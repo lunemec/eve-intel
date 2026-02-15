@@ -398,6 +398,14 @@ zKill `pastSeconds` is capped; this app clamps windowed lookback to supported ma
 - Browser security model limits continuous clipboard reads
 - Desktop wrapper uses Electron native clipboard API
 
+## Auto-update behavior (desktop)
+
+- Desktop builds use `electron-updater` against GitHub Releases
+- App checks for updates automatically (startup + periodic checks)
+- When update is available it downloads in background
+- When download is complete, use `Restart to Update` in app (or just close/reopen)
+- Differential update metadata (`latest.yml` + `.blockmap`) must be present in release assets for best update behavior on Windows
+
 ## Project Structure
 
 - `src/` - frontend source

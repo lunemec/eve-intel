@@ -98,6 +98,7 @@ export default function App() {
   const [debugEnabled, setDebugEnabled] = useState<boolean>(() => loadDebugEnabled());
   const [isDesktopApp] = useState<boolean>(() => Boolean(window.eveIntelDesktop));
   const [isWindowMaximized, setIsWindowMaximized] = useState<boolean>(false);
+  const [updaterState, setUpdaterState] = useState<DesktopUpdaterState | null>(null);
   const [lastPasteAt, setLastPasteAt] = useState<string>("Never");
   const [lastPasteRaw, setLastPasteRaw] = useState<string>("");
   const [manualEntry, setManualEntry] = useState<string>("");
@@ -108,6 +109,8 @@ export default function App() {
   const pasteTrapRef = useRef<HTMLTextAreaElement>(null);
   const debugSectionRef = useRef<HTMLElement>(null);
   const copyableFleetCount = pilotCards.filter((pilot) => Number.isFinite(pilot.characterId)).length;
+  const globalLoadProgress = aggregatePilotProgress(pilotCards);
+  const showGlobalLoad = pilotCards.length > 0 && globalLoadProgress < 1;
 
   const applyPaste = (text: string) => {
     const trimmed = text.trim();
@@ -204,6 +207,16 @@ export default function App() {
       mounted = false;
       unsubscribe();
     };
+  }, []);
+
+  useEffect(() => {
+    if (!window.eveIntelDesktop?.onUpdaterState) {
+      return;
+    }
+    const unsubscribe = window.eveIntelDesktop.onUpdaterState((state) => {
+      setUpdaterState(state);
+    });
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -514,7 +527,47 @@ export default function App() {
   return (
     <main className={`app${isDesktopApp ? " desktop-shell" : ""}`}>
       <ConstellationBackground />
-      {isDesktopApp ? <div className="window-drag-region" aria-hidden="true" /> : null}
+      {isDesktopApp ? (
+        <div className="window-topbar">
+          <div className="window-controls" aria-hidden="true">
+            <button
+              type="button"
+              className="window-btn"
+              aria-label="Minimize"
+              title="Minimize"
+              onClick={() => void window.eveIntelDesktop?.minimizeWindow()}
+            >
+              <span className="window-icon icon-minimize" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className="window-btn"
+              aria-label={isWindowMaximized ? "Restore" : "Maximize"}
+              title={isWindowMaximized ? "Restore" : "Maximize"}
+              onClick={() => void window.eveIntelDesktop?.toggleMaximizeWindow()}
+            >
+              <span
+                className={`window-icon ${isWindowMaximized ? "icon-restore" : "icon-maximize"}`}
+                aria-hidden="true"
+              />
+            </button>
+            <button
+              type="button"
+              className="window-btn window-btn-close"
+              aria-label="Close"
+              title="Close"
+              onClick={() => void window.eveIntelDesktop?.closeWindow()}
+            >
+              <span className="window-icon icon-close" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+      {isDesktopApp ? (
+        <div className={`global-load-line${showGlobalLoad ? " active" : ""}`} aria-hidden="true">
+          <span className="global-load-fill" style={{ width: `${Math.round(globalLoadProgress * 100)}%` }} />
+        </div>
+      ) : null}
       <textarea
         ref={pasteTrapRef}
         aria-hidden="true"
@@ -530,37 +583,6 @@ export default function App() {
 
       <header className="toolbar">
         <h1>EVE Intel Browser</h1>
-        {isDesktopApp ? (
-          <div className="window-controls">
-            <button
-              type="button"
-              className="window-btn"
-              aria-label="Minimize"
-              title="Minimize"
-              onClick={() => void window.eveIntelDesktop?.minimizeWindow()}
-            >
-              _
-            </button>
-            <button
-              type="button"
-              className="window-btn"
-              aria-label={isWindowMaximized ? "Restore" : "Maximize"}
-              title={isWindowMaximized ? "Restore" : "Maximize"}
-              onClick={() => void window.eveIntelDesktop?.toggleMaximizeWindow()}
-            >
-              {isWindowMaximized ? "❐" : "□"}
-            </button>
-            <button
-              type="button"
-              className="window-btn window-btn-close"
-              aria-label="Close"
-              title="Close"
-              onClick={() => void window.eveIntelDesktop?.closeWindow()}
-            >
-              ×
-            </button>
-          </div>
-        ) : null}
       </header>
 
       {networkNotice ? <p className="notice notice-inline">{networkNotice}</p> : null}
@@ -616,7 +638,6 @@ export default function App() {
                     ? `https://zkillboard.com/kill/${topFit.sourceLossKillmailId}/`
                     : undefined;
                   const topShipCyno = topShip ? shipHasPotentialCyno(topShip) : false;
-                  const isFetching = isPilotFetching(pilot);
                   return (
                     <li
                       className={`fleet-summary-line fleet-summary-grid${topShipCyno ? " cyno-highlight" : ""}`}
@@ -723,7 +744,6 @@ export default function App() {
                       <span className="fleet-col fleet-col-alerts">
                         {topShip ? renderShipPills(topShip, pilot.cynoRisk, "icon") : null}
                       </span>
-                      <span className={`fetch-progress-line${isFetching ? " active" : ""}`} aria-hidden="true" />
                     </li>
                   );
                 })}
@@ -738,10 +758,6 @@ export default function App() {
                 key={pilot.parsedEntry.pilotName.toLowerCase()}
               >
               <div className={`player-card ${threatClass(pilot.stats?.danger)}`}>
-                <div
-                  className={`fetch-progress-line detail-progress${isPilotFetching(pilot) ? " active" : ""}`}
-                  aria-hidden="true"
-                />
                 <div className="player-card-header">
                   <div className="player-avatar" aria-hidden="true">
                     {pilot.characterId ? (
@@ -1048,6 +1064,36 @@ export default function App() {
             Debug logging
           </label>
         </div>
+        {isDesktopApp ? (
+          <div className="controls-panel-row updater-row">
+            <span className={`updater-status updater-${updaterState?.status ?? "idle"}`}>
+              {formatUpdaterStatus(updaterState)}
+            </span>
+            <button
+              type="button"
+              className="settings-button"
+              onClick={async () => {
+                const result = await window.eveIntelDesktop?.checkForUpdates();
+                if (result && !result.ok && result.reason && result.reason !== "dev") {
+                  setNetworkNotice(`Update check failed: ${result.reason}`);
+                }
+              }}
+            >
+              Check Updates
+            </button>
+            {updaterState?.status === "downloaded" ? (
+              <button
+                type="button"
+                className="settings-button"
+                onClick={() => {
+                  void window.eveIntelDesktop?.quitAndInstallUpdate();
+                }}
+              >
+                Restart to Update
+              </button>
+            ) : null}
+          </div>
+        ) : null}
       </section>
       {debugEnabled ? (
         <section className="raw" ref={debugSectionRef}>
@@ -1058,6 +1104,28 @@ export default function App() {
       <footer className="app-version">v{APP_VERSION}</footer>
     </main>
   );
+}
+
+function formatUpdaterStatus(state: DesktopUpdaterState | null): string {
+  if (!state) {
+    return "Updates: idle";
+  }
+  switch (state.status) {
+    case "dev":
+      return "Updates: dev mode";
+    case "checking":
+      return "Updates: checking...";
+    case "downloading":
+      return `Updates: downloading ${Math.max(0, Math.min(100, state.progress))}%`;
+    case "downloaded":
+      return `Updates: ready (${state.downloadedVersion ?? "new version"})`;
+    case "up-to-date":
+      return `Updates: up to date (${state.version})`;
+    case "error":
+      return `Updates: error${state.error ? ` (${state.error})` : ""}`;
+    default:
+      return "Updates: idle";
+  }
 }
 
 function extractErrorMessage(error: unknown): string {
@@ -1102,8 +1170,28 @@ function mergeKillmailLists(primary: ZkillKillmail[], secondary: ZkillKillmail[]
   return [...map.values()].sort((a, b) => Date.parse(b.killmail_time) - Date.parse(a.killmail_time));
 }
 
-function isPilotFetching(pilot: PilotCard): boolean {
-  return pilot.status === "loading" || pilot.fetchPhase === "enriching";
+function aggregatePilotProgress(pilots: PilotCard[]): number {
+  if (pilots.length === 0) {
+    return 1;
+  }
+  const total = pilots.reduce((sum, pilot) => sum + pilotProgressWeight(pilot), 0);
+  return Math.max(0.06, Math.min(1, total / pilots.length));
+}
+
+function pilotProgressWeight(pilot: PilotCard): number {
+  if (pilot.status === "error" || pilot.fetchPhase === "error") {
+    return 1;
+  }
+  if (pilot.fetchPhase === "ready") {
+    return 1;
+  }
+  if (pilot.fetchPhase === "enriching") {
+    return 0.72;
+  }
+  if (pilot.status === "ready") {
+    return 0.55;
+  }
+  return 0.2;
 }
 
 async function ensureExplicitShipTypeId(

@@ -22,5 +22,16 @@ contextBridge.exposeInMainWorld("eveIntelDesktop", {
     const listener = (_event, value) => callback(Boolean(value));
     ipcRenderer.on("window:maximized", listener);
     return () => ipcRenderer.removeListener("window:maximized", listener);
+  },
+  onUpdaterState(callback) {
+    const listener = (_event, state) => callback(state);
+    ipcRenderer.on("updater:state", listener);
+    return () => ipcRenderer.removeListener("updater:state", listener);
+  },
+  checkForUpdates() {
+    return ipcRenderer.invoke("updater:check-now");
+  },
+  quitAndInstallUpdate() {
+    return ipcRenderer.invoke("updater:quit-and-install");
   }
 });
