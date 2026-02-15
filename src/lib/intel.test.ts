@@ -344,6 +344,47 @@ describe("deriveShipPredictions", () => {
     expect(result[0].shipName).toBe("Rifter");
     expect(result[0].probability).toBe(100);
   });
+
+  it("excludes deployables and structures from inferred ship candidates", () => {
+    const characterId = 2007;
+    const parsedEntry: ParsedPilotInput = {
+      pilotName: "NoDeployables",
+      sourceLine: "NoDeployables",
+      parseConfidence: 0.9,
+      shipSource: "inferred"
+    };
+    const losses: ZkillKillmail[] = [
+      makeKillmail({
+        id: 60001,
+        time: "2026-02-14T00:00:00Z",
+        victimCharacterId: characterId,
+        victimShipTypeId: 900001
+      }),
+      makeKillmail({
+        id: 60002,
+        time: "2026-02-13T00:00:00Z",
+        victimCharacterId: characterId,
+        victimShipTypeId: 11188
+      })
+    ];
+
+    const result = deriveShipPredictions({
+      parsedEntry,
+      characterId,
+      kills: [],
+      losses,
+      lookbackDays: 7,
+      topShips: 3,
+      shipNamesByTypeId: new Map([
+        [900001, "Mobile Small Warp Disruptor I"],
+        [11188, "Rifter"]
+      ])
+    });
+
+    expect(result.some((row) => row.shipName.includes("Mobile Small Warp Disruptor"))).toBe(false);
+    expect(result).toHaveLength(1);
+    expect(result[0].shipName).toBe("Rifter");
+  });
 });
 
 describe("collectShipTypeIdsForNaming", () => {

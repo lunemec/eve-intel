@@ -253,9 +253,31 @@ Output:
 - `release/EVE Intel Setup <version>.exe.blockmap`
 - `release/win-unpacked/`
 
+## Build Linux / macOS Artifacts
+
+Linux:
+
+```bash
+npm run desktop:dist:linux
+```
+
+macOS Apple Silicon (arm64):
+
+```bash
+npm run desktop:dist:mac:arm64
+```
+
+Notes:
+
+- In practice, build each platform on that platform (Windows on Windows, Linux on Linux, macOS on macOS).
+- Cross-building desktop binaries is limited and often unreliable (especially macOS signing/notarization from non-macOS).
+
 ## Create/Update GitHub Release Locally
 
-This flow builds binaries locally, then uploads them to a GitHub Release (no CI workflow required).
+This flow can run in two modes:
+
+- Host-scoped (default): build/verify/upload only targets supported by the current OS
+- Full (`--full`): require all platforms before publishing
 
 Prerequisites:
 
@@ -263,7 +285,7 @@ Prerequisites:
    - `gh auth login`
 2. Ensure you have push/release permissions for the target repository.
 
-Command:
+Host-scoped build + verify + upload (default):
 
 ```bash
 npm run release:github
@@ -271,10 +293,36 @@ npm run release:github
 
 What it does:
 
-1. Runs `npm run desktop:dist`
-2. Collects release artifacts from `release/` (`.exe`, `.blockmap`, `.yml`)
-3. Creates a release for tag `v<package.json version>` if missing
-4. Or uploads and overwrites artifacts on existing release tag
+1. Checks required artifacts for current version for targets supported by current host OS:
+   - Windows installer (`.exe`)
+   - Linux (`.AppImage`, `.tar.gz`)
+   - macOS arm64 (`.dmg`, `.zip`)
+2. Builds missing targets by running:
+   - `desktop:dist:win`
+   - `desktop:dist:linux`
+   - `desktop:dist:mac:arm64`
+   - Auto-build only runs for targets supported on the current host OS:
+     - Windows host -> Windows target
+     - Linux host -> Linux target
+     - macOS host -> macOS target
+3. Verifies required artifacts for current mode are present before release creation/upload
+4. Scans `release/` for current-version artifacts and `.yml` metadata
+5. Creates a release for tag `v<package.json version>` if missing
+6. Or uploads and overwrites artifacts on existing release tag
+
+Strict all-platform mode:
+
+```bash
+npm run release:github:full
+```
+
+In full mode, release upload fails unless Windows + Linux + macOS arm64 artifacts all exist.
+
+Windows build + upload shortcut:
+
+```bash
+npm run release:github:win
+```
 
 Optional custom tag:
 
@@ -315,7 +363,12 @@ npm test -- --run -u
 - `npm run desktop:run` - Electron app against built frontend
 - `npm run desktop:pack` - unpacked desktop bundle
 - `npm run desktop:dist` - Windows installer
+- `npm run desktop:dist:win` - Windows installer
+- `npm run desktop:dist:linux` - Linux packages
+- `npm run desktop:dist:mac:arm64` - macOS Apple Silicon packages
 - `npm run release:github` - build locally and publish artifacts to GitHub Release
+- `npm run release:github:full` - require all platform artifacts before upload
+- `npm run release:github:win` - build Windows artifacts then upload release assets
 
 ## Troubleshooting
 

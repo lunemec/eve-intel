@@ -13,7 +13,8 @@ function normalizeShipName(name: string): string {
 }
 
 export function parseClipboardText(text: string): ParseResult {
-  const lines = text
+  const normalizedText = text.replace(/<br\s*\/?>/giu, "\n");
+  const lines = normalizedText
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
@@ -66,17 +67,25 @@ export function parseClipboardText(text: string): ParseResult {
 }
 
 function extractPilotCandidates(line: string): string[] {
-  const firstGt = line.indexOf(">");
-  const tail = firstGt >= 0 ? line.slice(firstGt + 1).trim() : line.trim();
-  if (!tail) {
-    return [line.trim()].filter(Boolean);
-  }
-
-  const urlMatches = [...tail.matchAll(URL_TAG_NAME_REGEX)]
+  const fullLine = line.trim();
+  const lineUrlMatches = [...fullLine.matchAll(URL_TAG_NAME_REGEX)]
     .map((match) => match[1]?.trim() ?? "")
     .filter(Boolean);
-  if (urlMatches.length > 0) {
-    return urlMatches;
+  if (lineUrlMatches.length > 0) {
+    return lineUrlMatches;
+  }
+
+  const firstGt = fullLine.indexOf(">");
+  const tail = firstGt >= 0 ? fullLine.slice(firstGt + 1).trim() : fullLine;
+  if (!tail) {
+    return [fullLine].filter(Boolean);
+  }
+
+  const tailUrlMatches = [...tail.matchAll(URL_TAG_NAME_REGEX)]
+    .map((match) => match[1]?.trim() ?? "")
+    .filter(Boolean);
+  if (tailUrlMatches.length > 0) {
+    return tailUrlMatches;
   }
 
   return [tail];

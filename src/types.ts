@@ -13,5 +13,4 @@ export type ParseResult = {
 
 export type Settings = {
   lookbackDays: number;
-  topShips: number;
 };

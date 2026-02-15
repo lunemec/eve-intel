@@ -8,30 +8,117 @@ const releaseDir = path.join(repoRoot, "release");
 const packageJsonPath = path.join(repoRoot, "package.json");
 
 const pkg = JSON.parse(await readFile(packageJsonPath, "utf8"));
-const defaultTag = `v${pkg.version}`;
-const tag = process.argv[2] ?? process.env.RELEASE_TAG ?? defaultTag;
+const version = String(pkg.version);
+const defaultTag = `v${version}`;
+const cliArgs = process.argv.slice(2);
+const requireAllTargets = cliArgs.includes("--full") || process.env.RELEASE_REQUIRE_ALL === "1";
+const tagArg = cliArgs.find((arg) => !arg.startsWith("--"));
+const tag = tagArg ?? process.env.RELEASE_TAG ?? defaultTag;
+
+const targetBuilds = [
+  {
+    id: "windows",
+    script: "desktop:dist:win",
+    supportedHosts: ["win32"],
+    required: [
+      {
+        name: "Windows installer (.exe)",
+        match: (fileName) => fileName.includes(` ${version}.`) && fileName.endsWith(".exe")
+      }
+    ]
+  },
+  {
+    id: "linux",
+    script: "desktop:dist:linux",
+    supportedHosts: ["linux"],
+    required: [
+      {
+        name: "Linux AppImage",
+        match: (fileName) => fileName.includes(version) && fileName.endsWith(".AppImage")
+      },
+      {
+        name: "Linux tar.gz",
+        match: (fileName) => fileName.includes(version) && fileName.endsWith(".tar.gz")
+      }
+    ]
+  },
+  {
+    id: "macos-arm64",
+    script: "desktop:dist:mac:arm64",
+    supportedHosts: ["darwin"],
+    required: [
+      {
+        name: "macOS arm64 DMG",
+        match: (fileName) => fileName.includes(version) && fileName.includes("arm64") && fileName.endsWith(".dmg")
+      },
+      {
+        name: "macOS arm64 ZIP",
+        match: (fileName) => fileName.includes(version) && fileName.includes("arm64") && fileName.endsWith(".zip")
+      }
+    ]
+  }
+];
 
 if (!existsSync(releaseDir)) {
-  fail(`Release directory not found: ${releaseDir}. Run "npm run desktop:dist" first.`);
-}
-
-const files = await collectReleaseFiles(releaseDir);
-if (files.length === 0) {
-  fail(`No releasable files found in ${releaseDir}. Expected .exe/.blockmap/.yml artifacts.`);
+  await ensureReleaseDir();
 }
 
 await run("gh", ["--version"]);
 
+let releaseFiles = await collectReleaseFiles(releaseDir);
+const requiredTargets = requireAllTargets
+  ? targetBuilds
+  : targetBuilds.filter((target) => target.supportedHosts.includes(process.platform));
+let missing = evaluateMissingTargets(releaseFiles, requiredTargets);
+
+if (missing.length > 0) {
+  log(`Missing release artifacts for version ${version}. Building missing targets...`);
+  for (const target of missing) {
+    if (!target.supportedHosts.includes(process.platform)) {
+      log(
+        `Skipping auto-build for ${target.id} on host ${process.platform}. ` +
+          `Build this target on one of: ${target.supportedHosts.join(", ")}`
+      );
+      continue;
+    }
+    log(`Running npm script: ${target.script}`);
+    await runNpmScript(target.script);
+    releaseFiles = await collectReleaseFiles(releaseDir);
+  }
+}
+
+missing = evaluateMissingTargets(releaseFiles, requiredTargets);
+if (missing.length > 0) {
+  const details = missing
+    .map(
+      (target) =>
+        `${target.id}: ${target.required
+          .filter((rule) => !releaseFiles.some((file) => rule.match(path.basename(file))))
+          .map((rule) => rule.name)
+          .join(", ")}`
+    )
+    .join(" | ");
+  fail(
+    `Not all required artifacts are present for version ${version} (${requireAllTargets ? "full" : "host-scoped"} mode). ` +
+      `Missing -> ${details}. Build each missing target on a supported host OS and place files in release/ before running release upload.`
+  );
+}
+
+const uploadFiles = filterUploadFiles(releaseFiles, version);
+if (uploadFiles.length === 0) {
+  fail(`No releasable files found in ${releaseDir} for version ${version}.`);
+}
+
 const releaseExists = await commandSucceeds("gh", ["release", "view", tag]);
 if (releaseExists) {
-  await run("gh", ["release", "upload", tag, ...files, "--clobber"]);
+  await run("gh", ["release", "upload", tag, ...uploadFiles, "--clobber"]);
   log(`Updated existing GitHub release: ${tag}`);
 } else {
   await run("gh", [
     "release",
     "create",
     tag,
-    ...files,
+    ...uploadFiles,
     "--generate-notes",
     "--title",
     `EVE Intel ${tag}`
@@ -39,35 +126,75 @@ if (releaseExists) {
   log(`Created GitHub release: ${tag}`);
 }
 
-log(`Uploaded ${files.length} artifact(s):`);
-for (const file of files) {
+log(`Uploaded ${uploadFiles.length} artifact(s):`);
+for (const file of uploadFiles) {
   log(`- ${path.relative(repoRoot, file)}`);
+}
+
+async function ensureReleaseDir() {
+  fail(`Release directory not found: ${releaseDir}.`);
 }
 
 async function collectReleaseFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
-  const files = [];
+  return entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => path.join(dir, entry.name))
+    .sort((a, b) => a.localeCompare(b));
+}
 
-  for (const entry of entries) {
-    if (!entry.isFile()) {
-      continue;
+function evaluateMissingTargets(files, targets) {
+  return targets.filter((target) =>
+    target.required.some((rule) => !files.some((file) => rule.match(path.basename(file))))
+  );
+}
+
+function filterUploadFiles(files, currentVersion) {
+  return files.filter((file) => {
+    const name = path.basename(file);
+    if (name.endsWith(".yml")) {
+      return true;
     }
-    const full = path.join(dir, entry.name);
-    if (
-      entry.name.endsWith(".exe") ||
-      entry.name.endsWith(".blockmap") ||
-      entry.name.endsWith(".yml")
-    ) {
-      files.push(full);
+    if (!fileNameHasVersion(name, currentVersion)) {
+      return false;
     }
+    return (
+      name.endsWith(".exe") ||
+      name.endsWith(".AppImage") ||
+      name.endsWith(".dmg") ||
+      name.endsWith(".zip") ||
+      name.endsWith(".tar.gz") ||
+      name.endsWith(".deb") ||
+      name.endsWith(".rpm") ||
+      name.endsWith(".snap") ||
+      name.endsWith(".pkg") ||
+      name.endsWith(".tar.xz") ||
+      name.endsWith(".pkg.tar.zst")
+    );
+  });
+}
+
+function fileNameHasVersion(name, currentVersion) {
+  return (
+    name.includes(` ${currentVersion}.`) ||
+    name.includes(`-${currentVersion}`) ||
+    name.includes(`_${currentVersion}`) ||
+    name.includes(`v${currentVersion}`)
+  );
+}
+
+function runNpmScript(scriptName) {
+  const npmExecPath = process.env.npm_execpath;
+  if (npmExecPath) {
+    return run(process.execPath, [npmExecPath, "run", scriptName]);
   }
-
-  return files.sort((a, b) => a.localeCompare(b));
+  const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
+  return run(npmCmd, ["run", scriptName]);
 }
 
 async function run(cmd, args) {
   await new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: "inherit", shell: process.platform === "win32" });
+    const child = spawn(cmd, args, { stdio: "inherit", shell: false });
     child.on("error", reject);
     child.on("exit", (code) => {
       if (code === 0) {
@@ -81,7 +208,7 @@ async function run(cmd, args) {
 
 async function commandSucceeds(cmd, args) {
   return new Promise((resolve) => {
-    const child = spawn(cmd, args, { stdio: "ignore", shell: process.platform === "win32" });
+    const child = spawn(cmd, args, { stdio: "ignore", shell: false });
     child.on("error", () => resolve(false));
     child.on("exit", (code) => resolve(code === 0));
   });

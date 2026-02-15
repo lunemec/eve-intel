@@ -70,4 +70,36 @@ describe("parseClipboardText", () => {
       "Denis Bergamp"
     ]);
   });
+
+  it("parses standalone url-tag lines (one pilot per line)", () => {
+    const text = [
+      "<url=showinfo:1377//2115173641>Artem Noir</url>",
+      "<url=showinfo:1377//2123829880>Bor O'dinsky</url>",
+      "<url=showinfo:1377//2123203479>Denis Bergamp</url>"
+    ].join("\n");
+    const result = parseClipboardText(text);
+    expect(result.rejected).toEqual([]);
+    expect(result.entries).toHaveLength(3);
+    expect(result.entries.map((entry) => entry.pilotName)).toEqual([
+      "Artem Noir",
+      "Bor O'dinsky",
+      "Denis Bergamp"
+    ]);
+  });
+
+  it("parses html <br> separated pilot names", () => {
+    const text =
+      "Artem Noir<br>Bor O'dinsky<br>Denis Bergamp<br>Esta Joi<br>Fredy Redy<br>Gayle en Cedoulain";
+    const result = parseClipboardText(text);
+    expect(result.rejected).toEqual([]);
+    expect(result.entries).toHaveLength(6);
+    expect(result.entries.map((entry) => entry.pilotName)).toEqual([
+      "Artem Noir",
+      "Bor O'dinsky",
+      "Denis Bergamp",
+      "Esta Joi",
+      "Fredy Redy",
+      "Gayle en Cedoulain"
+    ]);
+  });
 });

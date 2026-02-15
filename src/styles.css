@@ -219,10 +219,38 @@ body {
   padding: 10px 12px;
 }
 
+.fleet-summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
 .fleet-summary h4 {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 0.9rem;
   color: #d3dbe6;
+}
+
+.fleet-copy-button {
+  border: 1px solid #44566a;
+  border-radius: 4px;
+  background: #2d3748;
+  color: #ffffff;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.fleet-copy-button:hover:not(:disabled) {
+  background: #3a4960;
+}
+
+.fleet-copy-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .fleet-summary-grid {

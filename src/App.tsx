@@ -36,8 +36,7 @@ import type { ParseResult, ParsedPilotInput, Settings } from "./types";
 import { ConstellationBackground } from "./components/ConstellationBackground";
 
 const DEFAULT_SETTINGS: Settings = {
-  lookbackDays: ZKILL_MAX_LOOKBACK_DAYS,
-  topShips: 3
+  lookbackDays: ZKILL_MAX_LOOKBACK_DAYS
 };
 const APP_VERSION = import.meta.env.PACKAGE_VERSION;
 const SETTINGS_KEY = "eve-intel.settings.v1";
@@ -90,6 +89,8 @@ const ROLE_ICON_TYPE_IDS: Record<string, number> = {
   "Armor Logi": 16455
 };
 const DEEP_HISTORY_MAX_PAGES = 20;
+const TOP_SHIP_CANDIDATES = 5;
+const DETAIL_FIT_CANDIDATES = 3;
 
 export default function App() {
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
@@ -104,6 +105,7 @@ export default function App() {
   const [networkNotice, setNetworkNotice] = useState<string>("");
   const [debugLines, setDebugLines] = useState<string[]>([]);
   const pasteTrapRef = useRef<HTMLTextAreaElement>(null);
+  const copyableFleetCount = pilotCards.filter((pilot) => Number.isFinite(pilot.characterId)).length;
 
   const applyPaste = (text: string) => {
     const trimmed = text.trim();
@@ -238,7 +240,7 @@ export default function App() {
       const derivedKey = buildDerivedInferenceKey({
         characterId: row.characterId!,
         lookbackDays: settings.lookbackDays,
-        topShips: settings.topShips,
+        topShips: TOP_SHIP_CANDIDATES,
         explicitShip: row.parsedEntry.explicitShip,
         kills: row.inferenceKills,
         losses: row.inferenceLosses
@@ -452,7 +454,7 @@ export default function App() {
       logDebug("Starting intel pipeline", {
         pilots: names,
         lookbackDays: settings.lookbackDays,
-        topShips: settings.topShips
+        topShips: TOP_SHIP_CANDIDATES
       });
       let idMap = new Map<string, number>();
       let idResolveError: string | null = null;
@@ -499,7 +501,7 @@ export default function App() {
       cancelled = true;
       abortController.abort();
     };
-  }, [parseResult.entries, settings.lookbackDays, settings.topShips]);
+  }, [parseResult.entries, settings.lookbackDays]);
 
   return (
     <main className={`app${isDesktopApp ? " desktop-shell" : ""}`}>
@@ -521,19 +523,6 @@ export default function App() {
       <header className="toolbar">
         <h1>EVE Intel Browser</h1>
         <div className="settings">
-          <label>
-            Top Ships
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={settings.topShips}
-              onChange={(event) => {
-                const next = Number(event.target.value || 3);
-                setSettings((current) => ({ ...current, topShips: Math.min(10, Math.max(1, next)) }));
-              }}
-            />
-          </label>
           <label className="setting-inline">
             <input
               type="checkbox"
@@ -607,7 +596,34 @@ export default function App() {
         <>
           {pilotCards.length > 1 ? (
             <section className="fleet-summary">
-              <h4>Fleet Summary</h4>
+              <div className="fleet-summary-header">
+                <h4>Fleet Summary</h4>
+                <button
+                  type="button"
+                  className="fleet-copy-button"
+                  disabled={copyableFleetCount === 0}
+                  onClick={async () => {
+                    const lines = pilotCards
+                      .filter((pilot) => Number.isFinite(pilot.characterId))
+                      .map((pilot) => {
+                        return pilot.characterName ?? pilot.parsedEntry.pilotName;
+                      });
+                    if (lines.length === 0) {
+                      setNetworkNotice("No resolved character IDs to copy.");
+                      return;
+                    }
+                    try {
+                      await navigator.clipboard.writeText(lines.join("\n"));
+                      setNetworkNotice(`Copied ${lines.length} pilot link(s) to clipboard.`);
+                      logDebug("Fleet summary copied to clipboard", { count: lines.length });
+                    } catch (error) {
+                      setNetworkNotice(`Clipboard copy failed: ${extractErrorMessage(error)}`);
+                    }
+                  }}
+                >
+                  Copy to Clipboard
+                </button>
+              </div>
               <ul className="fleet-summary-list">
                 {pilotCards.map((pilot) => {
                   const topShip = pilot.predictedShips[0];
@@ -897,7 +913,7 @@ export default function App() {
                 })()}
                 <ul>
                   {pilot.predictedShips.length > 0 ? (
-                    pilot.predictedShips.map((ship) => {
+                    pilot.predictedShips.slice(0, DETAIL_FIT_CANDIDATES).map((ship) => {
                       const fit = ship.shipTypeId
                         ? pilot.fitCandidates.find((entry) => entry.shipTypeId === ship.shipTypeId)
                         : undefined;
@@ -1140,7 +1156,7 @@ async function recomputeDerivedInference(params: {
     kills: params.row.inferenceKills,
     losses: params.row.inferenceLosses,
     lookbackDays: params.settings.lookbackDays,
-    topShips: params.settings.topShips,
+    topShips: TOP_SHIP_CANDIDATES,
     shipNamesByTypeId: params.namesById
   });
   const fitCandidates = deriveFitCandidates({
@@ -1504,10 +1520,9 @@ function loadSettings(): Settings {
       return DEFAULT_SETTINGS;
     }
 
-    const parsed = JSON.parse(raw) as Partial<Settings>;
+    void (JSON.parse(raw) as Partial<Settings>);
     return {
-      lookbackDays: ZKILL_MAX_LOOKBACK_DAYS,
-      topShips: Math.min(10, Math.max(1, Number(parsed.topShips ?? DEFAULT_SETTINGS.topShips)))
+      lookbackDays: ZKILL_MAX_LOOKBACK_DAYS
     };
   } catch {
     return DEFAULT_SETTINGS;

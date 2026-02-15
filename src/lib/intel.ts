@@ -56,6 +56,29 @@ const DEFAULT_WEIGHTS: ScoringWeights = {
 };
 const MIN_RECENCY_WEIGHT = 1e-6;
 const CAPSULE_TYPE_IDS = new Set([670, 33328]);
+const NON_SHIP_NAME_KEYWORDS = [
+  "mobile",
+  "warp disruptor",
+  "depot",
+  "tractor unit",
+  "siphon",
+  "control tower",
+  "starbase",
+  "cynosural generator",
+  "jump bridge",
+  "station",
+  "citadel",
+  "engineering complex",
+  "refinery",
+  "customs office",
+  "infrastructure hub",
+  "territorial claim unit",
+  "sovereignty blockade unit",
+  "array",
+  "battery",
+  "silo",
+  "laboratory"
+];
 
 type Evidence = {
   shipTypeId: number;
@@ -131,7 +154,10 @@ export function deriveShipPredictions(params: {
     if (entry.source === "explicit") {
       return true;
     }
-    return !isCapsuleCandidate(entry.shipTypeId, params.shipNamesByTypeId);
+    return (
+      !isCapsuleCandidate(entry.shipTypeId, params.shipNamesByTypeId) &&
+      !isNonShipCandidate(entry.shipTypeId, params.shipNamesByTypeId)
+    );
   });
   const top = withoutCapsules.slice(0, Math.max(1, params.topShips));
 
@@ -474,6 +500,17 @@ function isCapsuleCandidate(shipTypeId: number | undefined, shipNamesByTypeId: M
   }
   const name = shipNamesByTypeId.get(shipTypeId)?.toLowerCase() ?? "";
   return name.includes("capsule") || name === "pod";
+}
+
+function isNonShipCandidate(shipTypeId: number | undefined, shipNamesByTypeId: Map<number, string>): boolean {
+  if (!shipTypeId) {
+    return false;
+  }
+  const name = shipNamesByTypeId.get(shipTypeId)?.toLowerCase().trim() ?? "";
+  if (!name) {
+    return false;
+  }
+  return NON_SHIP_NAME_KEYWORDS.some((keyword) => name.includes(keyword));
 }
 
 function renormalizeProbabilities(predictions: ShipPrediction[]): ShipPrediction[] {
