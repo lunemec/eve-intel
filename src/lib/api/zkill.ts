@@ -1,0 +1,475 @@
+import { getCachedStateAsync, setCachedAsync } from "../cache";
+import { fetchJson, type RetryInfo } from "./http";
+
+const ZKILL_BASE = "https://zkillboard.com/api";
+const ZKILL_CACHE_TTL_MS = 1000 * 60 * 10;
+export const ZKILL_MAX_LOOKBACK_DAYS = 7;
+const ESI_BASE = "https://esi.evetech.net/latest";
+const ESI_DATASOURCE = "tranquility";
+const KILLMAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
+const MAX_HYDRATE = 50;
+const HYDRATE_CONCURRENCY = 5;
+const ZKILL_PAGE_SIZE_HINT = 200;
+
+export type ZkillAttacker = {
+  character_id?: number;
+  ship_type_id?: number;
+};
+
+export type ZkillVictim = {
+  character_id?: number;
+  ship_type_id?: number;
+};
+
+export type ZkillItem = {
+  item_type_id: number;
+  flag?: number;
+};
+
+export type ZkillKillmail = {
+  killmail_id: number;
+  killmail_time: string;
+  solar_system_id?: number;
+  victim: ZkillVictim & { items?: ZkillItem[] };
+  attackers?: ZkillAttacker[];
+  zkb?: {
+    hash?: string;
+    totalValue?: number;
+  };
+};
+
+export type ZkillCharacterStats = {
+  kills?: number;
+  losses?: number;
+  solo?: number;
+  danger?: number;
+  iskDestroyed?: number;
+  iskLost?: number;
+};
+
+export async function fetchRecentKills(
+  characterId: number,
+  lookbackDays: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const pastSeconds = lookbackDaysToSeconds(lookbackDays);
+  const key = `eve-intel.cache.zkill.kills.${characterId}.${lookbackDays}`;
+  return fetchZkillList(
+    `${ZKILL_BASE}/kills/characterID/${characterId}/pastSeconds/${pastSeconds}/`,
+    key,
+    signal,
+    onRetry
+  );
+}
+
+export async function fetchLatestKills(
+  characterId: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const key = `eve-intel.cache.zkill.kills.latest.${characterId}`;
+  return fetchZkillList(`${ZKILL_BASE}/kills/characterID/${characterId}/`, key, signal, onRetry);
+}
+
+export async function fetchRecentLosses(
+  characterId: number,
+  lookbackDays: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const pastSeconds = lookbackDaysToSeconds(lookbackDays);
+  const key = `eve-intel.cache.zkill.losses.${characterId}.${lookbackDays}`;
+  return fetchZkillList(
+    `${ZKILL_BASE}/losses/characterID/${characterId}/pastSeconds/${pastSeconds}/`,
+    key,
+    signal,
+    onRetry
+  );
+}
+
+export async function fetchLatestLosses(
+  characterId: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const key = `eve-intel.cache.zkill.losses.latest.${characterId}`;
+  return fetchZkillList(`${ZKILL_BASE}/losses/characterID/${characterId}/`, key, signal, onRetry);
+}
+
+export async function fetchLatestKillsPaged(
+  characterId: number,
+  maxPages: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  return fetchLatestPaged("kills", characterId, maxPages, signal, onRetry);
+}
+
+export async function fetchLatestLossesPaged(
+  characterId: number,
+  maxPages: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  return fetchLatestPaged("losses", characterId, maxPages, signal, onRetry);
+}
+
+export async function fetchCharacterStats(
+  characterId: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillCharacterStats | null> {
+  const cacheKey = `eve-intel.cache.zkill.stats.${characterId}`;
+  const cached = await getCachedStateAsync<ZkillCharacterStats | null>(cacheKey);
+  if (cached.value !== null) {
+    if (cached.stale) {
+      void refreshCharacterStats(characterId, cacheKey, signal, onRetry);
+    }
+    return cached.value;
+  }
+  return refreshCharacterStats(characterId, cacheKey, signal, onRetry);
+}
+
+async function fetchZkillList(
+  url: string,
+  cacheKey: string,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const cached = await getCachedStateAsync<ZkillKillmail[]>(cacheKey);
+  if (cached.value) {
+    if (!Array.isArray(cached.value)) {
+      return refreshZkillList(url, cacheKey, onRetry, signal);
+    }
+    const normalizedCached = normalizeZkillArray(cached.value);
+    if (normalizedCached.length !== cached.value.length) {
+      await setCachedAsync(cacheKey, normalizedCached, ZKILL_CACHE_TTL_MS);
+    }
+    if (normalizedCached.length === 0 && cached.value.length > 0) {
+      return refreshZkillList(url, cacheKey, onRetry, signal);
+    }
+    if (normalizedCached.length === 0) {
+      // Empty cache entries can be stale/poisoned from transient upstream responses.
+      try {
+        return await refreshZkillList(url, cacheKey, onRetry, signal);
+      } catch {
+        return [];
+      }
+    }
+    if (cached.stale) {
+      void refreshZkillList(url, cacheKey, onRetry);
+    }
+    return normalizedCached;
+  }
+
+  return refreshZkillList(url, cacheKey, onRetry, signal);
+}
+
+async function fetchLatestPaged(
+  side: "kills" | "losses",
+  characterId: number,
+  maxPages: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const unique = new Map<number, ZkillKillmail>();
+  const totalPages = Math.max(1, Math.floor(maxPages));
+
+  for (let page = 1; page <= totalPages; page += 1) {
+    const cacheKey = `eve-intel.cache.zkill.${side}.latest.${characterId}.page.${page}`;
+    const url = `${ZKILL_BASE}/${side}/characterID/${characterId}/page/${page}/`;
+    const rows = await fetchZkillList(url, cacheKey, signal, onRetry);
+
+    for (const row of rows) {
+      unique.set(row.killmail_id, row);
+    }
+
+    if (rows.length === 0 || rows.length < ZKILL_PAGE_SIZE_HINT) {
+      break;
+    }
+  }
+
+  return [...unique.values()];
+}
+
+function lookbackDaysToSeconds(days: number): number {
+  const clampedDays = Math.min(ZKILL_MAX_LOOKBACK_DAYS, Math.max(1, Math.floor(days)));
+  return clampedDays * 24 * 60 * 60;
+}
+
+async function refreshZkillList(
+  url: string,
+  cacheKey: string,
+  onRetry?: (info: RetryInfo) => void,
+  signal?: AbortSignal
+): Promise<ZkillKillmail[]> {
+  const raw = await fetchJson<unknown>(
+    url,
+    {
+      headers: {
+        Accept: "application/json"
+      }
+    },
+    12000,
+    signal,
+    onRetry
+  );
+  const data = await parseZkillResponse(raw, signal, onRetry);
+  await setCachedAsync(cacheKey, data, ZKILL_CACHE_TTL_MS);
+  return data;
+}
+
+async function refreshCharacterStats(
+  characterId: number,
+  cacheKey: string,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillCharacterStats | null> {
+  try {
+    const raw = await fetchJson<unknown>(
+      `${ZKILL_BASE}/stats/characterID/${characterId}/`,
+      {
+        headers: {
+          Accept: "application/json"
+        }
+      },
+      12000,
+      signal,
+      onRetry
+    );
+    const stats = parseCharacterStats(raw);
+    await setCachedAsync(cacheKey, stats, ZKILL_CACHE_TTL_MS);
+    return stats;
+  } catch {
+    await setCachedAsync(cacheKey, null, 1000 * 60 * 5);
+    return null;
+  }
+}
+
+async function parseZkillResponse(
+  payload: unknown,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  if (!Array.isArray(payload)) {
+    throw new Error(`Unexpected zKill payload (not array): ${formatPayloadSnippet(payload)}`);
+  }
+  const normalized = normalizeZkillArray(payload);
+  if (normalized.length > 0) {
+    return normalized;
+  }
+
+  const summaryRows = (payload as unknown[]).filter(
+    (entry): entry is { killmail_id: number; zkb?: { hash?: string; totalValue?: number } } =>
+      Boolean(
+        entry &&
+          typeof entry === "object" &&
+          typeof (entry as { killmail_id?: unknown }).killmail_id === "number" &&
+          typeof (entry as { zkb?: { hash?: unknown } }).zkb?.hash === "string"
+      )
+  );
+
+  if (summaryRows.length === 0) {
+    return [];
+  }
+
+  return hydrateKillmailSummaries(summaryRows.slice(0, MAX_HYDRATE), signal, onRetry);
+}
+
+function normalizeZkillArray(payload: unknown[]): ZkillKillmail[] {
+  return payload.filter((entry): entry is ZkillKillmail => {
+    if (!entry || typeof entry !== "object") {
+      return false;
+    }
+    const row = entry as Partial<ZkillKillmail>;
+    return typeof row.killmail_id === "number" && typeof row.killmail_time === "string";
+  });
+}
+
+function formatPayloadSnippet(payload: unknown): string {
+  try {
+    const raw = JSON.stringify(payload);
+    return raw.length > 240 ? `${raw.slice(0, 240)}...` : raw;
+  } catch {
+    return String(payload);
+  }
+}
+
+function parseCharacterStats(payload: unknown): ZkillCharacterStats | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  const root = payload as Record<string, unknown>;
+  const kills = extractNumber(root, [
+    "kills",
+    "kills.all",
+    "shipsDestroyed",
+    "shipsDestroyed.all",
+    "shipCountDestroyed",
+    "shipCountDestroyed.all"
+  ]);
+  const losses = extractNumber(root, [
+    "losses",
+    "losses.all",
+    "shipsLost",
+    "shipsLost.all",
+    "shipCountLost",
+    "shipCountLost.all"
+  ]);
+  const solo = extractNumber(root, ["solo", "soloKills", "soloKills.all"]);
+  const dangerRaw = extractNumber(root, ["danger", "dangerRatio"]);
+  const iskDestroyed = extractNumber(root, ["iskDestroyed", "isk.destroyed", "iskDestroyed.all"]);
+  const iskLost = extractNumber(root, ["iskLost", "isk.lost", "iskLost.all"]);
+
+  if (
+    kills === undefined &&
+    losses === undefined &&
+    solo === undefined &&
+    dangerRaw === undefined &&
+    iskDestroyed === undefined &&
+    iskLost === undefined
+  ) {
+    return null;
+  }
+
+  const danger = normalizeDangerPercent(dangerRaw);
+  return {
+    kills,
+    losses,
+    solo,
+    danger,
+    iskDestroyed,
+    iskLost
+  };
+}
+
+function extractNumber(root: Record<string, unknown>, candidates: string[]): number | undefined {
+  for (const candidate of candidates) {
+    const value = getByPath(root, candidate);
+    const number = normalizeNumber(value);
+    if (number !== undefined) {
+      return number;
+    }
+  }
+  return undefined;
+}
+
+function getByPath(root: Record<string, unknown>, path: string): unknown {
+  const parts = path.split(".");
+  let current: unknown = root;
+  for (const part of parts) {
+    if (!current || typeof current !== "object") {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[part];
+  }
+  return current;
+}
+
+function normalizeNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value.replace(/,/g, ""));
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return undefined;
+}
+
+function normalizeDangerPercent(value?: number): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value <= 1) {
+    return Number((value * 100).toFixed(1));
+  }
+  return Number(value.toFixed(1));
+}
+
+async function hydrateKillmailSummaries(
+  rows: Array<{ killmail_id: number; zkb?: { hash?: string; totalValue?: number } }>,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const output: ZkillKillmail[] = [];
+
+  for (let index = 0; index < rows.length; index += HYDRATE_CONCURRENCY) {
+    const batch = rows.slice(index, index + HYDRATE_CONCURRENCY);
+    const hydrated = await Promise.all(
+      batch.map(async (row) => {
+        const hash = row.zkb?.hash;
+        if (!hash) {
+          return null;
+        }
+        const details = await fetchKillmailDetails(row.killmail_id, hash, signal, onRetry);
+        if (!details) {
+          return null;
+        }
+        const normalized: ZkillKillmail = {
+          ...details,
+          zkb: {
+            ...(details.zkb ?? {}),
+            hash,
+            totalValue: row.zkb?.totalValue ?? details.zkb?.totalValue
+          }
+        };
+        return normalized;
+      })
+    );
+
+    for (const entry of hydrated) {
+      if (entry) {
+        output.push(entry);
+      }
+    }
+  }
+
+  return output;
+}
+
+async function fetchKillmailDetails(
+  killmailId: number,
+  hash: string,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail | null> {
+  const cacheKey = `eve-intel.cache.killmail.${killmailId}.${hash}`;
+  const cached = await getCachedStateAsync<ZkillKillmail>(cacheKey);
+  if (cached.value) {
+    return cached.value;
+  }
+
+  try {
+    const detail = await fetchJson<{
+      killmail_id: number;
+      killmail_time: string;
+      solar_system_id?: number;
+      victim: ZkillKillmail["victim"];
+      attackers?: ZkillKillmail["attackers"];
+    }>(
+      `${ESI_BASE}/killmails/${killmailId}/${hash}/?datasource=${ESI_DATASOURCE}`,
+      undefined,
+      12000,
+      signal,
+      onRetry
+    );
+
+    const normalized: ZkillKillmail = {
+      killmail_id: detail.killmail_id,
+      killmail_time: detail.killmail_time,
+      solar_system_id: detail.solar_system_id,
+      victim: detail.victim,
+      attackers: detail.attackers
+    };
+
+    await setCachedAsync(cacheKey, normalized, KILLMAIL_CACHE_TTL_MS);
+    return normalized;
+  } catch {
+    return null;
+  }
+}

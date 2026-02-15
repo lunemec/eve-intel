@@ -1,0 +1,323 @@
+import { describe, expect, it } from "vitest";
+import { estimateShipCynoChance, evaluateCynoRisk } from "./cyno";
+import type { ZkillKillmail } from "./api/zkill";
+
+describe("evaluateCynoRisk", () => {
+  it("does not flag potential cyno with hull-only signal and no module evidence", () => {
+    const risk = evaluateCynoRisk({
+      predictedShips: [
+        {
+          shipName: "Falcon",
+          probability: 60,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 1
+        }
+      ],
+      characterId: 10,
+      kills: [],
+      losses: [],
+      namesByTypeId: new Map()
+    });
+
+    expect(risk.potentialCyno).toBe(false);
+  });
+
+  it("flags potential cyno for Viator when losses contain cyno module", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 2,
+        killmail_time: "2026-02-13T00:00:00Z",
+        victim: { character_id: 10, ship_type_id: 100, items: [{ item_type_id: 7000 }] },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+    const risk = evaluateCynoRisk({
+      predictedShips: [
+        {
+          shipName: "Viator",
+          probability: 72,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 2
+        }
+      ],
+      characterId: 10,
+      kills: [],
+      losses,
+      namesByTypeId: new Map([[7000, "Covert Cynosural Field Generator I"]])
+    });
+
+    expect(risk.potentialCyno).toBe(true);
+  });
+
+  it("flags potential cyno for Impel when losses contain industrial cyno module", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 3,
+        killmail_time: "2026-02-13T00:00:00Z",
+        victim: { character_id: 10, ship_type_id: 101, items: [{ item_type_id: 8000 }] },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+    const risk = evaluateCynoRisk({
+      predictedShips: [
+        {
+          shipName: "Impel",
+          probability: 70,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 3
+        }
+      ],
+      characterId: 10,
+      kills: [],
+      losses,
+      namesByTypeId: new Map([[8000, "Industrial Cynosural Field Generator I"]])
+    });
+
+    expect(risk.potentialCyno).toBe(true);
+  });
+
+  it("flags potential cyno for Venture when losses contain industrial cyno module", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 4,
+        killmail_time: "2026-02-13T00:00:00Z",
+        victim: { character_id: 10, ship_type_id: 102, items: [{ item_type_id: 8100 }] },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+    const risk = evaluateCynoRisk({
+      predictedShips: [
+        {
+          shipName: "Venture",
+          probability: 68,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 4
+        }
+      ],
+      characterId: 10,
+      kills: [],
+      losses,
+      namesByTypeId: new Map([[8100, "Industrial Cynosural Field Generator"]])
+    });
+
+    expect(risk.potentialCyno).toBe(true);
+  });
+
+  it("does not flag bait from jump-capable history alone", () => {
+    const kills: ZkillKillmail[] = [
+      {
+        killmail_id: 1,
+        killmail_time: "2026-02-13T00:00:00Z",
+        victim: {},
+        attackers: [{ character_id: 10, ship_type_id: 900 }],
+        zkb: {}
+      }
+    ];
+
+    const risk = evaluateCynoRisk({
+      predictedShips: [
+        {
+          shipName: "Drake",
+          probability: 80,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 999
+        }
+      ],
+      characterId: 10,
+      kills,
+      losses: [],
+      namesByTypeId: new Map([[900, "Archon"]])
+    });
+
+    expect(risk.jumpAssociation).toBe(false);
+  });
+
+  it("flags bait for cyno+tackle+tank profile on likely ship", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 5,
+        killmail_time: "2026-02-13T00:00:00Z",
+        victim: {
+          character_id: 10,
+          ship_type_id: 700,
+          items: [{ item_type_id: 5000 }, { item_type_id: 5001 }, { item_type_id: 5002 }]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const risk = evaluateCynoRisk({
+      predictedShips: [
+        {
+          shipName: "Devoter",
+          probability: 90,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 700
+        }
+      ],
+      characterId: 10,
+      kills: [],
+      losses,
+      namesByTypeId: new Map([
+        [700, "Devoter"],
+        [5000, "Cynosural Field Generator I"],
+        [5001, "Warp Scrambler II"],
+        [5002, "Damage Control II"]
+      ])
+    });
+
+    expect(risk.jumpAssociation).toBe(true);
+  });
+});
+
+describe("estimateShipCynoChance", () => {
+  it("returns 100% when same-hull losses show cyno module evidence", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 10,
+        killmail_time: "2026-02-13T00:00:00Z",
+        victim: {
+          character_id: 55,
+          ship_type_id: 200,
+          items: [{ item_type_id: 9000 }]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const result = estimateShipCynoChance({
+      predictedShips: [
+        {
+          shipName: "Falcon",
+          probability: 70,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 200
+        },
+        {
+          shipName: "Drake",
+          probability: 30,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 201
+        }
+      ],
+      characterId: 55,
+      losses,
+      namesByTypeId: new Map([
+        [200, "Falcon"],
+        [201, "Drake"],
+        [9000, "Covert Cynosural Field Generator I"]
+      ])
+    });
+
+    expect(result.get("Falcon")?.cynoCapable).toBe(true);
+    expect(result.get("Falcon")?.cynoChance).toBe(100);
+    expect(result.get("Drake")).toEqual({ cynoCapable: false, cynoChance: 0 });
+  });
+
+  it("returns intermediate chance when only other-hull cyno evidence exists", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 11,
+        killmail_time: "2026-02-13T00:00:00Z",
+        victim: {
+          character_id: 55,
+          ship_type_id: 300,
+          items: [{ item_type_id: 9001 }]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const result = estimateShipCynoChance({
+      predictedShips: [
+        {
+          shipName: "Viator",
+          probability: 60,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 301
+        }
+      ],
+      characterId: 55,
+      losses,
+      namesByTypeId: new Map([
+        [300, "Falcon"],
+        [301, "Viator"],
+        [9001, "Covert Cynosural Field Generator I"]
+      ])
+    });
+
+    const chance = result.get("Viator")?.cynoChance ?? 0;
+    expect(chance).toBeGreaterThan(0);
+    expect(chance).toBeLessThan(100);
+  });
+
+  it("returns low baseline chance for cyno-capable hull with no fit evidence", () => {
+    const result = estimateShipCynoChance({
+      predictedShips: [
+        {
+          shipName: "Impel",
+          probability: 80,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 302
+        }
+      ],
+      characterId: 55,
+      losses: [],
+      namesByTypeId: new Map([[302, "Impel"]])
+    });
+
+    const chance = result.get("Impel")?.cynoChance ?? 0;
+    expect(chance).toBeGreaterThan(0);
+    expect(chance).toBeLessThan(40);
+  });
+
+  it("returns 0% for non-cyno-capable hull", () => {
+    const result = estimateShipCynoChance({
+      predictedShips: [
+        {
+          shipName: "Drake",
+          probability: 95,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 500
+        }
+      ],
+      characterId: 55,
+      losses: [
+        {
+          killmail_id: 12,
+          killmail_time: "2026-02-13T00:00:00Z",
+          victim: {
+            character_id: 55,
+            ship_type_id: 500,
+            items: [{ item_type_id: 9002 }]
+          },
+          attackers: [],
+          zkb: {}
+        }
+      ],
+      namesByTypeId: new Map([
+        [500, "Drake"],
+        [9002, "Covert Cynosural Field Generator I"]
+      ])
+    });
+
+    expect(result.get("Drake")).toEqual({ cynoCapable: false, cynoChance: 0 });
+  });
+});
