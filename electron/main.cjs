@@ -9,7 +9,7 @@ const devBaseUrl = process.env.VITE_DEV_SERVER_URL || "";
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1380,
+    width: 1080,
     height: 920,
     minWidth: 980,
     minHeight: 680,

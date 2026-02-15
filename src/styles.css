@@ -31,7 +31,7 @@ body {
 .app {
   position: relative;
   z-index: 1;
-  max-width: 1160px;
+  max-width: 1060px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -123,6 +123,31 @@ body {
 
 .settings-button:hover {
   background: #3a4960;
+}
+
+.controls-panel {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.controls-panel-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  -webkit-app-region: no-drag;
+}
+
+.bottom-debug-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #d0dae6;
+  font-size: 0.84rem;
+  white-space: nowrap;
+}
+
+.bottom-debug-toggle input[type="checkbox"] {
+  margin: 0;
 }
 
 .window-controls {
@@ -272,6 +297,7 @@ body {
   border-bottom: 1px solid #2a3340;
   padding-bottom: 6px;
   font-size: 0.86rem;
+  cursor: pointer;
 }
 
 .fleet-summary-line:last-child {
@@ -1007,10 +1033,13 @@ body {
 }
 
 .app-version {
-  margin-top: 10px;
-  text-align: right;
+  position: fixed;
+  right: 14px;
+  bottom: 12px;
   color: #7f90a6;
   font-size: 0.76rem;
+  z-index: 30;
+  pointer-events: none;
 }
 
 .manual-entry-form {

@@ -91,6 +91,7 @@ const ROLE_ICON_TYPE_IDS: Record<string, number> = {
 const DEEP_HISTORY_MAX_PAGES = 20;
 const TOP_SHIP_CANDIDATES = 5;
 const DETAIL_FIT_CANDIDATES = 3;
+const FAST_SCROLL_DURATION_MS = 120;
 
 export default function App() {
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
@@ -105,6 +106,7 @@ export default function App() {
   const [networkNotice, setNetworkNotice] = useState<string>("");
   const [debugLines, setDebugLines] = useState<string[]>([]);
   const pasteTrapRef = useRef<HTMLTextAreaElement>(null);
+  const debugSectionRef = useRef<HTMLElement>(null);
   const copyableFleetCount = pilotCards.filter((pilot) => Number.isFinite(pilot.characterId)).length;
 
   const applyPaste = (text: string) => {
@@ -125,14 +127,20 @@ export default function App() {
   };
 
   const logDebug = (message: string, data?: unknown) => {
-    if (!debugEnabled) {
-      return;
-    }
     const suffix = data !== undefined ? ` | ${safeStringify(data)}` : "";
     const line = `[${new Date().toLocaleTimeString()}] ${message}${suffix}`;
     setDebugLines((prev) => [line, ...prev].slice(0, 250));
-    console.debug(line);
+    if (debugEnabled) {
+      console.debug(line);
+    }
   };
+
+  useEffect(() => {
+    if (!debugEnabled) {
+      return;
+    }
+    debugSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [debugEnabled]);
 
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
@@ -522,33 +530,6 @@ export default function App() {
 
       <header className="toolbar">
         <h1>EVE Intel Browser</h1>
-        <div className="settings">
-          <label className="setting-inline">
-            <input
-              type="checkbox"
-              checked={debugEnabled}
-              onChange={(event) => setDebugEnabled(event.target.checked)}
-            />
-            Debug logging
-          </label>
-          <button
-            type="button"
-            className="settings-button"
-            onClick={async () => {
-              await clearIntelCache();
-              logDebug("Cache wiped by user");
-              setNetworkNotice("Cache wiped.");
-              const payload = (lastPasteRaw || manualEntry).trim();
-              if (payload) {
-                applyPaste(payload);
-              } else {
-                setPilotCards([]);
-              }
-            }}
-          >
-            Wipe Cache
-          </button>
-        </div>
         {isDesktopApp ? (
           <div className="window-controls">
             <button
@@ -626,6 +607,7 @@ export default function App() {
               </div>
               <ul className="fleet-summary-list">
                 {pilotCards.map((pilot) => {
+                  const detailAnchorId = pilotDetailAnchorId(pilot);
                   const topShip = pilot.predictedShips[0];
                   const topFit = topShip?.shipTypeId
                     ? pilot.fitCandidates.find((entry) => entry.shipTypeId === topShip.shipTypeId)
@@ -639,6 +621,16 @@ export default function App() {
                     <li
                       className={`fleet-summary-line fleet-summary-grid${topShipCyno ? " cyno-highlight" : ""}`}
                       key={`summary-${pilot.parsedEntry.pilotName.toLowerCase()}`}
+                      onClick={(event) => {
+                        const target = event.target as HTMLElement;
+                        if (target.closest("a, button")) {
+                          return;
+                        }
+                        const detail = document.getElementById(detailAnchorId);
+                        if (detail) {
+                          smoothScrollToElement(detail, FAST_SCROLL_DURATION_MS);
+                        }
+                      }}
                     >
                       <span className="fleet-col fleet-col-pilot">
                         {pilot.characterId ? (
@@ -740,7 +732,11 @@ export default function App() {
           ) : null}
           <section className="cards">
             {pilotCards.map((pilot) => (
-              <article className="pilot-card" key={pilot.parsedEntry.pilotName.toLowerCase()}>
+              <article
+                className="pilot-card"
+                id={pilotDetailAnchorId(pilot)}
+                key={pilot.parsedEntry.pilotName.toLowerCase()}
+              >
               <div className={`player-card ${threatClass(pilot.stats?.danger)}`}>
                 <div
                   className={`fetch-progress-line detail-progress${isPilotFetching(pilot) ? " active" : ""}`}
@@ -1024,8 +1020,37 @@ export default function App() {
           <button type="submit" className="manual-entry-submit">Submit</button>
         </form>
       </section>
+      <section className="raw controls-panel">
+        <div className="controls-panel-row">
+          <button
+            type="button"
+            className="settings-button"
+            onClick={async () => {
+              await clearIntelCache();
+              logDebug("Cache wiped by user");
+              setNetworkNotice("Cache wiped.");
+              const payload = (lastPasteRaw || manualEntry).trim();
+              if (payload) {
+                applyPaste(payload);
+              } else {
+                setPilotCards([]);
+              }
+            }}
+          >
+            Wipe Cache
+          </button>
+          <label className="bottom-debug-toggle">
+            <input
+              type="checkbox"
+              checked={debugEnabled}
+              onChange={(event) => setDebugEnabled(event.target.checked)}
+            />
+            Debug logging
+          </label>
+        </div>
+      </section>
       {debugEnabled ? (
-        <section className="raw">
+        <section className="raw" ref={debugSectionRef}>
           <h3>Debug Log</h3>
           <pre>{debugLines.length > 0 ? debugLines.join("\n") : "(no events yet)"}</pre>
         </section>
@@ -1551,4 +1576,34 @@ function persistDebugEnabled(enabled: boolean): void {
   } catch {
     // Ignore storage failures.
   }
+}
+
+function pilotDetailAnchorId(pilot: PilotCard): string {
+  const stableKey = pilot.characterId
+    ? `char-${pilot.characterId}`
+    : pilot.parsedEntry.pilotName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  return `pilot-detail-${stableKey}`;
+}
+
+function smoothScrollToElement(element: HTMLElement, durationMs: number): void {
+  const startY = window.scrollY;
+  const targetY = startY + element.getBoundingClientRect().top;
+  const delta = targetY - startY;
+  if (Math.abs(delta) < 2) {
+    return;
+  }
+
+  const start = performance.now();
+  const duration = Math.max(40, durationMs);
+  const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+  const tick = (now: number) => {
+    const progress = Math.min(1, (now - start) / duration);
+    window.scrollTo(0, startY + delta * easeOutCubic(progress));
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    }
+  };
+
+  requestAnimationFrame(tick);
 }
