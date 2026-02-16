@@ -8,6 +8,7 @@ declare global {
     availableVersion: string | null;
     downloadedVersion: string | null;
     error: string | null;
+    errorDetails: string | null;
   };
 
   interface Window {

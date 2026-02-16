@@ -151,6 +151,11 @@ body {
   overflow: hidden;
 }
 
+.updater-status-right {
+  margin-left: auto;
+  text-align: right;
+}
+
 .updater-checking,
 .updater-downloading {
   color: #d1bb7c;

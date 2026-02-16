@@ -106,6 +106,7 @@ export default function App() {
   const [pilotCards, setPilotCards] = useState<PilotCard[]>([]);
   const [networkNotice, setNetworkNotice] = useState<string>("");
   const [debugLines, setDebugLines] = useState<string[]>([]);
+  const updaterLogSignatureRef = useRef<string>("");
   const pasteTrapRef = useRef<HTMLTextAreaElement>(null);
   const debugSectionRef = useRef<HTMLElement>(null);
   const copyableFleetCount = pilotCards.filter((pilot) => Number.isFinite(pilot.characterId)).length;
@@ -215,6 +216,34 @@ export default function App() {
     }
     const unsubscribe = window.eveIntelDesktop.onUpdaterState((state) => {
       setUpdaterState(state);
+
+      const signature = `${state.status}|${state.progress}|${state.availableVersion}|${state.downloadedVersion}|${state.error}|${state.errorDetails ?? ""}`;
+      if (updaterLogSignatureRef.current === signature) {
+        return;
+      }
+      updaterLogSignatureRef.current = signature;
+
+      if (state.status === "error") {
+        logDebug("Updater error", {
+          message: state.error,
+          details: state.errorDetails
+        });
+        return;
+      }
+
+      if (
+        state.status === "checking" ||
+        state.status === "downloading" ||
+        state.status === "downloaded" ||
+        state.status === "up-to-date"
+      ) {
+        logDebug("Updater state", {
+          status: state.status,
+          progress: state.progress,
+          availableVersion: state.availableVersion,
+          downloadedVersion: state.downloadedVersion
+        });
+      }
     });
     return unsubscribe;
   }, []);
@@ -583,6 +612,26 @@ export default function App() {
 
       <header className="toolbar">
         <h1>EVE Intel Browser</h1>
+        <p
+          style={{
+            margin: 0,
+            fontSize: "0.86rem",
+            color: "#d7c27d",
+            textAlign: "right",
+            whiteSpace: "nowrap"
+          }}
+        >
+          Like the app? Donate ISK to{" "}
+          <a
+            href="https://zkillboard.com/character/93227004/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#f6d77d", fontWeight: 700, textDecoration: "none" }}
+          >
+            Lukas Nemec
+          </a>
+          .
+        </p>
       </header>
 
       {networkNotice ? <p className="notice notice-inline">{networkNotice}</p> : null}
@@ -1063,37 +1112,23 @@ export default function App() {
             />
             Debug logging
           </label>
-        </div>
-        {isDesktopApp ? (
-          <div className="controls-panel-row updater-row">
-            <span className={`updater-status updater-${updaterState?.status ?? "idle"}`}>
+          {isDesktopApp ? (
+            <span className={`updater-status updater-status-right updater-${updaterState?.status ?? "idle"}`}>
               {formatUpdaterStatus(updaterState)}
             </span>
+          ) : null}
+          {isDesktopApp && updaterState?.status === "downloaded" ? (
             <button
               type="button"
               className="settings-button"
-              onClick={async () => {
-                const result = await window.eveIntelDesktop?.checkForUpdates();
-                if (result && !result.ok && result.reason && result.reason !== "dev") {
-                  setNetworkNotice(`Update check failed: ${result.reason}`);
-                }
+              onClick={() => {
+                void window.eveIntelDesktop?.quitAndInstallUpdate();
               }}
             >
-              Check Updates
+              Restart to Update
             </button>
-            {updaterState?.status === "downloaded" ? (
-              <button
-                type="button"
-                className="settings-button"
-                onClick={() => {
-                  void window.eveIntelDesktop?.quitAndInstallUpdate();
-                }}
-              >
-                Restart to Update
-              </button>
-            ) : null}
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </section>
       {debugEnabled ? (
         <section className="raw" ref={debugSectionRef}>

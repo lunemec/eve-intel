@@ -1,6 +1,6 @@
 {
   "name": "eve-intel-browser",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "private": true,
   "main": "electron/main.cjs",
   "type": "module",
@@ -62,15 +62,15 @@
     ],
     "win": {
       "icon": "build/icon.ico",
-      "signAndEditExecutable": false,
+      "artifactName": "EVE-Intel-Setup-${version}.${ext}",
       "target": [
         "nsis"
       ]
     },
     "nsis": {
-      "oneClick": false,
+      "oneClick": true,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": false
     }
   }
 }

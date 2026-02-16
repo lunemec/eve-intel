@@ -8,14 +8,21 @@ let clipboardInterval = null;
 let lastClipboardText = "";
 const devBaseUrl = process.env.VITE_DEV_SERVER_URL || "";
 let updaterCheckInterval = null;
+let updateDownloaded = false;
+let quittingForInstall = false;
 let updaterState = {
   status: "idle",
   progress: 0,
   version: app.getVersion(),
   availableVersion: null,
   downloadedVersion: null,
-  error: null
+  error: null,
+  errorDetails: null
 };
+const appIconPath =
+  process.platform === "win32"
+    ? path.join(__dirname, "..", "build", "icon.ico")
+    : path.join(__dirname, "..", "build", "icon.png");
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -25,7 +32,7 @@ function createWindow() {
     minHeight: 680,
     frame: false,
     autoHideMenuBar: true,
-    icon: path.join(__dirname, "..", "build", "icon.png"),
+    icon: appIconPath,
     backgroundColor: "#000000",
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
@@ -114,10 +121,11 @@ function setupAutoUpdater() {
   }
 
   autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
+  autoUpdater.autoInstallOnAppQuit = false;
 
   autoUpdater.on("checking-for-update", () => {
-    sendUpdaterState({ status: "checking", error: null, progress: 0 });
+    updateDownloaded = false;
+    sendUpdaterState({ status: "checking", error: null, errorDetails: null, progress: 0 });
   });
 
   autoUpdater.on("update-available", (info) => {
@@ -125,6 +133,7 @@ function setupAutoUpdater() {
       status: "downloading",
       progress: 0,
       error: null,
+      errorDetails: null,
       availableVersion: info?.version ?? null
     });
   });
@@ -133,42 +142,51 @@ function setupAutoUpdater() {
     sendUpdaterState({
       status: "downloading",
       progress: Math.max(0, Math.min(100, Math.round(progress?.percent ?? 0))),
-      error: null
+      error: null,
+      errorDetails: null
     });
   });
 
   autoUpdater.on("update-not-available", () => {
+    updateDownloaded = false;
     sendUpdaterState({
       status: "up-to-date",
       progress: 100,
       error: null,
+      errorDetails: null,
       availableVersion: null,
       downloadedVersion: null
     });
   });
 
   autoUpdater.on("update-downloaded", (info) => {
+    updateDownloaded = true;
     sendUpdaterState({
       status: "downloaded",
       progress: 100,
       error: null,
+      errorDetails: null,
       downloadedVersion: info?.version ?? null
     });
   });
 
   autoUpdater.on("error", (error) => {
+    const details = formatUpdaterError(error);
     sendUpdaterState({
       status: "error",
       error: error?.message ?? String(error),
+      errorDetails: details,
       progress: 0
     });
   });
 
   setTimeout(() => {
     void autoUpdater.checkForUpdates().catch((error) => {
+      const details = formatUpdaterError(error);
       sendUpdaterState({
         status: "error",
         error: error?.message ?? String(error),
+        errorDetails: details,
         progress: 0
       });
     });
@@ -176,9 +194,11 @@ function setupAutoUpdater() {
 
   updaterCheckInterval = setInterval(() => {
     void autoUpdater.checkForUpdates().catch((error) => {
+      const details = formatUpdaterError(error);
       sendUpdaterState({
         status: "error",
         error: error?.message ?? String(error),
+        errorDetails: details,
         progress: 0
       });
     });
@@ -193,6 +213,9 @@ function stopAutoUpdater() {
 }
 
 app.whenReady().then(() => {
+  if (process.platform === "win32") {
+    app.setAppUserModelId("com.eveintel.app");
+  }
   createWindow();
   startClipboardWatch();
   setupAutoUpdater();
@@ -202,6 +225,15 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+});
+
+app.on("before-quit", (event) => {
+  if (isDev || !updateDownloaded || quittingForInstall) {
+    return;
+  }
+  quittingForInstall = true;
+  event.preventDefault();
+  autoUpdater.quitAndInstall(true, false);
 });
 
 app.on("window-all-closed", () => {
@@ -258,8 +290,9 @@ ipcMain.handle("updater:check-now", async () => {
     await autoUpdater.checkForUpdates();
     return { ok: true };
   } catch (error) {
+    const details = formatUpdaterError(error);
     const message = error?.message ?? String(error);
-    sendUpdaterState({ status: "error", error: message, progress: 0 });
+    sendUpdaterState({ status: "error", error: message, errorDetails: details, progress: 0 });
     return { ok: false, reason: message };
   }
 });
@@ -268,7 +301,8 @@ ipcMain.handle("updater:quit-and-install", () => {
   if (isDev) {
     return false;
   }
-  autoUpdater.quitAndInstall(false, true);
+  quittingForInstall = true;
+  autoUpdater.quitAndInstall(true, true);
   return true;
 });
 
@@ -280,4 +314,27 @@ function isInternalUrl(url) {
     return url.startsWith(devBaseUrl);
   }
   return url.startsWith("file://");
+}
+
+function formatUpdaterError(error) {
+  if (!error) {
+    return null;
+  }
+
+  const fields = {
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+    code: error.code,
+    statusCode: error.statusCode,
+    url: error.url,
+    method: error.method,
+    responseHeaders: error.responseHeaders
+  };
+
+  try {
+    return JSON.stringify(fields, null, 2);
+  } catch {
+    return String(error);
+  }
 }

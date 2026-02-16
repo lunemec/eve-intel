@@ -8,6 +8,8 @@
 
 Browser-first EVE Online intel app inspired by EVE Squadron / EVEOS workflows, with an optional Electron desktop wrapper for better clipboard automation.
 
+**Like the app?** Donate ISK to [Lukas Nemec](https://zkillboard.com/character/93227004/).
+
 ## Overview
 
 This project provides:

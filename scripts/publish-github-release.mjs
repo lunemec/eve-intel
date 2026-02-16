@@ -23,7 +23,11 @@ const targetBuilds = [
     required: [
       {
         name: "Windows installer (.exe)",
-        match: (fileName) => fileName.includes(` ${version}.`) && fileName.endsWith(".exe")
+        match: (fileName) => fileNameHasVersion(fileName, version) && fileName.endsWith(".exe")
+      },
+      {
+        name: "Windows installer blockmap (.exe.blockmap)",
+        match: (fileName) => fileNameHasVersion(fileName, version) && fileName.endsWith(".exe.blockmap")
       }
     ]
   },
@@ -69,6 +73,21 @@ let releaseFiles = await collectReleaseFiles(releaseDir);
 const requiredTargets = requireAllTargets
   ? targetBuilds
   : targetBuilds.filter((target) => target.supportedHosts.includes(process.platform));
+
+if (requiredTargets.some((target) => target.id === "windows")) {
+  const latestInfo = await readLatestYmlInfo();
+  if (!latestInfo || latestInfo.version !== version || !fileNameHasVersion(latestInfo.path ?? "", version)) {
+    log(
+      `latest.yml is missing or stale (found version=${latestInfo?.version ?? "none"}, path=${latestInfo?.path ?? "none"}). Rebuilding Windows artifacts...`
+    );
+    if (!targetBuilds[0].supportedHosts.includes(process.platform)) {
+      fail("latest.yml is stale for Windows updater metadata, but current host cannot build Windows artifacts.");
+    }
+    await runNpmScript(targetBuilds[0].script);
+    releaseFiles = await collectReleaseFiles(releaseDir);
+  }
+}
+
 let missing = evaluateMissingTargets(releaseFiles, requiredTargets);
 
 if (missing.length > 0) {
@@ -143,6 +162,21 @@ async function collectReleaseFiles(dir) {
     .sort((a, b) => a.localeCompare(b));
 }
 
+async function readLatestYmlInfo() {
+  const latestPath = path.join(releaseDir, "latest.yml");
+  if (!existsSync(latestPath)) {
+    return null;
+  }
+
+  const content = await readFile(latestPath, "utf8");
+  const versionMatch = content.match(/^version:\s*(.+)$/m);
+  const pathMatch = content.match(/^path:\s*(.+)$/m);
+  return {
+    version: versionMatch ? versionMatch[1].trim() : null,
+    path: pathMatch ? pathMatch[1].trim() : null
+  };
+}
+
 function evaluateMissingTargets(files, targets) {
   return targets.filter((target) =>
     target.required.some((rule) => !files.some((file) => rule.match(path.basename(file))))
@@ -160,6 +194,7 @@ function filterUploadFiles(files, currentVersion) {
     }
     return (
       name.endsWith(".exe") ||
+      name.endsWith(".blockmap") ||
       name.endsWith(".AppImage") ||
       name.endsWith(".dmg") ||
       name.endsWith(".zip") ||
