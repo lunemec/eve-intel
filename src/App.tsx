@@ -26,6 +26,8 @@ import {
   deriveFitCandidates,
   derivePilotStats,
   deriveShipPredictions,
+  summarizeEvidenceCoverage,
+  summarizeTopEvidenceShips,
   type FitCandidate,
   type PilotStats,
   type ShipPrediction
@@ -1279,15 +1281,21 @@ function buildDerivedInferenceKey(params: {
   losses: ZkillKillmail[];
 }): string {
   const killHead = params.kills.slice(0, 8).map((k) => k.killmail_id).join(",");
+  const killTail = params.kills.slice(-8).map((k) => k.killmail_id).join(",");
   const lossHead = params.losses.slice(0, 8).map((l) => l.killmail_id).join(",");
+  const lossTail = params.losses.slice(-8).map((l) => l.killmail_id).join(",");
   return [
-    "derived.inference.v6",
+    "derived.inference.v7",
     params.characterId,
     params.lookbackDays,
     params.topShips,
     params.explicitShip ?? "-",
+    params.kills.length,
+    params.losses.length,
     killHead,
-    lossHead
+    killTail,
+    lossHead,
+    lossTail
   ].join("|");
 }
 
@@ -1298,6 +1306,28 @@ async function recomputeDerivedInference(params: {
   cacheKey: string;
   debugLog?: (message: string, data?: unknown) => void;
 }): Promise<DerivedInference> {
+  const evidenceCoverage = summarizeEvidenceCoverage(
+    params.row.characterId!,
+    params.row.inferenceKills,
+    params.row.inferenceLosses
+  );
+  params.debugLog?.("Inference evidence coverage", {
+    pilot: params.row.parsedEntry.pilotName,
+    ...evidenceCoverage
+  });
+
+  const topEvidence = summarizeTopEvidenceShips({
+    characterId: params.row.characterId!,
+    kills: params.row.inferenceKills,
+    losses: params.row.inferenceLosses,
+    shipNamesByTypeId: params.namesById,
+    limit: 10
+  });
+  params.debugLog?.("Inference top evidence ships", {
+    pilot: params.row.parsedEntry.pilotName,
+    ships: topEvidence
+  });
+
   const predictedShips = deriveShipPredictions({
     parsedEntry: params.row.parsedEntry,
     characterId: params.row.characterId!,
@@ -1364,6 +1394,15 @@ async function recomputeDerivedInference(params: {
     fitCandidates,
     cynoRisk
   };
+  params.debugLog?.("Inference ranked ships", {
+    pilot: params.row.parsedEntry.pilotName,
+    ranked: predictedShipsWithCyno.map((ship) => ({
+      ship: ship.shipName,
+      probability: ship.probability,
+      source: ship.source,
+      reason: ship.reason
+    }))
+  });
   await setCachedAsync(params.cacheKey, derived, 1000 * 60 * 15, 1000 * 60 * 5);
   return derived;
 }

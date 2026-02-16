@@ -385,6 +385,61 @@ describe("deriveShipPredictions", () => {
     expect(result).toHaveLength(1);
     expect(result[0].shipName).toBe("Rifter");
   });
+
+  it("lets high-volume older activity outweigh a few very recent kills", () => {
+    const characterId = 2008;
+    const parsedEntry: ParsedPilotInput = {
+      pilotName: "Volume Pilot",
+      sourceLine: "Volume Pilot",
+      parseConfidence: 0.9,
+      shipSource: "inferred"
+    };
+
+    const now = Date.now();
+    const daysAgo = (days: number) => new Date(now - days * 24 * 60 * 60 * 1000).toISOString();
+    const kills: ZkillKillmail[] = [];
+
+    // A few very recent Vargur kills.
+    for (let i = 0; i < 3; i += 1) {
+      kills.push(
+        makeKillmail({
+          id: 70000 + i,
+          time: daysAgo(i + 1),
+          attackerCharacterId: characterId,
+          attackerShipTypeId: 19726 // Vargur
+        })
+      );
+    }
+
+    // Many older Daredevil kills (around one month old).
+    for (let i = 0; i < 30; i += 1) {
+      kills.push(
+        makeKillmail({
+          id: 71000 + i,
+          time: daysAgo(25 + i),
+          attackerCharacterId: characterId,
+          attackerShipTypeId: 17922 // Daredevil
+        })
+      );
+    }
+
+    const result = deriveShipPredictions({
+      parsedEntry,
+      characterId,
+      kills,
+      losses: [],
+      lookbackDays: 7,
+      topShips: 3,
+      shipNamesByTypeId: new Map([
+        [19726, "Vargur"],
+        [17922, "Daredevil"]
+      ])
+    });
+
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0].shipName).toBe("Daredevil");
+    expect(result[0].probability).toBeGreaterThan(result.find((row) => row.shipName === "Vargur")?.probability ?? 0);
+  });
 });
 
 describe("collectShipTypeIdsForNaming", () => {

@@ -48,11 +48,15 @@ export type PilotStats = {
 export type ScoringWeights = {
   lossEventWeight: number;
   halfLifeDivisor: number;
+  longTailWeight?: number;
+  longTailDays?: number;
 };
 
 const DEFAULT_WEIGHTS: ScoringWeights = {
-  lossEventWeight: 1.15,
-  halfLifeDivisor: 2
+  lossEventWeight: 1.0,
+  halfLifeDivisor: 2,
+  longTailWeight: 0.2,
+  longTailDays: 30
 };
 const MIN_RECENCY_WEIGHT = 1e-6;
 const CAPSULE_TYPE_IDS = new Set([670, 33328]);
@@ -91,6 +95,15 @@ type ScoredShip = {
   score: number;
   source: "explicit" | "inferred";
   reason: string[];
+};
+
+export type EvidenceCoverage = {
+  totalKills: number;
+  totalLosses: number;
+  killRowsWithMatchedAttackerShip: number;
+  killRowsWithoutAttackers: number;
+  killRowsWithAttackersButNoCharacterMatch: number;
+  lossRowsWithVictimShip: number;
 };
 
 export function derivePilotStats(
@@ -280,6 +293,81 @@ export function deriveFitCandidates(params: {
   return fits;
 }
 
+export function summarizeEvidenceCoverage(
+  characterId: number,
+  kills: ZkillKillmail[],
+  losses: ZkillKillmail[]
+): EvidenceCoverage {
+  let killRowsWithMatchedAttackerShip = 0;
+  let killRowsWithoutAttackers = 0;
+  let killRowsWithAttackersButNoCharacterMatch = 0;
+
+  for (const kill of kills) {
+    const attackers = kill.attackers ?? [];
+    if (attackers.length === 0) {
+      killRowsWithoutAttackers += 1;
+      continue;
+    }
+    const matched = attackers.find(
+      (entry) => entry.character_id === characterId && typeof entry.ship_type_id === "number"
+    );
+    if (matched) {
+      killRowsWithMatchedAttackerShip += 1;
+    } else {
+      killRowsWithAttackersButNoCharacterMatch += 1;
+    }
+  }
+
+  let lossRowsWithVictimShip = 0;
+  for (const loss of losses) {
+    if (
+      (loss.victim.character_id === characterId || loss.victim.character_id === undefined) &&
+      typeof loss.victim.ship_type_id === "number"
+    ) {
+      lossRowsWithVictimShip += 1;
+    }
+  }
+
+  return {
+    totalKills: kills.length,
+    totalLosses: losses.length,
+    killRowsWithMatchedAttackerShip,
+    killRowsWithoutAttackers,
+    killRowsWithAttackersButNoCharacterMatch,
+    lossRowsWithVictimShip
+  };
+}
+
+export function summarizeTopEvidenceShips(params: {
+  characterId: number;
+  kills: ZkillKillmail[];
+  losses: ZkillKillmail[];
+  shipNamesByTypeId: Map<number, string>;
+  limit?: number;
+}): Array<{ shipTypeId: number; shipName: string; kills: number; losses: number; total: number }> {
+  const bucket = new Map<number, { kills: number; losses: number }>();
+  for (const ev of collectEvidence(params.characterId, params.kills, params.losses)) {
+    const current = bucket.get(ev.shipTypeId) ?? { kills: 0, losses: 0 };
+    if (ev.eventType === "kill") {
+      current.kills += 1;
+    } else {
+      current.losses += 1;
+    }
+    bucket.set(ev.shipTypeId, current);
+  }
+
+  return [...bucket.entries()]
+    .map(([shipTypeId, counts]) => ({
+      shipTypeId,
+      shipName: params.shipNamesByTypeId.get(shipTypeId) ?? `Type ${shipTypeId}`,
+      kills: counts.kills,
+      losses: counts.losses,
+      total: counts.kills + counts.losses
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, Math.max(1, params.limit ?? 8));
+}
+
 function buildEftSections(
   items: Array<{ item_type_id: number; flag?: number }>,
   namesByTypeId: Map<number, string>
@@ -354,14 +442,17 @@ function scoreShips(
 ): ScoredShip[] {
   const byShip = new Map<number, { score: number; kills: number; losses: number }>();
   const now = Date.now();
+  const longTailWeight: number = weights.longTailWeight ?? DEFAULT_WEIGHTS.longTailWeight ?? 0.2;
+  const longTailDays = Math.max(1, weights.longTailDays ?? DEFAULT_WEIGHTS.longTailDays ?? 30);
 
   for (const ev of evidence) {
     const ageMs = Math.max(0, now - ev.occurredAt);
     const ageDays = ageMs / (1000 * 60 * 60 * 24);
     const recencyRaw = Math.exp(-ageDays / Math.max(1, lookbackDays / Math.max(1, weights.halfLifeDivisor)));
     const recency = Math.max(MIN_RECENCY_WEIGHT, recencyRaw);
+    const longTail = 1 / (1 + ageDays / longTailDays);
     const eventWeight = ev.eventType === "loss" ? weights.lossEventWeight : 1.0;
-    const increment = recency * eventWeight;
+    const increment = eventWeight * (recency + longTailWeight * longTail);
 
     const current = byShip.get(ev.shipTypeId) ?? { score: 0, kills: 0, losses: 0 };
     current.score += increment;

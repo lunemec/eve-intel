@@ -9,7 +9,6 @@ const ESI_DATASOURCE = "tranquility";
 const KILLMAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 const MAX_HYDRATE = 50;
 const HYDRATE_CONCURRENCY = 5;
-const ZKILL_PAGE_SIZE_HINT = 200;
 
 export type ZkillAttacker = {
   character_id?: number;
@@ -180,12 +179,15 @@ async function fetchLatestPaged(
     const cacheKey = `eve-intel.cache.zkill.${side}.latest.${characterId}.page.${page}`;
     const url = `${ZKILL_BASE}/${side}/characterID/${characterId}/page/${page}/`;
     const rows = await fetchZkillList(url, cacheKey, signal, onRetry);
+    const beforeCount = unique.size;
 
     for (const row of rows) {
       unique.set(row.killmail_id, row);
     }
 
-    if (rows.length === 0 || rows.length < ZKILL_PAGE_SIZE_HINT) {
+    // Stop only when endpoint is exhausted (no rows), or when paging no longer yields new killmails.
+    // Some zKill list endpoints are effectively capped per page well below 200.
+    if (rows.length === 0 || unique.size === beforeCount) {
       break;
     }
   }
@@ -257,7 +259,24 @@ async function parseZkillResponse(
   }
   const normalized = normalizeZkillArray(payload);
   if (normalized.length > 0) {
-    return normalized;
+    const hydrationCandidates = findHydrationCandidates(payload);
+    if (hydrationCandidates.length === 0) {
+      return normalized;
+    }
+
+    const hydrated = await hydrateKillmailSummaries(hydrationCandidates.slice(0, MAX_HYDRATE), signal, onRetry);
+    if (hydrated.length === 0) {
+      return normalized;
+    }
+
+    const merged = new Map<number, ZkillKillmail>();
+    for (const row of normalized) {
+      merged.set(row.killmail_id, row);
+    }
+    for (const row of hydrated) {
+      merged.set(row.killmail_id, row);
+    }
+    return [...merged.values()];
   }
 
   const summaryRows = (payload as unknown[]).filter(
@@ -275,6 +294,35 @@ async function parseZkillResponse(
   }
 
   return hydrateKillmailSummaries(summaryRows.slice(0, MAX_HYDRATE), signal, onRetry);
+}
+
+function findHydrationCandidates(
+  payload: unknown
+): Array<{ killmail_id: number; zkb?: { hash?: string; totalValue?: number } }> {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  return payload.filter(
+    (entry): entry is { killmail_id: number; zkb?: { hash?: string; totalValue?: number } } => {
+      if (!entry || typeof entry !== "object") {
+        return false;
+      }
+      const row = entry as Partial<ZkillKillmail>;
+      if (typeof row.killmail_id !== "number" || typeof row.zkb?.hash !== "string") {
+        return false;
+      }
+
+      const victimMissingShip = typeof row.victim?.ship_type_id !== "number";
+      const attackers = row.attackers;
+      const attackersMissingIdentity =
+        !Array.isArray(attackers) ||
+        attackers.length === 0 ||
+        attackers.every((attacker) => typeof attacker.character_id !== "number" || typeof attacker.ship_type_id !== "number");
+
+      return victimMissingShip || attackersMissingIdentity;
+    }
+  );
 }
 
 function normalizeZkillArray(payload: unknown[]): ZkillKillmail[] {

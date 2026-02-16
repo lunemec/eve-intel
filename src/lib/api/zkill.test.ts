@@ -61,6 +61,52 @@ describe("zkill API client", () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  it("hydrates partial killmail rows missing attacker/victim identity", async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("zkillboard.com/api")) {
+        return {
+          ok: true,
+          json: async () => [
+            {
+              killmail_id: 778,
+              killmail_time: "2025-10-31T00:00:00Z",
+              victim: {},
+              attackers: [],
+              zkb: { hash: "def456", totalValue: 2000000 }
+            }
+          ]
+        } as Response;
+      }
+
+      if (url.includes("/killmails/778/def456/")) {
+        return {
+          ok: true,
+          json: async () => ({
+            killmail_id: 778,
+            killmail_time: "2025-10-31T00:00:00Z",
+            victim: { character_id: 1, ship_type_id: 2 },
+            attackers: [{ character_id: 3, ship_type_id: 4 }]
+          })
+        } as Response;
+      }
+
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+    globalThis.fetch = fetchMock;
+
+    try {
+      const data = await fetchRecentKills(12345, 7);
+      expect(data).toHaveLength(1);
+      expect(data[0].victim.ship_type_id).toBe(2);
+      expect(data[0].attackers?.[0]?.character_id).toBe(3);
+      expect(data[0].attackers?.[0]?.ship_type_id).toBe(4);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });
 
 describe("lookback clamping", () => {
@@ -137,6 +183,12 @@ describe("latest endpoint", () => {
           ]
         } as Response;
       }
+      if (url.includes("/page/3/")) {
+        return {
+          ok: true,
+          json: async () => []
+        } as Response;
+      }
       throw new Error(`Unexpected URL: ${url}`);
     });
     globalThis.fetch = fetchMock;
@@ -144,9 +196,10 @@ describe("latest endpoint", () => {
     try {
       const data = await fetchLatestKillsPaged(321, 4);
       expect(data).toHaveLength(201);
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
       expect(String(fetchMock.mock.calls[0]?.[0])).toContain("/kills/characterID/321/page/1/");
       expect(String(fetchMock.mock.calls[1]?.[0])).toContain("/kills/characterID/321/page/2/");
+      expect(String(fetchMock.mock.calls[2]?.[0])).toContain("/kills/characterID/321/page/3/");
     } finally {
       globalThis.fetch = originalFetch;
     }
