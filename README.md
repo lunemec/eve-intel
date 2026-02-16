@@ -20,6 +20,7 @@ This project provides:
 - Cyno and bait risk signals
 - Role badges/icons (bubble, HIC, boosh, logi class, etc.)
 - Fit inference from recent losses in EFT format
+- Dogma-based combat estimates per inferred fit (DPS, alpha, damage split, range, EHP, resists)
 - Local cache for faster repeated lookups
 - Optional desktop build (`.exe`) with native clipboard polling
 
@@ -89,6 +90,28 @@ For predicted ships, fits are inferred from pilot losses on that hull:
 
 - fit is unknown
 - ship is capsule/pod-like
+
+## Dogma-Based Combat Estimates
+
+When fit/module evidence is available, each fit row now includes:
+
+- `DPS` and `alpha`
+- damage distribution (`EM / TH / KI / EX`)
+- engagement range (`optimal`, `falloff`, effective band)
+- EHP estimate and resist profile (`shield / armor / hull`)
+- confidence score + assumptions tooltip
+
+Data source/model:
+
+- Build-time static dogma pack generated from Fuzzwork static data (CSV tables)
+- Runtime calculator uses conservative defaults whenever module/ammo/script detail is incomplete
+- Estimates are directional and not guaranteed pyfa-exact
+
+If dogma data is unavailable at runtime:
+
+- fit still renders
+- combat metrics panel shows `Unavailable`
+- debug log records loader error/version context
 
 ## Cyno + Bait Risk
 
@@ -243,6 +266,24 @@ Output:
 
 - `release/win-unpacked/`
 
+## Static Dogma Data Pipeline
+
+Manual commands:
+
+```bash
+npm run sde:sync
+npm run sde:compile
+npm run sde:prepare
+```
+
+Behavior:
+
+- `sde:sync` downloads/refreshes Fuzzwork raw CSV into `data/sde/raw/<version>/` and updates `data/sde/.manifest.json`
+- `sde:compile` compiles a runtime pack into:
+  - `public/data/dogma-pack.<version>.json`
+  - `public/data/dogma-manifest.json`
+- `prebuild` runs `sde:prepare` automatically
+
 Installer (`.exe`):
 
 ```bash
@@ -355,6 +396,10 @@ npm test -- --run -u
 ## Scripts Reference
 
 - `npm run dev` - web dev server
+- `npm run sde:sync` - refresh cached static dogma raw data
+- `npm run sde:compile` - compile runtime dogma pack
+- `npm run sde:prepare` - sync + compile dogma pack
+- `npm run sde:refresh` - alias of `sde:prepare`
 - `npm run build` - TypeScript build + Vite build
 - `npm run preview` - preview built web output
 - `npm run test` - run tests

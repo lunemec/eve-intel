@@ -732,10 +732,11 @@ body {
 }
 
 .affiliation-logo {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 999px;
   border: 1px solid #ffffff1a;
+  margin-right: 6px;
 }
 
 .threat-indicator {
@@ -974,6 +975,158 @@ body {
   border: 1px solid #273544;
   border-radius: 4px;
   padding: 6px;
+}
+
+.ship-metrics {
+  margin-top: 6px;
+  border: 1px solid #2a394a;
+  border-radius: 4px;
+  background: #0b1219;
+  padding: 7px;
+  display: grid;
+  gap: 6px;
+  min-height: 128px;
+}
+
+.ship-metrics-low {
+  opacity: 0.84;
+}
+
+.ship-metrics-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.77rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8ea4bc;
+}
+
+.ship-metrics-head strong {
+  color: #c6d7eb;
+  font-size: 0.74rem;
+  background: #1b2a39;
+  border: 1px solid #30455b;
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.ship-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.ship-metric-tile {
+  border: 1px solid #273544;
+  background: #101922;
+  border-radius: 4px;
+  padding: 4px 5px;
+  display: grid;
+  gap: 2px;
+}
+
+.ship-metric-tile span {
+  font-size: 0.68rem;
+  color: #8ea4bc;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ship-metric-tile strong {
+  font-size: 0.82rem;
+  color: #d7e4f3;
+  font-weight: 600;
+}
+
+.ship-metric-tile-wide {
+  grid-column: 1 / -1;
+}
+
+.damage-inline {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+.ship-ehp-block {
+  border: 1px solid #273544;
+  background: #101922;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+.ship-ehp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.ship-ehp-head span {
+  font-size: 0.68rem;
+  color: #8ea4bc;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ship-ehp-head strong {
+  font-size: 0.82rem;
+  color: #d7e4f3;
+}
+
+.ship-resist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.74rem;
+  color: #a9b9cc;
+}
+
+.ship-resist-table th,
+.ship-resist-table td {
+  padding: 1px 4px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ship-resist-table th {
+  text-align: left;
+  color: #8ea4bc;
+  font-weight: 600;
+  width: 16px;
+}
+
+.damage-em {
+  color: #7fb0ff;
+}
+
+.damage-th {
+  color: #ffb07a;
+}
+
+.damage-ki {
+  color: #8cdd9a;
+}
+
+.damage-ex {
+  color: #ff8f8f;
+}
+
+.ship-metrics-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #aab8cb;
+}
+
+.ship-metrics-row strong {
+  color: #d8e3f3;
+  font-weight: 600;
+  text-align: right;
 }
 
 .fit-copy-button {

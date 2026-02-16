@@ -148,6 +148,16 @@
   - [x] Capability-only/no fit evidence => low chance.
   - [x] Non-capable hull => `0%`.
 
+### 4.13 Static Dogma + Combat Estimates (new)
+- [x] Build-time SDE sync (`scripts/sync-sde.mjs`) with manifest + local cache.
+- [x] Build-time dogma pack compiler (`scripts/compile-dogma-pack.mjs`).
+- [x] Runtime dogma loader/index (`src/lib/dogma/loader.ts`, `src/lib/dogma/index.ts`).
+- [x] Combat calculator engine (`src/lib/dogma/calc.ts`) for DPS/alpha, damage split, range, EHP, resists.
+- [x] UI render in fit column for combat estimates with confidence + assumption tooltip.
+- [x] Confidence/assumption display and unavailable fallback.
+- [x] Tests for loader/calc + intel fit normalization coverage.
+- [ ] Backtest sanity pass against broader real-fit samples.
+
 ## 5) Milestones
 - [x] M1: App shell + global paste + parser.
 - [x] M2: ESI/zKill integration + base card rendering.
@@ -155,6 +165,7 @@
 - [x] M4: Fit inference + cyno/jump alerts.
 - [x] M5: Caching hardening + UI polish to EVEOS-like density.
 - [x] M6 (final validation): tune probability weights by backtesting against zKill history and compare predicted ships vs observed recent usage (utility added: `src/lib/backtest.ts`, live script: `scripts/backtest-zkill.mjs`).
+- [ ] M7: Dogma-based combat metrics shipped.
 
 ## 6) Next sprint (decision-complete)
 1. Wire identity resolution into UI:

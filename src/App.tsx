@@ -34,6 +34,10 @@ import {
 } from "./lib/intel";
 import { formatFitAsEft } from "./lib/eft";
 import { parseClipboardText } from "./lib/parser";
+import { calculateShipCombatMetrics, type CalculateCombatMetricsInput } from "./lib/dogma/calc";
+import { buildDogmaIndex, type DogmaIndex } from "./lib/dogma/index";
+import { loadDogmaData } from "./lib/dogma/loader";
+import type { CombatMetrics } from "./lib/dogma/types";
 import type { ParseResult, ParsedPilotInput, Settings } from "./types";
 import { ConstellationBackground } from "./components/ConstellationBackground";
 
@@ -78,6 +82,10 @@ type ShipRiskFlags = {
   bait: boolean;
 };
 
+type FitMetricResult =
+  | { status: "ready"; key: string; value: CombatMetrics }
+  | { status: "unavailable"; key: string; reason: string };
+
 const CYNO_ICON_TYPE_ID = 21096;
 const ROLE_ICON_TYPE_IDS: Record<string, number> = {
   "Long Point": 3242,
@@ -108,7 +116,12 @@ export default function App() {
   const [pilotCards, setPilotCards] = useState<PilotCard[]>([]);
   const [networkNotice, setNetworkNotice] = useState<string>("");
   const [debugLines, setDebugLines] = useState<string[]>([]);
+  const [dogmaIndex, setDogmaIndex] = useState<DogmaIndex | null>(null);
+  const [dogmaVersion, setDogmaVersion] = useState<string>("");
+  const [dogmaLoadError, setDogmaLoadError] = useState<string>("");
   const updaterLogSignatureRef = useRef<string>("");
+  const fitMetricsCacheRef = useRef<Map<string, FitMetricResult>>(new Map());
+  const loggedFitMetricKeysRef = useRef<Set<string>>(new Set());
   const pasteTrapRef = useRef<HTMLTextAreaElement>(null);
   const debugSectionRef = useRef<HTMLElement>(null);
   const copyableFleetCount = pilotCards.filter((pilot) => Number.isFinite(pilot.characterId)).length;
@@ -248,6 +261,37 @@ export default function App() {
       }
     });
     return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadDogmaData()
+      .then((payload) => {
+        if (cancelled) {
+          return;
+        }
+        const index = buildDogmaIndex(payload.pack);
+        setDogmaIndex(index);
+        setDogmaVersion(payload.manifest.activeVersion);
+        setDogmaLoadError("");
+        logDebug("Dogma pack loaded", {
+          version: payload.manifest.activeVersion,
+          typeCount: payload.pack.typeCount
+        });
+      })
+      .catch((error) => {
+        if (cancelled) {
+          return;
+        }
+        const reason = extractErrorMessage(error);
+        setDogmaIndex(null);
+        setDogmaVersion("");
+        setDogmaLoadError(reason);
+        logDebug("Dogma loader failed", { error: reason });
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -554,6 +598,77 @@ export default function App() {
       abortController.abort();
     };
   }, [parseResult.entries, settings.lookbackDays]);
+
+  const getFitMetrics = (pilot: PilotCard, fit: FitCandidate | undefined): FitMetricResult => {
+    if (!fit?.modulesBySlot || !fit.shipTypeId) {
+      return { status: "unavailable", key: "none", reason: "No resolved fit modules available." };
+    }
+
+    const key = buildFitMetricKey(pilot.characterId, fit);
+    const cached = fitMetricsCacheRef.current.get(key);
+    if (cached) {
+      return cached;
+    }
+
+    if (!dogmaIndex) {
+      const missing = {
+        status: "unavailable" as const,
+        key,
+        reason: "Dogma pack not loaded yet."
+      };
+      fitMetricsCacheRef.current.set(key, missing);
+      return missing;
+    }
+
+    try {
+      const totalSlots = countFitModules(fit.modulesBySlot);
+      const resolvedSlots = countResolvedFitModules(fit.modulesBySlot);
+      const resolvedRatio = totalSlots > 0 ? resolvedSlots / totalSlots : 0;
+
+      const input: CalculateCombatMetricsInput = {
+        shipTypeId: fit.shipTypeId,
+        slots: fit.modulesBySlot,
+        drones: fit.modulesBySlot.other
+      };
+      const value = calculateShipCombatMetrics(dogmaIndex, input);
+      const result: FitMetricResult = { status: "ready", key, value };
+      fitMetricsCacheRef.current.set(key, result);
+
+      if (!loggedFitMetricKeysRef.current.has(key)) {
+        loggedFitMetricKeysRef.current.add(key);
+        logDebug("Fit resolution summary", {
+          pilot: pilot.parsedEntry.pilotName,
+          shipTypeId: fit.shipTypeId,
+          fitLabel: fit.fitLabel,
+          resolvedModules: resolvedSlots,
+          totalModules: totalSlots,
+          resolvedRatio: Number((resolvedRatio * 100).toFixed(1))
+        });
+        logDebug("Calculator assumptions", {
+          pilot: pilot.parsedEntry.pilotName,
+          shipTypeId: fit.shipTypeId,
+          assumptions: value.assumptions
+        });
+        logDebug("Confidence score breakdown", {
+          pilot: pilot.parsedEntry.pilotName,
+          shipTypeId: fit.shipTypeId,
+          confidence: value.confidence,
+          assumptionCount: value.assumptions.length
+        });
+      }
+      return result;
+    } catch (error) {
+      const reason = extractErrorMessage(error);
+      const failed = { status: "unavailable" as const, key, reason: `Combat calculator failed: ${reason}` };
+      fitMetricsCacheRef.current.set(key, failed);
+      logDebug("Combat calculator failure", {
+        pilot: pilot.parsedEntry.pilotName,
+        fitSignature: key,
+        error: reason
+      });
+      return failed;
+    }
+  };
 
   return (
     <main className={`app${isDesktopApp ? " desktop-shell" : ""}`}>
@@ -980,6 +1095,7 @@ export default function App() {
                       const fit = ship.shipTypeId
                         ? pilot.fitCandidates.find((entry) => entry.shipTypeId === ship.shipTypeId)
                         : undefined;
+                      const metrics = getFitMetrics(pilot, fit);
                       const rowCyno = shipHasPotentialCyno(ship);
                       const eft = formatFitAsEft(ship.shipName, fit);
                       const shipNameLower = ship.shipName.toLowerCase();
@@ -1033,6 +1149,84 @@ export default function App() {
                               {renderShipPills(ship, pilot.cynoRisk)}
                             </span>
                             <pre className="ship-eft">{eft}</pre>
+                            {fit ? (
+                              <div
+                                className={`ship-metrics ${metrics.status === "ready" && metrics.value.confidence < 60 ? "ship-metrics-low" : ""}`}
+                              >
+                                {metrics.status === "ready" ? (
+                                  <>
+                                    <div className="ship-metrics-head">
+                                      <span>Combat Capability</span>
+                                      <strong title={metrics.value.assumptions.join(" | ") || "No assumptions"}>
+                                        {metrics.value.confidence}%
+                                      </strong>
+                                    </div>
+                                    <div className="ship-metrics-grid">
+                                      <div className="ship-metric-tile">
+                                        <span>DPS</span>
+                                        <strong>{metrics.value.dpsTotal}</strong>
+                                        <div className="damage-inline">
+                                          <span className="damage-em">EM {toPct(metrics.value.damageSplit.em)}</span>
+                                          <span className="damage-th">TH {toPct(metrics.value.damageSplit.therm)}</span>
+                                          <span className="damage-ki">KI {toPct(metrics.value.damageSplit.kin)}</span>
+                                          <span className="damage-ex">EX {toPct(metrics.value.damageSplit.exp)}</span>
+                                        </div>
+                                      </div>
+                                      <div className="ship-metric-tile">
+                                        <span>Alpha</span>
+                                        <strong>{metrics.value.alpha}</strong>
+                                      </div>
+                                      <div className="ship-metric-tile ship-metric-tile-wide">
+                                        <span>Range</span>
+                                        <strong>
+                                          O {formatRange(metrics.value.engagementRange.optimal)} + F {formatRange(metrics.value.engagementRange.falloff)} | Eff {formatRange(metrics.value.engagementRange.effectiveBand)}
+                                        </strong>
+                                      </div>
+                                    </div>
+                                    <div className="ship-ehp-block">
+                                      <div className="ship-ehp-head">
+                                        <span>EHP</span>
+                                        <strong>{formatEhp(metrics.value.ehp)}</strong>
+                                      </div>
+                                      <table className="ship-resist-table">
+                                        <tbody>
+                                          <tr>
+                                            <th scope="row">S</th>
+                                            <td className="damage-em">{toPct(metrics.value.resists.shield.em)}</td>
+                                            <td className="damage-th">{toPct(metrics.value.resists.shield.therm)}</td>
+                                            <td className="damage-ki">{toPct(metrics.value.resists.shield.kin)}</td>
+                                            <td className="damage-ex">{toPct(metrics.value.resists.shield.exp)}</td>
+                                          </tr>
+                                          <tr>
+                                            <th scope="row">A</th>
+                                            <td className="damage-em">{toPct(metrics.value.resists.armor.em)}</td>
+                                            <td className="damage-th">{toPct(metrics.value.resists.armor.therm)}</td>
+                                            <td className="damage-ki">{toPct(metrics.value.resists.armor.kin)}</td>
+                                            <td className="damage-ex">{toPct(metrics.value.resists.armor.exp)}</td>
+                                          </tr>
+                                          <tr>
+                                            <th scope="row">H</th>
+                                            <td className="damage-em">{toPct(metrics.value.resists.hull.em)}</td>
+                                            <td className="damage-th">{toPct(metrics.value.resists.hull.therm)}</td>
+                                            <td className="damage-ki">{toPct(metrics.value.resists.hull.kin)}</td>
+                                            <td className="damage-ex">{toPct(metrics.value.resists.hull.exp)}</td>
+                                          </tr>
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                    <div className="ship-metrics-row">
+                                      <span>Speed</span>
+                                      <strong>{formatSpeedRange(metrics.value.speed)}</strong>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="ship-metrics-row">
+                                    <span>Combat Estimates</span>
+                                    <strong title={metrics.reason}>Unavailable</strong>
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
                             {canCopyEft ? (
                               <button
                                 type="button"
@@ -1141,6 +1335,74 @@ export default function App() {
       <footer className="app-version">v{APP_VERSION}</footer>
     </main>
   );
+}
+
+function buildFitMetricKey(characterId: number | undefined, fit: FitCandidate): string {
+  const modules = fit.modulesBySlot
+    ? [
+        ...fit.modulesBySlot.high,
+        ...fit.modulesBySlot.mid,
+        ...fit.modulesBySlot.low,
+        ...fit.modulesBySlot.rig,
+        ...fit.modulesBySlot.other
+      ]
+        .map((row) => row.typeId)
+        .sort((a, b) => a - b)
+        .join(",")
+    : "none";
+  return [characterId ?? "unknown", fit.shipTypeId, fit.fitLabel, modules].join("|");
+}
+
+function countFitModules(slots: NonNullable<FitCandidate["modulesBySlot"]>): number {
+  return slots.high.length + slots.mid.length + slots.low.length + slots.rig.length + slots.other.length;
+}
+
+function countResolvedFitModules(slots: NonNullable<FitCandidate["modulesBySlot"]>): number {
+  return [...slots.high, ...slots.mid, ...slots.low, ...slots.rig, ...slots.other].filter((row) =>
+    Number.isFinite(row.typeId)
+  ).length;
+}
+
+function toPct(value: number): string {
+  return `${Math.round(value * 100)}%`;
+}
+
+function formatRange(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) {
+    return "—";
+  }
+  const km = value / 1000;
+  return `${km.toFixed(km >= 10 ? 0 : 1)}km`;
+}
+
+function formatEhp(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) {
+    return "—";
+  }
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(2)}m`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(1)}k`;
+  }
+  return `${Math.round(value)}`;
+}
+
+function formatSpeed(value: number): string {
+  if (!Number.isFinite(value) || value <= 0) {
+    return "—";
+  }
+  return `${Math.round(value)}m/s`;
+}
+
+function formatSpeedRange(speed: { base: number; propOn: number; propOnHeated: number }): string {
+  const base = formatSpeed(speed.base);
+  const heated = formatSpeed(speed.propOnHeated);
+  const hasProp = Math.abs(speed.propOnHeated - speed.base) > 1;
+  if (!hasProp) {
+    return base;
+  }
+  return `${base} - ${heated}`;
 }
 
 function formatUpdaterStatus(state: DesktopUpdaterState | null): string {
@@ -1341,7 +1603,19 @@ async function recomputeDerivedInference(params: {
     characterId: params.row.characterId!,
     losses: params.row.inferenceLosses,
     predictedShips,
-    itemNamesByTypeId: params.namesById
+    itemNamesByTypeId: params.namesById,
+    onFitDebug: (fitDebug) => {
+      params.debugLog?.("Fit inference source", {
+        pilot: params.row.parsedEntry.pilotName,
+        shipTypeId: fitDebug.shipTypeId,
+        shipName: params.namesById.get(fitDebug.shipTypeId) ?? `Type ${fitDebug.shipTypeId}`,
+        killmailId: fitDebug.sourceLossKillmailId,
+        totalItems: fitDebug.totalItems,
+        fittedFlagItems: fitDebug.fittedFlagItems,
+        selectedSlots: fitDebug.selectedSlots,
+        droppedAsChargeLike: fitDebug.droppedAsChargeLike
+      });
+    }
   });
   const cynoRisk = evaluateCynoRisk({
     predictedShips,
@@ -1769,3 +2043,4 @@ function smoothScrollToElement(element: HTMLElement, durationMs: number): void {
 
   requestAnimationFrame(tick);
 }
+

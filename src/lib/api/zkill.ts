@@ -23,6 +23,9 @@ export type ZkillVictim = {
 export type ZkillItem = {
   item_type_id: number;
   flag?: number;
+  charge_item_type_id?: number;
+  quantity_destroyed?: number;
+  quantity_dropped?: number;
 };
 
 export type ZkillKillmail = {
