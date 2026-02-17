@@ -8,23 +8,23 @@ export type RunPyfaParams = {
   shipTypeId: number;
   eft: string;
   sdeVersion?: string;
-  image?: string;
-  mode?: "web" | "direct-cli";
+  pythonBin?: string;
+  scriptPath?: string;
   timeoutMs?: number;
   hardKillMs?: number;
   debug?: boolean;
 };
 
-export const DEFAULT_PYFA_IMAGE: string;
+export const DEFAULT_PYFA_PYTHON: string;
 export function normalizeEft(eft: string): NormalizedEft;
 export function parsePyfaOutput(
   stdout: string,
   fitId: string,
   shipTypeId: number,
   sdeVersion: string,
-  image?: string
+  runner?: string
 ): import("../../../src/lib/dogma/parity/types").ParityMetricResult;
-export function runPyfaDocker(
+export function runPyfaLocal(
   params: RunPyfaParams
 ): Promise<import("../../../src/lib/dogma/parity/types").ParityMetricResult>;
-export function shutdownPyfaDockerRuntimes(): Promise<void>;
+export function shutdownPyfaLocalRuntimes(): Promise<void>;

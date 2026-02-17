@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { runPyfaDocker, shutdownPyfaDockerRuntimes } from "../tools/parity/pyfa-adapter/index.mjs";
+import { runPyfaLocal, shutdownPyfaLocalRuntimes } from "../tools/parity/pyfa-adapter/index.mjs";
 import { createHash } from "node:crypto";
 import { normalizeEft } from "../tools/parity/pyfa-adapter/normalize-eft.mjs";
 
@@ -15,7 +15,7 @@ const unresolvedPath = path.join(repoRoot, "data", "parity", "pyfa-inputs.json")
 const tracePath = path.join(repoRoot, "reports", "dogma-parity-reference-trace.jsonl");
 const pyfaTimeoutMs = Number(process.env.DOGMA_PARITY_PYFA_TIMEOUT_MS ?? 60_000);
 const pyfaHardKillMs = Number(process.env.DOGMA_PARITY_PYFA_HARD_KILL_MS ?? 150_000);
-const pyfaMode = process.env.DOGMA_PARITY_PYFA_MODE ?? "direct-cli";
+const pyfaPython = process.env.DOGMA_PARITY_PYFA_PYTHON ?? "";
 const pyfaDebug = process.env.DOGMA_PARITY_PYFA_DEBUG === "1";
 
 async function main() {
@@ -51,14 +51,14 @@ async function main() {
 
       try {
         const normalizedEft = normalizeEft(entry.eft);
-        const pyfa = await runPyfaDocker({
+        const pyfa = await runPyfaLocal({
           fitId,
           shipTypeId: entry.shipTypeId,
           eft: entry.eft,
           sdeVersion: manifest.activeVersion,
+          pythonBin: pyfaPython || undefined,
           timeoutMs: pyfaTimeoutMs,
           hardKillMs: pyfaHardKillMs,
-          mode: pyfaMode,
           debug: pyfaDebug
         });
 
@@ -87,7 +87,8 @@ async function main() {
           fitId,
           reason: "pyfa_failed",
           error: String(error?.message ?? error),
-          mode: details.mode ?? pyfaMode,
+          runner: details.runner ?? "local-python",
+          pythonBin: details.pythonBin ?? (pyfaPython || "auto"),
           timeoutMs: details.timeoutMs ?? pyfaTimeoutMs,
           hardKillMs: details.hardKillMs ?? pyfaHardKillMs,
           stage: details.stage ?? "runtime_error",
@@ -108,7 +109,8 @@ async function main() {
       goldenCount: goldenFitIds.length,
       existingBefore: (references.fits ?? []).length,
       existingAfter: nextFits.length,
-      mode: pyfaMode,
+      pyfaRunner: "local-python",
+      pythonBin: pyfaPython || "auto",
       timeoutMs: pyfaTimeoutMs,
       hardKillMs: pyfaHardKillMs,
       tracePath: pyfaDebug ? path.relative(repoRoot, tracePath) : null,
@@ -146,7 +148,7 @@ async function main() {
       "utf8"
     );
   } finally {
-    await shutdownPyfaDockerRuntimes();
+    await shutdownPyfaLocalRuntimes();
   }
 }
 
