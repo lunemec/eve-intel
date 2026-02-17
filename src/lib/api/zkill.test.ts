@@ -241,4 +241,35 @@ describe("character stats endpoint", () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  it("propagates aborts and does not cache null from cancelled requests", async () => {
+    const characterId = 991499999;
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async () => {
+      return {
+        ok: true,
+        json: async () => ({
+          shipsDestroyed: 7,
+          shipsLost: 2
+        })
+      } as Response;
+    });
+    globalThis.fetch = fetchMock;
+
+    try {
+      const controller = new AbortController();
+      controller.abort();
+
+      await expect(fetchCharacterStats(characterId, controller.signal)).rejects.toMatchObject({
+        name: "AbortError"
+      });
+
+      const stats = await fetchCharacterStats(characterId);
+      expect(stats?.kills).toBe(7);
+      expect(stats?.losses).toBe(2);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });

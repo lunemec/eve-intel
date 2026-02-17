@@ -2,11 +2,35 @@
  * @vitest-environment jsdom
  */
 import { render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { fetchCharacterPublic, resolveUniverseNames } from "./lib/api/esi";
 import { fetchCharacterStats } from "./lib/api/zkill";
-import { fetchRecentKills, fetchRecentLosses } from "./lib/api/zkill";
+import { fetchLatestKillsPaged, fetchLatestLossesPaged, fetchRecentKills, fetchRecentLosses } from "./lib/api/zkill";
+
+function createMemoryStorage(): Storage {
+  const data = new Map<string, string>();
+  return {
+    get length() {
+      return data.size;
+    },
+    clear() {
+      data.clear();
+    },
+    getItem(key: string) {
+      return data.has(key) ? data.get(key)! : null;
+    },
+    key(index: number) {
+      return [...data.keys()][index] ?? null;
+    },
+    removeItem(key: string) {
+      data.delete(key);
+    },
+    setItem(key: string, value: string) {
+      data.set(key, String(value));
+    }
+  };
+}
 
 vi.mock("./lib/api/esi", () => ({
   resolveCharacterIds: vi.fn(async () => new Map([["a9tan", 12345]])),
@@ -33,6 +57,25 @@ vi.mock("./lib/api/zkill", () => ({
 }));
 
 describe("App paste flow", () => {
+  beforeEach(() => {
+    vi.stubGlobal("localStorage", createMemoryStorage());
+    for (const key of [
+      "eve-intel.settings.v1",
+      "eve-intel.debug-enabled.v1"
+    ]) {
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // Ignore storage cleanup failures in tests.
+      }
+    }
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("parses clipboard payload immediately and renders pilot card", async () => {
     render(<App />);
 
@@ -49,6 +92,8 @@ describe("App paste flow", () => {
     });
 
     expect(screen.getByText(/Likely Ships/i)).toBeTruthy();
+    expect(vi.mocked(fetchLatestKillsPaged)).toHaveBeenCalled();
+    expect(vi.mocked(fetchLatestLossesPaged)).toHaveBeenCalled();
   });
 
   it("derives low threat from merged kills/losses even if zKill danger is high", async () => {
@@ -137,5 +182,116 @@ describe("App paste flow", () => {
     expect(screen.queryByText("Corp 54321")).toBeNull();
     expect(screen.queryByText("Alliance 98765")).toBeNull();
     expect(screen.queryByText("Type 12731")).toBeNull();
+  });
+
+  it("loads saved lookbackDays from settings storage", async () => {
+    localStorage.setItem("eve-intel.settings.v1", JSON.stringify({ lookbackDays: 3 }));
+
+    render(<App />);
+
+    const event = new Event("paste") as ClipboardEvent;
+    Object.defineProperty(event, "clipboardData", {
+      value: {
+        getData: () => "A9tan"
+      }
+    });
+    window.dispatchEvent(event);
+
+    await waitFor(() => {
+      expect(vi.mocked(fetchRecentKills)).toHaveBeenCalled();
+    });
+
+    expect(vi.mocked(fetchRecentKills)).toHaveBeenCalledWith(
+      12345,
+      3,
+      expect.anything(),
+      expect.any(Function)
+    );
+    expect(JSON.parse(localStorage.getItem("eve-intel.settings.v1") ?? "{}")).toEqual({ lookbackDays: 3 });
+  });
+
+  it("clamps out-of-range saved lookbackDays values", async () => {
+    localStorage.setItem("eve-intel.settings.v1", JSON.stringify({ lookbackDays: 0 }));
+
+    render(<App />);
+
+    const event = new Event("paste") as ClipboardEvent;
+    Object.defineProperty(event, "clipboardData", {
+      value: {
+        getData: () => "A9tan"
+      }
+    });
+    window.dispatchEvent(event);
+
+    await waitFor(() => {
+      expect(vi.mocked(fetchRecentKills)).toHaveBeenCalled();
+    });
+
+    expect(vi.mocked(fetchRecentKills)).toHaveBeenCalledWith(
+      12345,
+      1,
+      expect.anything(),
+      expect.any(Function)
+    );
+    expect(JSON.parse(localStorage.getItem("eve-intel.settings.v1") ?? "{}")).toEqual({ lookbackDays: 1 });
+  });
+
+  it("renders unresolved pilots as error cards", async () => {
+    const { resolveCharacterIds } = await import("./lib/api/esi");
+    vi.mocked(resolveCharacterIds).mockResolvedValueOnce(new Map());
+    render(<App />);
+
+    const event = new Event("paste") as ClipboardEvent;
+    Object.defineProperty(event, "clipboardData", {
+      value: {
+        getData: () => "Ghost Pilot"
+      }
+    });
+    window.dispatchEvent(event);
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Character not found in ESI\./i).length).toBeGreaterThan(0);
+    });
+  });
+
+  it("deduplicates repeated pilot lines into one card", async () => {
+    const { container } = render(<App />);
+
+    const event = new Event("paste") as ClipboardEvent;
+    Object.defineProperty(event, "clipboardData", {
+      value: {
+        getData: () => "A9tan\nA9tan"
+      }
+    });
+    window.dispatchEvent(event);
+
+    await waitFor(() => {
+      expect(container.querySelectorAll("article.pilot-card").length).toBe(1);
+    });
+  });
+
+  it("supports desktop clipboard callback ingestion", async () => {
+    let clipboardHandler: ((text: string) => void) | undefined;
+    (window as Window & { eveIntelDesktop?: unknown }).eveIntelDesktop = {
+      onClipboardText(callback: (text: string) => void) {
+        clipboardHandler = callback;
+        return () => undefined;
+      },
+      isWindowMaximized: async () => false,
+      onWindowMaximized: () => () => undefined,
+      onUpdaterState: () => () => undefined,
+      checkForUpdates: async () => ({ ok: true }),
+      quitAndInstallUpdate: async () => true,
+      minimizeWindow: async () => undefined,
+      toggleMaximizeWindow: async () => false,
+      closeWindow: async () => undefined
+    };
+
+    render(<App />);
+    clipboardHandler?.("A9tan");
+
+    await waitFor(() => {
+      expect(screen.getAllByText("A9tan").length).toBeGreaterThan(0);
+    });
   });
 });

@@ -47,4 +47,21 @@ describe("ESI universe names", () => {
     expect(names.get(1)).toBe("Name 1");
     expect(names.has(1001)).toBe(false);
   });
+
+  it("propagates AbortError when names lookup is cancelled", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(JSON.stringify([{ id: 1, name: "Name 1" }]), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(resolveUniverseNames([1], controller.signal)).rejects.toMatchObject({
+      name: "AbortError"
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

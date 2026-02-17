@@ -246,7 +246,10 @@ async function refreshCharacterStats(
     const stats = parseCharacterStats(raw);
     await setCachedAsync(cacheKey, stats, ZKILL_CACHE_TTL_MS);
     return stats;
-  } catch {
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
     await setCachedAsync(cacheKey, null, 1000 * 60 * 5);
     return null;
   }
@@ -440,6 +443,10 @@ function normalizeDangerPercent(value?: number): number | undefined {
     return Number((value * 100).toFixed(1));
   }
   return Number(value.toFixed(1));
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
 }
 
 async function hydrateKillmailSummaries(

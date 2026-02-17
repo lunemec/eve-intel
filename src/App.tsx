@@ -41,6 +41,7 @@ import type { CombatMetrics } from "./lib/dogma/types";
 import type { ParseResult, ParsedPilotInput, Settings } from "./types";
 import { ConstellationBackground } from "./components/ConstellationBackground";
 import { withDogmaTypeNameFallback } from "./lib/names";
+import { useDesktopBridge } from "./lib/useDesktopBridge";
 
 const DEFAULT_SETTINGS: Settings = {
   lookbackDays: ZKILL_MAX_LOOKBACK_DAYS
@@ -107,9 +108,6 @@ const FAST_SCROLL_DURATION_MS = 120;
 export default function App() {
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
   const [debugEnabled, setDebugEnabled] = useState<boolean>(() => loadDebugEnabled());
-  const [isDesktopApp] = useState<boolean>(() => Boolean(window.eveIntelDesktop));
-  const [isWindowMaximized, setIsWindowMaximized] = useState<boolean>(false);
-  const [updaterState, setUpdaterState] = useState<DesktopUpdaterState | null>(null);
   const [lastPasteAt, setLastPasteAt] = useState<string>("Never");
   const [lastPasteRaw, setLastPasteRaw] = useState<string>("");
   const [manualEntry, setManualEntry] = useState<string>("");
@@ -120,7 +118,6 @@ export default function App() {
   const [dogmaIndex, setDogmaIndex] = useState<DogmaIndex | null>(null);
   const [dogmaVersion, setDogmaVersion] = useState<string>("");
   const [dogmaLoadError, setDogmaLoadError] = useState<string>("");
-  const updaterLogSignatureRef = useRef<string>("");
   const fitMetricsCacheRef = useRef<Map<string, FitMetricResult>>(new Map());
   const loggedFitMetricKeysRef = useRef<Set<string>>(new Set());
   const pasteTrapRef = useRef<HTMLTextAreaElement>(null);
@@ -154,6 +151,11 @@ export default function App() {
       console.debug(line);
     }
   };
+
+  const { isDesktopApp, isWindowMaximized, updaterState } = useDesktopBridge({
+    applyPaste,
+    logDebug
+  });
 
   useEffect(() => {
     if (!debugEnabled) {
@@ -191,78 +193,6 @@ export default function App() {
   useEffect(() => {
     persistDebugEnabled(debugEnabled);
   }, [debugEnabled]);
-
-  useEffect(() => {
-    if (!window.eveIntelDesktop?.onClipboardText) {
-      return;
-    }
-
-    const unsubscribe = window.eveIntelDesktop.onClipboardText((text) => {
-      applyPaste(text);
-      logDebug("Desktop clipboard update received");
-    });
-    return unsubscribe;
-  }, []);
-
-  useEffect(() => {
-    if (!window.eveIntelDesktop) {
-      return;
-    }
-
-    let mounted = true;
-    void window.eveIntelDesktop.isWindowMaximized().then((value) => {
-      if (mounted) {
-        setIsWindowMaximized(value);
-      }
-    });
-
-    const unsubscribe = window.eveIntelDesktop.onWindowMaximized((value) => {
-      setIsWindowMaximized(value);
-    });
-
-    return () => {
-      mounted = false;
-      unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!window.eveIntelDesktop?.onUpdaterState) {
-      return;
-    }
-    const unsubscribe = window.eveIntelDesktop.onUpdaterState((state) => {
-      setUpdaterState(state);
-
-      const signature = `${state.status}|${state.progress}|${state.availableVersion}|${state.downloadedVersion}|${state.error}|${state.errorDetails ?? ""}`;
-      if (updaterLogSignatureRef.current === signature) {
-        return;
-      }
-      updaterLogSignatureRef.current = signature;
-
-      if (state.status === "error") {
-        logDebug("Updater error", {
-          message: state.error,
-          details: state.errorDetails
-        });
-        return;
-      }
-
-      if (
-        state.status === "checking" ||
-        state.status === "downloading" ||
-        state.status === "downloaded" ||
-        state.status === "up-to-date"
-      ) {
-        logDebug("Updater state", {
-          status: state.status,
-          progress: state.progress,
-          availableVersion: state.availableVersion,
-          downloadedVersion: state.downloadedVersion
-        });
-      }
-    });
-    return unsubscribe;
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -2004,9 +1934,10 @@ function loadSettings(): Settings {
       return DEFAULT_SETTINGS;
     }
 
-    void (JSON.parse(raw) as Partial<Settings>);
+    const parsed = JSON.parse(raw) as Partial<Settings>;
+    const lookbackDays = normalizeLookbackDays(parsed.lookbackDays);
     return {
-      lookbackDays: ZKILL_MAX_LOOKBACK_DAYS
+      lookbackDays
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -2035,6 +1966,13 @@ function persistDebugEnabled(enabled: boolean): void {
   } catch {
     // Ignore storage failures.
   }
+}
+
+function normalizeLookbackDays(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return ZKILL_MAX_LOOKBACK_DAYS;
+  }
+  return Math.min(ZKILL_MAX_LOOKBACK_DAYS, Math.max(1, Math.floor(value)));
 }
 
 function pilotDetailAnchorId(pilot: PilotCard): string {
