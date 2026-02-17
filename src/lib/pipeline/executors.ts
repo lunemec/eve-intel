@@ -1,6 +1,8 @@
 import type { ParsedPilotInput, Settings } from "../../types";
 import { resolveInventoryTypeIdByName } from "../api/esi";
 import { setCachedAsync } from "../cache";
+import { formatFitAsEft } from "../eft";
+import { persistDevFitRecord } from "../devFitDump";
 import {
   deriveFitCandidates,
   deriveShipPredictions,
@@ -11,8 +13,9 @@ import {
 import type { PilotCard } from "../usePilotIntelPipeline";
 import { estimateShipCynoChance, evaluateCynoRisk, type CynoRisk } from "../cyno";
 import { deriveShipRolePills } from "../roles";
-
-const TOP_SHIP_CANDIDATES = 5;
+import { TOP_SHIP_CANDIDATES } from "./constants";
+import { DEV_FIT_DUMP_ENABLED } from "./constants";
+import type { DebugLogger, PipelineSignal, RetryBuilder } from "./types";
 
 export type DerivedInference = {
   predictedShips: ShipPrediction[];
@@ -23,9 +26,9 @@ export type DerivedInference = {
 export async function ensureExplicitShipTypeId(params: {
   predictedShips: ShipPrediction[];
   parsedEntry: ParsedPilotInput;
-  signal: AbortSignal | undefined;
-  onRetry: (scope: string) => (info: { status: number; attempt: number; delayMs: number }) => void;
-  logDebug: (message: string, data?: unknown) => void;
+  signal: PipelineSignal;
+  onRetry: RetryBuilder;
+  logDebug: DebugLogger;
 }): Promise<void> {
   const explicitName = params.parsedEntry.explicitShip?.trim();
   if (!explicitName) {
@@ -66,7 +69,7 @@ export async function recomputeDerivedInference(params: {
   settings: Settings;
   namesById: Map<number, string>;
   cacheKey: string;
-  debugLog?: (message: string, data?: unknown) => void;
+  debugLog?: DebugLogger;
 }): Promise<DerivedInference> {
   const evidenceCoverage = summarizeEvidenceCoverage(
     params.row.characterId!,
@@ -117,6 +120,15 @@ export async function recomputeDerivedInference(params: {
       });
     }
   });
+  if (DEV_FIT_DUMP_ENABLED()) {
+    await persistDerivedFitsForDev({
+      fitCandidates,
+      predictedShips,
+      namesById: params.namesById,
+      pilotName: params.row.parsedEntry.pilotName,
+      debugLog: params.debugLog
+    });
+  }
   const cynoRisk = evaluateCynoRisk({
     predictedShips,
     characterId: params.row.characterId!,
@@ -179,4 +191,52 @@ export async function recomputeDerivedInference(params: {
   });
   await setCachedAsync(params.cacheKey, derived, 1000 * 60 * 15, 1000 * 60 * 5);
   return derived;
+}
+
+async function persistDerivedFitsForDev(params: {
+  fitCandidates: ReturnType<typeof deriveFitCandidates>;
+  predictedShips: ShipPrediction[];
+  namesById: Map<number, string>;
+  pilotName: string;
+  debugLog?: DebugLogger;
+}): Promise<void> {
+  const shipNameByTypeId = new Map<number, string>();
+  for (const predicted of params.predictedShips) {
+    if (predicted.shipTypeId) {
+      shipNameByTypeId.set(predicted.shipTypeId, predicted.shipName);
+    }
+  }
+
+  const writes = params.fitCandidates
+    .filter((fit) => fit.shipTypeId && fit.eftSections)
+    .map(async (fit) => {
+      const shipName =
+        shipNameByTypeId.get(fit.shipTypeId) ??
+        params.namesById.get(fit.shipTypeId) ??
+        `Type ${fit.shipTypeId}`;
+      const eft = formatFitAsEft(shipName, fit);
+      try {
+        const stored = await persistDevFitRecord({
+          shipName,
+          shipTypeId: fit.shipTypeId,
+          eft,
+          sourceLossKillmailId: fit.sourceLossKillmailId
+        });
+        if (stored) {
+          params.debugLog?.("Dev fit dump persisted", {
+            pilot: params.pilotName,
+            shipTypeId: fit.shipTypeId,
+            shipName
+          });
+        }
+      } catch (error) {
+        params.debugLog?.("Dev fit dump persistence failed", {
+          pilot: params.pilotName,
+          shipTypeId: fit.shipTypeId,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    });
+
+  await Promise.all(writes);
 }

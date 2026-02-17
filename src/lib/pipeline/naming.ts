@@ -1,13 +1,14 @@
 import { resolveUniverseNames } from "../api/esi";
 import { withDogmaTypeNameFallback } from "../names";
 import type { DogmaIndex } from "../dogma/index";
+import type { DebugLogger, PipelineSignal, RetryBuilder } from "./types";
 
 export async function resolveNamesSafely(params: {
   ids: number[];
-  signal: AbortSignal | undefined;
-  onRetry: (scope: string) => (info: { status: number; attempt: number; delayMs: number }) => void;
+  signal: PipelineSignal;
+  onRetry: RetryBuilder;
   dogmaIndex: DogmaIndex | null;
-  logDebug: (message: string, data?: unknown) => void;
+  logDebug: DebugLogger;
 }): Promise<Map<number, string>> {
   if (params.ids.length === 0) {
     return new Map<number, string>();

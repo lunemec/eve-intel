@@ -433,7 +433,7 @@ body {
 
 .fleet-summary-grid {
   display: grid;
-  grid-template-columns: minmax(170px, 1.9fr) minmax(150px, 1.3fr) minmax(150px, 1.3fr) minmax(160px, 1.2fr) minmax(220px, 1.8fr);
+  grid-template-columns: minmax(170px, 1.9fr) minmax(145px, 1.2fr) minmax(145px, 1.2fr) minmax(190px, 1.7fr) minmax(185px, 1.4fr);
   column-gap: 10px;
 }
 
@@ -480,6 +480,7 @@ body {
 
 .fleet-col-ship {
   overflow: hidden;
+  gap: 6px;
 }
 
 .fleet-col-alerts {
@@ -571,6 +572,16 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.fleet-summary-probability {
+  flex: 0 0 auto;
+  color: #dce8f8;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .fleet-summary-muted {

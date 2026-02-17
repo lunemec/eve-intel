@@ -2,10 +2,18 @@
  * @vitest-environment jsdom
  */
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDebugLog } from "./useDebugLog";
 
 describe("useDebugLog", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("formats and stores debug lines with serialized payload suffix", () => {
     const { result } = renderHook(({ debugEnabled }) => useDebugLog({ debugEnabled }), {
       initialProps: { debugEnabled: false }
@@ -13,6 +21,7 @@ describe("useDebugLog", () => {
 
     act(() => {
       result.current.logDebug("hello", { x: 1 });
+      vi.advanceTimersByTime(20);
     });
 
     expect(result.current.debugLines.length).toBe(1);
@@ -44,6 +53,7 @@ describe("useDebugLog", () => {
       for (let i = 0; i < 260; i += 1) {
         result.current.logDebug(`msg-${i}`);
       }
+      vi.advanceTimersByTime(20);
     });
 
     expect(result.current.debugLines.length).toBe(250);
@@ -59,5 +69,25 @@ describe("useDebugLog", () => {
 
     rerender({ debugEnabled: false });
     expect(result.current.logDebug).toBe(first);
+  });
+
+  it("batches burst logs into a single state commit", () => {
+    const setTimeoutSpy = vi.spyOn(window, "setTimeout");
+    const { result } = renderHook(() => useDebugLog({ debugEnabled: false }));
+
+    act(() => {
+      result.current.logDebug("a");
+      result.current.logDebug("b");
+      result.current.logDebug("c");
+    });
+
+    expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      vi.advanceTimersByTime(20);
+    });
+
+    expect(result.current.debugLines.length).toBe(3);
+    expect(result.current.debugLines[0]).toContain("c");
   });
 });

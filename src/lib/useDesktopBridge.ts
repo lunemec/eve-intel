@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { bindDesktopClipboard } from "./desktopBridge/clipboard";
+import { buildUpdaterLogSignature, formatUpdaterLogEntry } from "./desktopBridge/updater";
+import { bindWindowMaximizedListener } from "./desktopBridge/windowState";
 
 type UseDesktopBridgeParams = {
   applyPaste: (text: string) => void;
@@ -18,37 +21,14 @@ export function useDesktopBridge(params: UseDesktopBridgeParams): UseDesktopBrid
   const updaterLogSignatureRef = useRef<string>("");
 
   useEffect(() => {
-    if (!window.eveIntelDesktop?.onClipboardText) {
-      return;
-    }
-
-    const unsubscribe = window.eveIntelDesktop.onClipboardText((text) => {
-      params.applyPaste(text);
-      params.logDebug("Desktop clipboard update received");
+    return bindDesktopClipboard(window.eveIntelDesktop, {
+      applyPaste: params.applyPaste,
+      logDebug: params.logDebug
     });
-    return unsubscribe;
   }, [params.applyPaste, params.logDebug]);
 
   useEffect(() => {
-    if (!window.eveIntelDesktop) {
-      return;
-    }
-
-    let mounted = true;
-    void window.eveIntelDesktop.isWindowMaximized().then((value) => {
-      if (mounted) {
-        setIsWindowMaximized(value);
-      }
-    });
-
-    const unsubscribe = window.eveIntelDesktop.onWindowMaximized((value) => {
-      setIsWindowMaximized(value);
-    });
-
-    return () => {
-      mounted = false;
-      unsubscribe();
-    };
+    return bindWindowMaximizedListener(window.eveIntelDesktop, setIsWindowMaximized);
   }, []);
 
   useEffect(() => {
@@ -58,32 +38,14 @@ export function useDesktopBridge(params: UseDesktopBridgeParams): UseDesktopBrid
 
     const unsubscribe = window.eveIntelDesktop.onUpdaterState((state) => {
       setUpdaterState(state);
-      const signature = `${state.status}|${state.progress}|${state.availableVersion}|${state.downloadedVersion}|${state.error}|${state.errorDetails ?? ""}`;
+      const signature = buildUpdaterLogSignature(state);
       if (updaterLogSignatureRef.current === signature) {
         return;
       }
       updaterLogSignatureRef.current = signature;
-
-      if (state.status === "error") {
-        params.logDebug("Updater error", {
-          message: state.error,
-          details: state.errorDetails
-        });
-        return;
-      }
-
-      if (
-        state.status === "checking" ||
-        state.status === "downloading" ||
-        state.status === "downloaded" ||
-        state.status === "up-to-date"
-      ) {
-        params.logDebug("Updater state", {
-          status: state.status,
-          progress: state.progress,
-          availableVersion: state.availableVersion,
-          downloadedVersion: state.downloadedVersion
-        });
+      const logEntry = formatUpdaterLogEntry(state);
+      if (logEntry) {
+        params.logDebug(logEntry.message, logEntry.data);
       }
     });
 

@@ -33,5 +33,8 @@ contextBridge.exposeInMainWorld("eveIntelDesktop", {
   },
   quitAndInstallUpdate() {
     return ipcRenderer.invoke("updater:quit-and-install");
+  },
+  appendParityFitDump(record) {
+    return ipcRenderer.invoke("parity-fit-dump:append", record);
   }
 });

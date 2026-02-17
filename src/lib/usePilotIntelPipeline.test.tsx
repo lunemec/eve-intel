@@ -13,8 +13,10 @@ import {
 import {
   fetchCharacterStats,
   fetchLatestKills,
+  fetchLatestKillsPage,
   fetchLatestKillsPaged,
   fetchLatestLosses,
+  fetchLatestLossesPage,
   fetchLatestLossesPaged,
   fetchRecentKills,
   fetchRecentLosses
@@ -34,8 +36,10 @@ vi.mock("./api/esi", () => ({
 vi.mock("./api/zkill", () => ({
   fetchCharacterStats: vi.fn(),
   fetchLatestKills: vi.fn(),
+  fetchLatestKillsPage: vi.fn(),
   fetchLatestKillsPaged: vi.fn(),
   fetchLatestLosses: vi.fn(),
+  fetchLatestLossesPage: vi.fn(),
   fetchLatestLossesPaged: vi.fn(),
   fetchRecentKills: vi.fn(),
   fetchRecentLosses: vi.fn()
@@ -127,6 +131,8 @@ describe("usePilotIntelPipeline", () => {
     vi.mocked(fetchRecentLosses).mockResolvedValue([]);
     vi.mocked(fetchLatestKills).mockResolvedValue([]);
     vi.mocked(fetchLatestLosses).mockResolvedValue([]);
+    vi.mocked(fetchLatestKillsPage).mockResolvedValue([]);
+    vi.mocked(fetchLatestLossesPage).mockResolvedValue([]);
     vi.mocked(fetchLatestKillsPaged).mockResolvedValue([]);
     vi.mocked(fetchLatestLossesPaged).mockResolvedValue([]);
     vi.mocked(fetchCharacterStats).mockResolvedValue(null);
@@ -181,11 +187,15 @@ describe("usePilotIntelPipeline", () => {
     expect(result.current.pilotCards[0].error).toContain("Character not found in ESI");
   });
 
-  it("transitions from loading to enriching to ready", async () => {
+  it("transitions from loading to base/history to ready", async () => {
     const deepKills = deferred<[]>();
     const deepLosses = deferred<[]>();
-    vi.mocked(fetchLatestKillsPaged).mockReturnValue(deepKills.promise);
-    vi.mocked(fetchLatestLossesPaged).mockReturnValue(deepLosses.promise);
+    vi.mocked(fetchLatestKillsPage).mockImplementation((_characterId, page) =>
+      page === 1 ? deepKills.promise : Promise.resolve([])
+    );
+    vi.mocked(fetchLatestLossesPage).mockImplementation((_characterId, page) =>
+      page === 1 ? deepLosses.promise : Promise.resolve([])
+    );
 
     const { result } = renderHook(() =>
       usePilotIntelPipeline({
@@ -197,7 +207,7 @@ describe("usePilotIntelPipeline", () => {
     );
 
     await waitFor(() => {
-      expect(result.current.pilotCards[0]?.fetchPhase).toBe("enriching");
+      expect(result.current.pilotCards[0]?.fetchPhase).toBe("base");
     });
 
     deepKills.resolve([]);

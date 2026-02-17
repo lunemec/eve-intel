@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 import {
   fetchCharacterStats,
   fetchLatestKills,
+  fetchLatestKillsPage,
   fetchLatestKillsPaged,
+  fetchLatestLossesPage,
   fetchRecentKills,
   ZKILL_MAX_LOOKBACK_DAYS
 } from "./zkill";
@@ -200,6 +202,27 @@ describe("latest endpoint", () => {
       expect(String(fetchMock.mock.calls[0]?.[0])).toContain("/kills/characterID/321/page/1/");
       expect(String(fetchMock.mock.calls[1]?.[0])).toContain("/kills/characterID/321/page/2/");
       expect(String(fetchMock.mock.calls[2]?.[0])).toContain("/kills/characterID/321/page/3/");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("fetches explicit latest page endpoints for kills/losses", async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async () => {
+      return {
+        ok: true,
+        json: async () => []
+      } as Response;
+    });
+    globalThis.fetch = fetchMock;
+
+    try {
+      await fetchLatestKillsPage(321, 2);
+      await fetchLatestLossesPage(654, 3);
+      const calls = fetchMock.mock.calls as unknown[][];
+      expect(String(calls[0]?.[0])).toContain("/kills/characterID/321/page/2/");
+      expect(String(calls[1]?.[0])).toContain("/losses/characterID/654/page/3/");
     } finally {
       globalThis.fetch = originalFetch;
     }

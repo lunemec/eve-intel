@@ -13,6 +13,21 @@ This file defines how code should be written in this repository.
 - Exception: pure style or presentation-only changes (for example CSS-only visual tweaks) do not require new tests.
 - Bug fixes must include a regression test that fails before the fix and passes after it.
 
+## Mandatory Change Workflow (All Changes)
+Use this workflow for any code change in this repository (feature work, bug fixes, reliability changes, and refactors):
+
+1. Write or update tests first for the intended behavior.
+2. Confirm the new/updated tests fail for the expected reason.
+3. Implement the smallest code change needed to pass.
+4. Run targeted tests for the touched area.
+5. Run the full test suite: `npm test`.
+6. Run full compilation/build as the final verification step: `npm run build`.
+
+Additional enforcement:
+- Do not begin large structural refactors without characterization/regression tests in place first.
+- Keep behavior stable during refactors unless an intentional behavior change is explicitly documented.
+- If a build/type error appears after tests pass, fix it and rerun the validation order with `npm run build` last.
+
 ## Robustness Standards
 - Validate inputs at boundaries and fail clearly when data is invalid.
 - Handle edge cases explicitly (empty values, missing data, unexpected types, out-of-range numbers).

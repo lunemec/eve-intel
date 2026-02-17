@@ -99,6 +99,38 @@ export async function fetchLatestLosses(
   return fetchZkillList(`${ZKILL_BASE}/losses/characterID/${characterId}/`, key, signal, onRetry);
 }
 
+export async function fetchLatestKillsPage(
+  characterId: number,
+  page: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const normalizedPage = Math.max(1, Math.floor(page));
+  const cacheKey = `eve-intel.cache.zkill.kills.latest.${characterId}.page.${normalizedPage}`;
+  return fetchZkillList(
+    `${ZKILL_BASE}/kills/characterID/${characterId}/page/${normalizedPage}/`,
+    cacheKey,
+    signal,
+    onRetry
+  );
+}
+
+export async function fetchLatestLossesPage(
+  characterId: number,
+  page: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const normalizedPage = Math.max(1, Math.floor(page));
+  const cacheKey = `eve-intel.cache.zkill.losses.latest.${characterId}.page.${normalizedPage}`;
+  return fetchZkillList(
+    `${ZKILL_BASE}/losses/characterID/${characterId}/page/${normalizedPage}/`,
+    cacheKey,
+    signal,
+    onRetry
+  );
+}
+
 export async function fetchLatestKillsPaged(
   characterId: number,
   maxPages: number,
@@ -179,9 +211,10 @@ async function fetchLatestPaged(
   const totalPages = Math.max(1, Math.floor(maxPages));
 
   for (let page = 1; page <= totalPages; page += 1) {
-    const cacheKey = `eve-intel.cache.zkill.${side}.latest.${characterId}.page.${page}`;
-    const url = `${ZKILL_BASE}/${side}/characterID/${characterId}/page/${page}/`;
-    const rows = await fetchZkillList(url, cacheKey, signal, onRetry);
+    const rows =
+      side === "kills"
+        ? await fetchLatestKillsPage(characterId, page, signal, onRetry)
+        : await fetchLatestLossesPage(characterId, page, signal, onRetry);
     const beforeCount = unique.size;
 
     for (const row of rows) {

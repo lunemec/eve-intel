@@ -1,13 +1,19 @@
-import { getCachedState, getCachedStateAsync, setCached, setCachedAsync } from "../cache";
+import { getCachedState, getCachedStateAsync, setCachedAsync } from "../cache";
 import { fetchJson, type RetryInfo } from "./http";
 
 const ESI_BASE = "https://esi.evetech.net/latest";
 const DATASOURCE = "tranquility";
-const NAME_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
+const NAME_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 180;
+const NAME_MISS_CACHE_TTL_MS = 1000 * 60 * 15;
 const CHARACTER_CACHE_TTL_MS = 1000 * 60 * 60 * 6;
 const TYPE_SEARCH_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 const TYPE_SEARCH_MISS_TTL_MS = 1000 * 60 * 60 * 6;
 const UNIVERSE_NAMES_BATCH_SIZE = 900;
+const CACHE_MISS_PRESENT = 1;
+
+const characterIdsInFlight = new Map<string, Promise<EsiIdsResponse>>();
+const characterPublicInFlight = new Map<number, Promise<CharacterPublic>>();
+const inventoryTypeInFlight = new Map<string, Promise<number>>();
 
 type EsiIdsResponse = {
   characters?: Array<{ id: number; name: string }>;
@@ -33,20 +39,37 @@ export async function resolveCharacterIds(
   onRetry?: (info: RetryInfo) => void
 ): Promise<Map<string, number>> {
   const map = new Map<string, number>();
-  const unique = [...new Set(names.map((name) => name.trim()).filter(Boolean))];
+  const normalizedToOriginal = new Map<string, string>();
+  for (const rawName of names) {
+    const normalized = normalizeName(rawName);
+    if (!normalized || normalizedToOriginal.has(normalized)) {
+      continue;
+    }
+    normalizedToOriginal.set(normalized, rawName.trim());
+  }
+  const unique = [...normalizedToOriginal.keys()];
   const toFetch: string[] = [];
 
-  for (const name of unique) {
-    const cacheKey = characterNameCacheKey(name);
+  for (const normalized of unique) {
+    const cacheKey = characterNameCacheKey(normalized);
     const cached = getCachedState<number>(cacheKey);
     if (cached.value) {
-      map.set(name.toLowerCase(), cached.value);
+      map.set(normalized, cached.value);
       if (cached.stale) {
-        toFetch.push(name);
+        toFetch.push(normalizedToOriginal.get(normalized)!);
       }
-    } else {
-      toFetch.push(name);
+      continue;
     }
+
+    const missCached = getCachedState<number>(characterNameMissCacheKey(normalized));
+    if (missCached.value === CACHE_MISS_PRESENT) {
+      if (missCached.stale) {
+        toFetch.push(normalizedToOriginal.get(normalized)!);
+      }
+      continue;
+    }
+
+    toFetch.push(normalizedToOriginal.get(normalized)!);
   }
 
   if (toFetch.length === 0) {
@@ -54,14 +77,13 @@ export async function resolveCharacterIds(
   }
 
   if (toFetch.length > 0 && map.size === unique.length) {
-    void refreshCharacterIds(toFetch, onRetry);
+    void refreshCharacterIdsDeduped(toFetch, onRetry);
     return map;
   }
 
-  const data = await refreshCharacterIds(toFetch, onRetry, signal);
+  const data = await refreshCharacterIdsDeduped(toFetch, onRetry, signal);
   for (const character of data.characters ?? []) {
     map.set(character.name.toLowerCase(), character.id);
-    setCached(characterNameCacheKey(character.name), character.id, NAME_CACHE_TTL_MS);
   }
 
   return map;
@@ -76,12 +98,12 @@ export async function fetchCharacterPublic(
   const cached = await getCachedStateAsync<CharacterPublic>(key);
   if (cached.value) {
     if (cached.stale) {
-      void refreshCharacterPublic(characterId, onRetry);
+      void refreshCharacterPublicDeduped(characterId, onRetry);
     }
     return cached.value;
   }
 
-  return refreshCharacterPublic(characterId, onRetry, signal);
+  return refreshCharacterPublicDeduped(characterId, onRetry, signal);
 }
 
 export async function resolveUniverseNames(
@@ -125,7 +147,6 @@ export async function resolveUniverseNames(
       const data = await refreshUniverseNames(batch, onRetry, signal);
       for (const row of data) {
         resolved.set(row.id, row.name);
-        setCached(`eve-intel.cache.universe-name.${row.id}`, row.name, NAME_CACHE_TTL_MS);
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
@@ -156,12 +177,12 @@ export async function resolveInventoryTypeIdByName(
   const cached = getCachedState<number>(cacheKey);
   if (cached.value) {
     if (cached.stale) {
-      void refreshInventoryTypeIdByName(name, onRetry);
+      void refreshInventoryTypeIdByNameDeduped(name, onRetry);
     }
     return cached.value > 0 ? cached.value : undefined;
   }
 
-  const resolved = await refreshInventoryTypeIdByName(name, onRetry, signal);
+  const resolved = await refreshInventoryTypeIdByNameDeduped(name, onRetry, signal);
   return resolved > 0 ? resolved : undefined;
 }
 
@@ -170,6 +191,7 @@ async function refreshCharacterIds(
   onRetry?: (info: RetryInfo) => void,
   signal?: AbortSignal
 ): Promise<EsiIdsResponse> {
+  const normalizedRequested = new Set(names.map((name) => normalizeName(name)).filter(Boolean));
   const data = await fetchJson<EsiIdsResponse>(
     `${ESI_BASE}/universe/ids/?datasource=${DATASOURCE}&language=en`,
     {
@@ -182,8 +204,26 @@ async function refreshCharacterIds(
     onRetry
   );
 
+  const writes: Array<Promise<void>> = [];
+  const normalizedResolved = new Set<string>();
   for (const character of data.characters ?? []) {
-    await setCachedAsync(characterNameCacheKey(character.name), character.id, NAME_CACHE_TTL_MS);
+    const normalized = normalizeName(character.name);
+    if (!normalized) {
+      continue;
+    }
+    normalizedResolved.add(normalized);
+    writes.push(setCachedAsync(characterNameCacheKey(normalized), character.id, NAME_CACHE_TTL_MS));
+  }
+
+  for (const normalized of normalizedRequested) {
+    if (normalizedResolved.has(normalized)) {
+      continue;
+    }
+    writes.push(setCachedAsync(characterNameMissCacheKey(normalized), CACHE_MISS_PRESENT, NAME_MISS_CACHE_TTL_MS));
+  }
+
+  if (writes.length > 0) {
+    await Promise.all(writes);
   }
 
   return data;
@@ -222,8 +262,12 @@ async function refreshUniverseNames(
     onRetry
   );
 
+  const writes: Array<Promise<void>> = [];
   for (const row of data) {
-    await setCachedAsync(`eve-intel.cache.universe-name.${row.id}`, row.name, NAME_CACHE_TTL_MS);
+    writes.push(setCachedAsync(`eve-intel.cache.universe-name.${row.id}`, row.name, NAME_CACHE_TTL_MS));
+  }
+  if (writes.length > 0) {
+    await Promise.all(writes);
   }
 
   return data;
@@ -258,5 +302,74 @@ async function refreshInventoryTypeIdByName(
 }
 
 function characterNameCacheKey(name: string): string {
-  return `eve-intel.cache.name.${name.toLowerCase()}`;
+  return `eve-intel.cache.name.${normalizeName(name)}`;
+}
+
+function characterNameMissCacheKey(name: string): string {
+  return `eve-intel.cache.name-miss.${normalizeName(name)}`;
+}
+
+function normalizeName(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+function characterIdsRequestKey(names: string[]): string {
+  return names
+    .map((name) => normalizeName(name))
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b))
+    .join("|");
+}
+
+function refreshCharacterIdsDeduped(
+  names: string[],
+  onRetry?: (info: RetryInfo) => void,
+  signal?: AbortSignal
+): Promise<EsiIdsResponse> {
+  const requestKey = characterIdsRequestKey(names);
+  const existing = characterIdsInFlight.get(requestKey);
+  if (existing) {
+    return existing;
+  }
+
+  const request = refreshCharacterIds(names, onRetry, signal).finally(() => {
+    characterIdsInFlight.delete(requestKey);
+  });
+  characterIdsInFlight.set(requestKey, request);
+  return request;
+}
+
+function refreshCharacterPublicDeduped(
+  characterId: number,
+  onRetry?: (info: RetryInfo) => void,
+  signal?: AbortSignal
+): Promise<CharacterPublic> {
+  const existing = characterPublicInFlight.get(characterId);
+  if (existing) {
+    return existing;
+  }
+
+  const request = refreshCharacterPublic(characterId, onRetry, signal).finally(() => {
+    characterPublicInFlight.delete(characterId);
+  });
+  characterPublicInFlight.set(characterId, request);
+  return request;
+}
+
+function refreshInventoryTypeIdByNameDeduped(
+  name: string,
+  onRetry?: (info: RetryInfo) => void,
+  signal?: AbortSignal
+): Promise<number> {
+  const normalized = normalizeName(name);
+  const existing = inventoryTypeInFlight.get(normalized);
+  if (existing) {
+    return existing;
+  }
+
+  const request = refreshInventoryTypeIdByName(name, onRetry, signal).finally(() => {
+    inventoryTypeInFlight.delete(normalized);
+  });
+  inventoryTypeInFlight.set(normalized, request);
+  return request;
 }

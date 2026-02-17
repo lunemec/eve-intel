@@ -139,6 +139,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
               <span className="fleet-col fleet-col-ship">
                 {topShip ? (
                   <>
+                    <span className="fleet-summary-probability">{topShip.probability}%</span>
                     <img
                       src={shipIconUrl(topShip.shipTypeId)}
                       alt={topShip.shipName}
@@ -147,10 +148,10 @@ export const FleetSummary = memo(function FleetSummary(props: {
                     />
                     {shipHref ? (
                       <a href={shipHref} target="_blank" rel="noreferrer" className="fleet-summary-ship">
-                        {topShip.shipName} {topShip.probability}%
+                        {topShip.shipName}
                       </a>
                     ) : (
-                      <span className="fleet-summary-ship">{topShip.shipName} {topShip.probability}%</span>
+                      <span className="fleet-summary-ship">{topShip.shipName}</span>
                     )}
                   </>
                 ) : (
