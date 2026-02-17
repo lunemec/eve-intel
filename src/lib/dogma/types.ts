@@ -4,7 +4,10 @@ export type DogmaTypeEntry = {
   categoryId?: number;
   name: string;
   attrs: Record<string, number>;
+  attrsById?: Record<number, number>;
   effects: string[];
+  effectsById?: number[];
+  effectsMeta?: Array<{ effectId: number; effectName: string }>;
 };
 
 export type DogmaGroupEntry = {
@@ -27,6 +30,8 @@ export type DogmaPack = {
   types: DogmaTypeEntry[];
   groups: DogmaGroupEntry[];
   categories: DogmaCategoryEntry[];
+  attributeTypes?: Array<{ attributeId: number; attributeName: string }>;
+  effectTypes?: Array<{ effectId: number; effectName: string }>;
 };
 
 export type DogmaManifest = {
@@ -103,4 +108,5 @@ export type CombatMetrics = {
   resists: LayerResists;
   confidence: number;
   assumptions: string[];
+  trace?: Array<{ stage: string; message: string; source?: string }>;
 };

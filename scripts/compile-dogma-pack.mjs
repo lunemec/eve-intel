@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 
 const repoRoot = process.cwd();
@@ -22,6 +23,27 @@ async function main() {
   const dgmTypeEffects = await loadCsv(path.join(rawDir, "dgmTypeEffects.csv"));
   const dgmAttributeTypes = await loadCsv(path.join(rawDir, "dgmAttributeTypes.csv"));
   const dgmEffects = await loadCsv(path.join(rawDir, "dgmEffects.csv"));
+
+  const pyfaDbPath = path.join(repoRoot, "pyfa", "eve.db");
+  if (existsSync(pyfaDbPath)) {
+    const augmented = loadMissingShipRowsFromPyfa(pyfaDbPath, invTypes);
+    mergeByKey(invTypes, augmented.invTypes, (row) => String(row.typeID));
+    mergeByKey(invGroups, augmented.invGroups, (row) => String(row.groupID));
+    mergeByKey(invCategories, augmented.invCategories, (row) => String(row.categoryID));
+    mergeByKey(
+      dgmTypeAttributes,
+      augmented.dgmTypeAttributes,
+      (row) => `${row.typeID}:${row.attributeID}`
+    );
+    mergeByKey(dgmTypeEffects, augmented.dgmTypeEffects, (row) => `${row.typeID}:${row.effectID}`);
+    mergeByKey(dgmAttributeTypes, augmented.dgmAttributeTypes, (row) => String(row.attributeID));
+    mergeByKey(dgmEffects, augmented.dgmEffects, (row) => String(row.effectID));
+    if (augmented.missingShipCount > 0) {
+      log(
+        `augmented from pyfa/eve.db missingShips=${augmented.missingShipCount} groups=${augmented.invGroups.length} categories=${augmented.invCategories.length}`
+      );
+    }
+  }
 
   const categoryByGroupId = new Map();
   for (const row of invGroups) {
@@ -95,13 +117,19 @@ async function main() {
 
     const categoryId = categoryByGroupId.get(groupId);
     const attrs = {};
+    const attrsById = {};
     for (const attr of attrsByTypeId.get(typeId) ?? []) {
       const attrName = attributeNameById.get(attr.attributeId) ?? `attr_${attr.attributeId}`;
       attrs[attrName] = attr.value;
+      attrsById[attr.attributeId] = attr.value;
     }
-    const effects = (effectsByTypeId.get(typeId) ?? []).map((effect) => {
-      return effectNameById.get(effect.effectId) ?? `effect_${effect.effectId}`;
-    });
+    const effectRows = effectsByTypeId.get(typeId) ?? [];
+    const effects = effectRows.map((effect) => effectNameById.get(effect.effectId) ?? `effect_${effect.effectId}`);
+    const effectsById = effectRows.map((effect) => effect.effectId);
+    const effectsMeta = effectRows.map((effect) => ({
+      effectId: effect.effectId,
+      effectName: effectNameById.get(effect.effectId) ?? `effect_${effect.effectId}`
+    }));
 
     typeEntries.push({
       typeId,
@@ -109,7 +137,10 @@ async function main() {
       categoryId,
       name: typeName,
       attrs,
-      effects
+      attrsById,
+      effects,
+      effectsById,
+      effectsMeta
     });
   }
 
@@ -148,7 +179,13 @@ async function main() {
     typeCount: typeEntries.length,
     types: typeEntries,
     groups,
-    categories
+    categories,
+    attributeTypes: [...attributeNameById.entries()]
+      .map(([attributeId, attributeName]) => ({ attributeId, attributeName }))
+      .sort((a, b) => a.attributeId - b.attributeId),
+    effectTypes: [...effectNameById.entries()]
+      .map(([effectId, effectName]) => ({ effectId, effectName }))
+      .sort((a, b) => a.effectId - b.effectId)
   };
 
   const serialized = `${JSON.stringify(pack)}\n`;
@@ -250,6 +287,119 @@ function parseCsv(raw) {
     out.push(record);
   }
   return out;
+}
+
+function loadMissingShipRowsFromPyfa(dbPath, invTypesRows) {
+  const existingTypeIds = new Set(
+    invTypesRows
+      .map((row) => toNumber(row.typeID))
+      .filter((value) => value !== undefined)
+  );
+
+  const pyfaShipTypes = querySqliteJson(
+    dbPath,
+    "select t.typeID as typeID, t.groupID as groupID, t.typeName as typeName from invtypes t join invgroups g on g.groupID=t.groupID where g.categoryID=6 and t.published=1"
+  );
+  const missingShipTypes = pyfaShipTypes.filter((row) => !existingTypeIds.has(Number(row.typeID)));
+  if (missingShipTypes.length === 0) {
+    return {
+      missingShipCount: 0,
+      invTypes: [],
+      invGroups: [],
+      invCategories: [],
+      dgmTypeAttributes: [],
+      dgmTypeEffects: [],
+      dgmAttributeTypes: [],
+      dgmEffects: []
+    };
+  }
+
+  const missingTypeIds = [...new Set(missingShipTypes.map((row) => Number(row.typeID)))];
+  const missingGroupIds = [...new Set(missingShipTypes.map((row) => Number(row.groupID)))];
+
+  const invGroups = querySqliteJson(
+    dbPath,
+    `select groupID as groupID, categoryID as categoryID, name as groupName from invgroups where groupID in (${sqlInList(missingGroupIds)})`
+  );
+  const missingCategoryIds = [...new Set(invGroups.map((row) => Number(row.categoryID)).filter(Number.isFinite))];
+  const invCategories =
+    missingCategoryIds.length > 0
+      ? querySqliteJson(
+          dbPath,
+          `select categoryID as categoryID, name as categoryName from invcategories where categoryID in (${sqlInList(missingCategoryIds)})`
+        )
+      : [];
+
+  const dgmTypeAttributes = querySqliteJson(
+    dbPath,
+    `select typeID as typeID, attributeID as attributeID, value as valueFloat from dgmtypeattribs where typeID in (${sqlInList(missingTypeIds)})`
+  );
+  const dgmTypeEffects = querySqliteJson(
+    dbPath,
+    `select typeID as typeID, effectID as effectID from dgmtypeeffects where typeID in (${sqlInList(missingTypeIds)})`
+  );
+
+  const missingAttrIds = [
+    ...new Set(dgmTypeAttributes.map((row) => Number(row.attributeID)).filter(Number.isFinite))
+  ];
+  const missingEffectIds = [
+    ...new Set(dgmTypeEffects.map((row) => Number(row.effectID)).filter(Number.isFinite))
+  ];
+
+  const dgmAttributeTypes =
+    missingAttrIds.length > 0
+      ? querySqliteJson(
+          dbPath,
+          `select attributeID as attributeID, attributeName as attributeName from dgmattribs where attributeID in (${sqlInList(missingAttrIds)})`
+        )
+      : [];
+  const dgmEffects =
+    missingEffectIds.length > 0
+      ? querySqliteJson(
+          dbPath,
+          `select effectID as effectID, effectName as effectName from dgmeffects where effectID in (${sqlInList(missingEffectIds)})`
+        )
+      : [];
+
+  return {
+    missingShipCount: missingShipTypes.length,
+    invTypes: missingShipTypes,
+    invGroups,
+    invCategories,
+    dgmTypeAttributes,
+    dgmTypeEffects,
+    dgmAttributeTypes,
+    dgmEffects
+  };
+}
+
+function querySqliteJson(dbPath, sql) {
+  try {
+    const raw = execFileSync("sqlite3", ["-json", dbPath, sql], {
+      encoding: "utf8",
+      maxBuffer: 64 * 1024 * 1024
+    });
+    return JSON.parse(raw || "[]");
+  } catch (error) {
+    log(`pyfa sqlite query failed: ${String(error?.message ?? error)}`);
+    return [];
+  }
+}
+
+function sqlInList(values) {
+  return values.map((value) => Number(value)).filter(Number.isFinite).join(",");
+}
+
+function mergeByKey(target, incoming, keyFn) {
+  const existing = new Set(target.map((row) => keyFn(row)));
+  for (const row of incoming) {
+    const key = keyFn(row);
+    if (existing.has(key)) {
+      continue;
+    }
+    target.push(row);
+    existing.add(key);
+  }
 }
 
 function toNumber(value) {

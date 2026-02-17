@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-02-17T11:00:18.001Z",
+  "count": 4,
+  "fits": [
+    {
+      "fitId": "zkill-legion-133446555",
+      "shipTypeId": 29986,
+      "eft": "[Legion, zkill 133446555]\n10MN Monopropellant Enduring Afterburner\nAuto Targeting System I\nBallistic Control System II\nBallistic Control System II\nBallistic Control System II\nCaldari Navy Nova Heavy Assault Missile x6336\nHeavy Assault Missile Launcher II, Scourge Rage Heavy Assault Missile\nHeavy Assault Missile Launcher II, Scourge Rage Heavy Assault Missile\nHeavy Assault Missile Launcher II, Scourge Rage Heavy Assault Missile\nHeavy Assault Missile Launcher II, Scourge Rage Heavy Assault Missile\nHeavy Assault Missile Launcher II, Scourge Rage Heavy Assault Missile\nLarge Cap Battery II\nLegion Core - Augmented Antimatter Reactor\nLegion Defensive - Nanobot Injector\nLegion Offensive - Assault Optimization\nLegion Propulsion - Wake Limiter\nMedium Armor Repairer II\nMedium Armor Repairer II\nMedium Capacitor Control Circuit I\nMedium Capacitor Control Circuit I\nMedium Warhead Calefaction Catalyst I\nMjolnir Rage Heavy Assault Missile x20000\nReactive Armor Hardener\nSalvage Drone II x5\nScourge Rage Heavy Assault Missile x62\nScourge Rage Heavy Assault Missile x62\nScourge Rage Heavy Assault Missile x62\nScourge Rage Heavy Assault Missile x62\nScourge Rage Heavy Assault Missile x63\nStasis Webifier II\nSubsystems:\nValkyrie II x5",
+      "shipName": "Legion",
+      "tags": [
+        "zkill",
+        "t3-subsystem",
+        "batch-4"
+      ],
+      "origin": "zkill"
+    },
+    {
+      "fitId": "zkill-loki-133446334",
+      "shipTypeId": 29990,
+      "eft": "[Loki, zkill 133446334]\n10MN Y-S8 Compact Afterburner\n425mm AutoCannon II, EMP M\n425mm AutoCannon II, EMP M\n425mm AutoCannon II, EMP M\n425mm AutoCannon II, EMP M\n425mm AutoCannon II, EMP M\nBarrage M x2797\nCovert Ops Cloaking Device II\nDamage Control II\nData Analyzer I\nDrone Epidermal Shielding Chunk x43\nDrone Synaptic Relay Wiring x64\nElite Drone AI\nEMP M x48\nEMP M x48\nEMP M x48\nEMP M x48\nEMP M x48\nEMP M x6245\nGist C-Type Large Shield Booster\nGyrostabilizer II\nGyrostabilizer II\nGyrostabilizer II\nHail M x4000\nInitiated Compact Warp Disruptor\nLarge F-S9 Regolith Compact Shield Extender\nLarge Shield Extender II\nLoki Core - Augmented Nuclear Reactor\nLoki Defensive - Covert Reconfiguration\nLoki Offensive - Projectile Scoping Array\nLoki Propulsion - Wake Limiter\nMedium Capacitor Control Circuit I\nMedium Capacitor Control Circuit II\nMedium Processor Overclocking Unit I\nMobile Depot\nMultispectrum Shield Hardener II\nMultispectrum Shield Hardener II\nRelic Analyzer I\nSisters Combat Scanner Probe x8\nSisters Core Scanner Probe x8\nSisters Expanded Probe Launcher\nSmall Gremlin Compact Energy Neutralizer\nSmall Tractor Beam I\nSubsystems:",
+      "shipName": "Loki",
+      "tags": [
+        "zkill",
+        "t3-subsystem",
+        "batch-4"
+      ],
+      "origin": "zkill"
+    },
+    {
+      "fitId": "zkill-proteus-133444509",
+      "shipTypeId": 29988,
+      "eft": "[Proteus, zkill 133444509]\n50MN Quad LiF Restrained Microwarpdrive\nCalm Firestorm Filament\nCompact Interdiction Nullifier\nCore Scanner Probe I x16\nCovert Ops Cloaking Device II\nCovert Research Tools x16\nData Analyzer II\nExplosive Armor Hardener II\nLight Armor Maintenance Bot I\nMedium Armor Repairer II\nMedium Energy Neutralizer II\nMedium Energy Neutralizer II\nMedium Energy Nosferatu II\nMedium Energy Nosferatu II\nMedium Gravity Capacitor Upgrade I\nMedium Hyperspatial Velocity Optimizer II\nMedium Nanobot Accelerator I\nMetal Scraps\nMultispectrum Energized Membrane II\nNanite Repair Paste x20\nNanofiber Internal Structure II\nNanofiber Internal Structure II\nOgre I x4\nOgre I x6\nProteus Core - Augmented Fusion Reactor\nProteus Defensive - Covert Reconfiguration\nProteus Offensive - Drone Synthesis Projector\nProteus Propulsion - Hyperspatial Optimization\nRelic Analyzer II\nSalvage Drone I\nShattered Villard Wheel x23\nSisters Core Probe Launcher\nSisters Core Scanner Probe x8\nSubsystems:\nVespa EC-600 x4\nWarp Core Stabilizer II",
+      "shipName": "Proteus",
+      "tags": [
+        "zkill",
+        "t3-subsystem",
+        "batch-4"
+      ],
+      "origin": "zkill"
+    },
+    {
+      "fitId": "zkill-tengu-133445382",
+      "shipTypeId": 29984,
+      "eft": "[Tengu, zkill 133445382]\nBallistic Control System II\nBallistic Control System II\nCovert Ops Cloaking Device II\nFederation Navy 10MN Afterburner\nHeavy Missile Launcher II, Mjolnir Fury Heavy Missile\nHeavy Missile Launcher II, Mjolnir Fury Heavy Missile\nHeavy Missile Launcher II, Mjolnir Fury Heavy Missile\nHeavy Missile Launcher II, Mjolnir Fury Heavy Missile\nHeavy Missile Launcher II, Mjolnir Fury Heavy Missile\nHeavy Missile Launcher II, Mjolnir Fury Heavy Missile\nInferno Fury Heavy Missile x559\nLarge Shield Booster II\nMedium Capacitor Control Circuit I\nMedium Capacitor Control Circuit II\nMedium Capacitor Control Circuit II\nMedium Compact Pb-Acid Cap Battery\nMedium F-S9 Regolith Compact Shield Extender\nMjolnir Auto-Targeting Light Missile I x199\nMjolnir Fury Heavy Missile x33\nMjolnir Fury Heavy Missile x33\nMjolnir Fury Heavy Missile x33\nMjolnir Fury Heavy Missile x33\nMjolnir Fury Heavy Missile x33\nMjolnir Fury Heavy Missile x33\nMjolnir Fury Heavy Missile x3458\nMjolnir Heavy Assault Missile x999\nMjolnir Heavy Missile x3\nMjolnir Light Missile x999\nMjolnir Rocket x199\nMobile Depot\nMultispectrum Shield Hardener II\nNova Fury Heavy Missile x1006\nNova Rocket x100\nScourge Fury Heavy Missile x1472\nShield Boost Amplifier I\nSisters Combat Scanner Probe x8\nSisters Expanded Probe Launcher\nSubsystems:\nTarget Painter I\nTengu Core - Electronic Efficiency Gate\nTengu Defensive - Covert Reconfiguration\nTengu Offensive - Accelerated Ejection Bay\nTengu Propulsion - Interdiction Nullifier\nWarp Core Stabilizer II",
+      "shipName": "Tengu",
+      "tags": [
+        "zkill",
+        "t3-subsystem",
+        "batch-4"
+      ],
+      "origin": "zkill"
+    }
+  ]
+}

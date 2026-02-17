@@ -7,6 +7,7 @@ const NAME_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 const CHARACTER_CACHE_TTL_MS = 1000 * 60 * 60 * 6;
 const TYPE_SEARCH_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 const TYPE_SEARCH_MISS_TTL_MS = 1000 * 60 * 60 * 6;
+const UNIVERSE_NAMES_BATCH_SIZE = 900;
 
 type EsiIdsResponse = {
   characters?: Array<{ id: number; name: string }>;
@@ -117,10 +118,25 @@ export async function resolveUniverseNames(
     return resolved;
   }
 
-  const data = await refreshUniverseNames(toFetch, onRetry, signal);
-  for (const row of data) {
-    resolved.set(row.id, row.name);
-    setCached(`eve-intel.cache.universe-name.${row.id}`, row.name, NAME_CACHE_TTL_MS);
+  let lastError: unknown;
+  for (let offset = 0; offset < toFetch.length; offset += UNIVERSE_NAMES_BATCH_SIZE) {
+    const batch = toFetch.slice(offset, offset + UNIVERSE_NAMES_BATCH_SIZE);
+    try {
+      const data = await refreshUniverseNames(batch, onRetry, signal);
+      for (const row of data) {
+        resolved.set(row.id, row.name);
+        setCached(`eve-intel.cache.universe-name.${row.id}`, row.name, NAME_CACHE_TTL_MS);
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw error;
+      }
+      lastError = error;
+    }
+  }
+
+  if (resolved.size === 0 && lastError) {
+    throw lastError;
   }
 
   return resolved;

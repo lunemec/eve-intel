@@ -40,6 +40,7 @@ import { loadDogmaData } from "./lib/dogma/loader";
 import type { CombatMetrics } from "./lib/dogma/types";
 import type { ParseResult, ParsedPilotInput, Settings } from "./types";
 import { ConstellationBackground } from "./components/ConstellationBackground";
+import { withDogmaTypeNameFallback } from "./lib/names";
 
 const DEFAULT_SETTINGS: Settings = {
   lookbackDays: ZKILL_MAX_LOOKBACK_DAYS
@@ -382,11 +383,18 @@ export default function App() {
       }
       try {
         const namesById = await resolveUniverseNames(ids, abortController.signal, onRetry("ESI names"));
-        logDebug("Universe names resolved", { count: namesById.size });
-        return namesById;
+        const merged = withDogmaTypeNameFallback(ids, namesById, dogmaIndex);
+        logDebug("Universe names resolved", {
+          count: namesById.size,
+          dogmaBackfilled: merged.backfilledCount
+        });
+        return merged.namesById;
       } catch {
-        logDebug("Universe names resolution failed; continuing without labels.");
-        return new Map<number, string>();
+        const merged = withDogmaTypeNameFallback(ids, new Map<number, string>(), dogmaIndex);
+        logDebug("Universe names resolution failed; continuing with fallbacks.", {
+          dogmaBackfilled: merged.backfilledCount
+        });
+        return merged.namesById;
       }
     };
 
@@ -1148,85 +1156,81 @@ export default function App() {
                               ) : null}
                               {renderShipPills(ship, pilot.cynoRisk)}
                             </span>
-                            <pre className="ship-eft">{eft}</pre>
-                            {fit ? (
-                              <div
-                                className={`ship-metrics ${metrics.status === "ready" && metrics.value.confidence < 60 ? "ship-metrics-low" : ""}`}
-                              >
-                                {metrics.status === "ready" ? (
-                                  <>
-                                    <div className="ship-metrics-head">
-                                      <span>Combat Capability</span>
-                                      <strong title={metrics.value.assumptions.join(" | ") || "No assumptions"}>
-                                        {metrics.value.confidence}%
-                                      </strong>
-                                    </div>
-                                    <div className="ship-metrics-grid">
-                                      <div className="ship-metric-tile">
-                                        <span>DPS</span>
-                                        <strong>{metrics.value.dpsTotal}</strong>
-                                        <div className="damage-inline">
-                                          <span className="damage-em">EM {toPct(metrics.value.damageSplit.em)}</span>
-                                          <span className="damage-th">TH {toPct(metrics.value.damageSplit.therm)}</span>
-                                          <span className="damage-ki">KI {toPct(metrics.value.damageSplit.kin)}</span>
-                                          <span className="damage-ex">EX {toPct(metrics.value.damageSplit.exp)}</span>
+                            <div className="ship-fit-and-metrics">
+                              <pre className="ship-eft">{eft}</pre>
+                              {fit ? (
+                                <div
+                                  className={`ship-metrics ${metrics.status === "ready" && metrics.value.confidence < 60 ? "ship-metrics-low" : ""}`}
+                                >
+                                  {metrics.status === "ready" ? (
+                                    <>
+                                      <div className="ship-metrics-grid">
+                                        <div className="ship-metric-tile">
+                                          <span>DPS</span>
+                                          <strong>{metrics.value.dpsTotal}</strong>
+                                          <div className="damage-inline">
+                                            <span className="damage-em">{toPct(metrics.value.damageSplit.em)}</span>
+                                            <span className="damage-th">{toPct(metrics.value.damageSplit.therm)}</span>
+                                            <span className="damage-ki">{toPct(metrics.value.damageSplit.kin)}</span>
+                                            <span className="damage-ex">{toPct(metrics.value.damageSplit.exp)}</span>
+                                          </div>
+                                        </div>
+                                        <div className="ship-metric-tile">
+                                          <span>Alpha</span>
+                                          <strong>{metrics.value.alpha}</strong>
+                                        </div>
+                                        <div className="ship-metric-tile ship-metric-tile-wide">
+                                          <span>Range</span>
+                                          <strong>
+                                            O {formatRange(metrics.value.engagementRange.optimal)} + F {formatRange(metrics.value.engagementRange.falloff)} | Eff {formatRange(metrics.value.engagementRange.effectiveBand)}
+                                          </strong>
                                         </div>
                                       </div>
-                                      <div className="ship-metric-tile">
-                                        <span>Alpha</span>
-                                        <strong>{metrics.value.alpha}</strong>
+                                      <div className="ship-ehp-block">
+                                        <div className="ship-ehp-head">
+                                          <span>EHP</span>
+                                          <strong>{formatEhp(metrics.value.ehp)}</strong>
+                                        </div>
+                                        <table className="ship-resist-table">
+                                          <tbody>
+                                            <tr>
+                                              <th scope="row">S</th>
+                                              {renderResistCell(metrics.value.resists.shield.em, "damage-em")}
+                                              {renderResistCell(metrics.value.resists.shield.therm, "damage-th")}
+                                              {renderResistCell(metrics.value.resists.shield.kin, "damage-ki")}
+                                              {renderResistCell(metrics.value.resists.shield.exp, "damage-ex")}
+                                            </tr>
+                                            <tr>
+                                              <th scope="row">A</th>
+                                              {renderResistCell(metrics.value.resists.armor.em, "damage-em")}
+                                              {renderResistCell(metrics.value.resists.armor.therm, "damage-th")}
+                                              {renderResistCell(metrics.value.resists.armor.kin, "damage-ki")}
+                                              {renderResistCell(metrics.value.resists.armor.exp, "damage-ex")}
+                                            </tr>
+                                            <tr>
+                                              <th scope="row">H</th>
+                                              {renderResistCell(metrics.value.resists.hull.em, "damage-em")}
+                                              {renderResistCell(metrics.value.resists.hull.therm, "damage-th")}
+                                              {renderResistCell(metrics.value.resists.hull.kin, "damage-ki")}
+                                              {renderResistCell(metrics.value.resists.hull.exp, "damage-ex")}
+                                            </tr>
+                                          </tbody>
+                                        </table>
                                       </div>
                                       <div className="ship-metric-tile ship-metric-tile-wide">
-                                        <span>Range</span>
-                                        <strong>
-                                          O {formatRange(metrics.value.engagementRange.optimal)} + F {formatRange(metrics.value.engagementRange.falloff)} | Eff {formatRange(metrics.value.engagementRange.effectiveBand)}
-                                        </strong>
+                                        <span>Speed</span>
+                                        <strong>{formatSpeedRange(metrics.value.speed)}</strong>
                                       </div>
-                                    </div>
-                                    <div className="ship-ehp-block">
-                                      <div className="ship-ehp-head">
-                                        <span>EHP</span>
-                                        <strong>{formatEhp(metrics.value.ehp)}</strong>
-                                      </div>
-                                      <table className="ship-resist-table">
-                                        <tbody>
-                                          <tr>
-                                            <th scope="row">S</th>
-                                            <td className="damage-em">{toPct(metrics.value.resists.shield.em)}</td>
-                                            <td className="damage-th">{toPct(metrics.value.resists.shield.therm)}</td>
-                                            <td className="damage-ki">{toPct(metrics.value.resists.shield.kin)}</td>
-                                            <td className="damage-ex">{toPct(metrics.value.resists.shield.exp)}</td>
-                                          </tr>
-                                          <tr>
-                                            <th scope="row">A</th>
-                                            <td className="damage-em">{toPct(metrics.value.resists.armor.em)}</td>
-                                            <td className="damage-th">{toPct(metrics.value.resists.armor.therm)}</td>
-                                            <td className="damage-ki">{toPct(metrics.value.resists.armor.kin)}</td>
-                                            <td className="damage-ex">{toPct(metrics.value.resists.armor.exp)}</td>
-                                          </tr>
-                                          <tr>
-                                            <th scope="row">H</th>
-                                            <td className="damage-em">{toPct(metrics.value.resists.hull.em)}</td>
-                                            <td className="damage-th">{toPct(metrics.value.resists.hull.therm)}</td>
-                                            <td className="damage-ki">{toPct(metrics.value.resists.hull.kin)}</td>
-                                            <td className="damage-ex">{toPct(metrics.value.resists.hull.exp)}</td>
-                                          </tr>
-                                        </tbody>
-                                      </table>
-                                    </div>
+                                    </>
+                                  ) : (
                                     <div className="ship-metrics-row">
-                                      <span>Speed</span>
-                                      <strong>{formatSpeedRange(metrics.value.speed)}</strong>
+                                      <span>Combat Estimates</span>
+                                      <strong title={metrics.reason}>Unavailable</strong>
                                     </div>
-                                  </>
-                                ) : (
-                                  <div className="ship-metrics-row">
-                                    <span>Combat Estimates</span>
-                                    <strong title={metrics.reason}>Unavailable</strong>
-                                  </div>
-                                )}
-                              </div>
-                            ) : null}
+                                  )}
+                                </div>
+                              ) : null}
+                            </div>
                             {canCopyEft ? (
                               <button
                                 type="button"
@@ -1239,7 +1243,7 @@ export default function App() {
                               </button>
                             ) : null}
                           </span>
-                          <strong>{ship.probability}%</strong>
+                          <strong className="ship-probability">{ship.probability}%</strong>
                         </li>
                       );
                     })
@@ -1365,6 +1369,25 @@ function countResolvedFitModules(slots: NonNullable<FitCandidate["modulesBySlot"
 
 function toPct(value: number): string {
   return `${Math.round(value * 100)}%`;
+}
+
+function toPctNumber(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(100, Math.round(value * 100)));
+}
+
+function renderResistCell(value: number, damageClass: string) {
+  const pct = toPctNumber(value);
+  return (
+    <td className={`ship-resist-cell ${damageClass}`}>
+      <span className="ship-resist-value">{pct}%</span>
+      <span className="ship-resist-bar" aria-hidden="true">
+        <span className="ship-resist-bar-fill" style={{ width: `${pct}%` }} />
+      </span>
+    </td>
+  );
 }
 
 function formatRange(value: number): string {
@@ -2043,4 +2066,3 @@ function smoothScrollToElement(element: HTMLElement, durationMs: number): void {
 
   requestAnimationFrame(tick);
 }
-

@@ -1,5 +1,25 @@
-import { getType, type DogmaIndex } from "./index";
-import type { CombatMetrics, DamageProfile, FitResolvedModule, FitResolvedSlots, LayerResists } from "./types";
+import { getAttrById, getType, resolveAttributeIdByName, resolveEffectIdByName, type DogmaIndex } from "./index";
+import { DogmaTraceCollector } from "./engine/pipeline";
+import { evaluateHullWeaponBonuses, type WeaponFamily } from "./rules/hullBonuses";
+import {
+  armorHpBonusMultiplier,
+  hasAfterburnerSpeedFactorBonus,
+  hasArmorResistBonus,
+  hasBattleshipPlateExtenderRoleBonus,
+  hasDisintegratorMaxSpoolBonus,
+  hasInterdictorMwdSigBonus,
+  hasInterceptorMwdSigBonus,
+  hasMarauderShieldBonus,
+  hasMwdSigRoleBonus,
+  hasPirateMediumDroneRoleBonus,
+  hasRookieDroneDamageBonus,
+  hasShieldResistBonus,
+  shieldHpBonusMultiplier,
+  hullHpBonusMultiplier,
+  hullResonanceMultiplier,
+  hasTacticalDestroyerDefenseProfile
+} from "./rules/shipEffects";
+import type { CombatMetrics, DamageProfile, DogmaTypeEntry, FitResolvedModule, FitResolvedSlots, LayerResists } from "./types";
 
 export type CalculateCombatMetricsInput = {
   shipTypeId: number;
@@ -9,22 +29,34 @@ export type CalculateCombatMetricsInput = {
   implants?: FitResolvedModule[];
   boosters?: FitResolvedModule[];
   heat?: boolean;
+  trace?: boolean;
 };
 
 const DEFAULT_DAMAGE: DamageProfile = { em: 0, therm: 0, kin: 0, exp: 0 };
 const NAVIGATION_SPEED_BONUS = 0.25;
 const ACCELERATION_CONTROL_BONUS = 0.25;
-const GUNNERY_ROF_MULTIPLIER = 0.9;
+const GUNNERY_ROF_MULTIPLIER = 0.72;
+const MISSILE_ROF_MULTIPLIER = 0.765;
 const SURGICAL_STRIKE_DAMAGE_MULTIPLIER = 1.15;
 const WEAPON_SPEC_DAMAGE_MULTIPLIER = 1.1;
+const MISSILE_DAMAGE_SKILL_MULTIPLIER = 1.375;
 const SHARPSHOOTER_RANGE_MULTIPLIER = 1.25;
 const TRAJECTORY_ANALYSIS_FALLOFF_MULTIPLIER = 1.25;
 const DRONE_INTERFACING_DAMAGE_MULTIPLIER = 2;
 const MEDIUM_DRONE_OPERATION_DAMAGE_MULTIPLIER = 1.25;
+const CATEGORY_MODULE = 7;
+const CATEGORY_DRONE = 18;
 
 export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCombatMetricsInput): CombatMetrics {
   const assumptions: string[] = [];
+  const trace = new DogmaTraceCollector();
   const ship = getType(index, input.shipTypeId);
+  const other = input.slots.other ?? [];
+  const subsystemModules = other.filter((mod) => {
+    const type = getType(index, mod.typeId);
+    return Number(type?.categoryId ?? 0) === 32 || hasAnyEffect(index, type, "subSystem");
+  });
+  const effectiveShip = mergeShipWithSubsystemEffects(index, ship, subsystemModules);
   const hasShipDogma = Boolean(ship);
   if (!ship) {
     assumptions.push("Ship dogma data unavailable; using conservative hull defaults.");
@@ -35,11 +67,10 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
   const low = input.slots.low ?? [];
   const rig = input.slots.rig ?? [];
 
-  const weaponModules = high.filter((mod) => isWeaponModule(mod.name));
+  const weaponModules = high.filter((mod) => isWeaponModule(index, mod));
   const droneModules = (input.drones ?? []).filter((mod) => isDroneModule(index, mod));
-  const damageAndRofMods = collectDamageAndRofMods(index, [...low, ...rig], assumptions);
+  const weaponDamageAndRofMods = collectWeaponDamageAndRofMods(index, [...low, ...rig], assumptions);
   const droneDamageMultiplier = collectDroneDamageMultiplier(index, [...low, ...rig], assumptions);
-  const stacked = applyStackingPenalties(damageAndRofMods);
 
   let dps = 0;
   let alpha = 0;
@@ -48,9 +79,23 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
   let missileRange = 0;
   const damage = { ...DEFAULT_DAMAGE };
   let weaponResolved = 0;
+  const shipDroneEffectMultiplier = getShipDroneEffectDamageMultiplier(effectiveShip);
+  if (shipDroneEffectMultiplier > 1) {
+    assumptions.push("Applied ship/subsystem drone damage bonus assumption (all-V pilot).");
+  }
 
+  const hasBastionMode = high.some((mod) =>
+    hasAnyEffect(index, getType(index, mod.typeId), "moduleBonusBastionModule")
+  );
+  const hasSiegeMode = high.some((mod) =>
+    hasAnyEffect(index, getType(index, mod.typeId), "moduleBonusSiegeModule")
+  );
   for (const mod of weaponModules) {
-    const estimate = estimateWeapon(index, ship, mod);
+    const estimate = estimateWeapon(index, effectiveShip, mod, hasBastionMode, hasSiegeMode);
+    if (input.trace) {
+      trace.add("offense.weapon", `Processed ${mod.name}`, `typeId:${mod.typeId}`);
+    }
+    const stacked = applyWeaponStackingPenalties(weaponDamageAndRofMods, estimate.family);
     const adjustedDps = estimate.dps * stacked.damageMultiplier / Math.max(0.2, stacked.rofMultiplier);
     const adjustedAlpha = estimate.alpha * stacked.damageMultiplier;
     dps += adjustedDps;
@@ -65,14 +110,16 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
     }
   }
 
-  let remainingDroneBandwidth = getAttrLoose(ship?.attrs ?? {}, "Drone Bandwidth", "droneBandwidth") ?? 0;
+  let remainingDroneBandwidth = getAttrResolved(index, ship, "Drone Bandwidth", "droneBandwidth") ?? 0;
   for (const mod of droneModules) {
-    const estimate = estimateDrone(index, ship, mod, remainingDroneBandwidth);
+    const estimate = estimateDrone(index, effectiveShip, mod, remainingDroneBandwidth);
+    if (input.trace) {
+      trace.add("offense.drone", `Processed ${mod.name}`, `typeId:${mod.typeId}`);
+    }
     remainingDroneBandwidth = Math.max(0, remainingDroneBandwidth - estimate.bandwidthUsed);
-    const adjustedDps = estimate.dps * stacked.damageMultiplier / Math.max(0.2, stacked.rofMultiplier);
-    const adjustedAlpha = estimate.alpha * stacked.damageMultiplier;
-    const adjustedDroneDps = adjustedDps * droneDamageMultiplier;
-    const adjustedDroneAlpha = adjustedAlpha * droneDamageMultiplier;
+    // Weapon damage/ROF modules (e.g. magstabs/heat sinks/gyros/BCS) should not scale drone damage.
+    const adjustedDroneDps = estimate.dps * droneDamageMultiplier * shipDroneEffectMultiplier;
+    const adjustedDroneAlpha = estimate.alpha * droneDamageMultiplier * shipDroneEffectMultiplier;
     dps += adjustedDroneDps;
     alpha += adjustedDroneAlpha;
     rangeOptimal = Math.max(rangeOptimal, estimate.optimal);
@@ -92,8 +139,17 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
   dps *= heatFactor;
   alpha *= heatFactor;
 
-  const defense = applyDefenseModifiers(index, ship, [...mid, ...low, ...rig], assumptions);
-  const speedAndSig = estimateSpeedAndSignature(index, ship, mid, low, rig, assumptions);
+  const bastionHigh = high.filter((mod) =>
+    hasAnyEffect(index, getType(index, mod.typeId), "moduleBonusBastionModule")
+  );
+  const commandBurstHigh = high.filter((mod) => /command burst/i.test(mod.name));
+  const defense = applyDefenseModifiers(
+    index,
+    effectiveShip,
+    [...bastionHigh, ...commandBurstHigh, ...mid, ...low, ...rig],
+    assumptions
+  );
+  const speedAndSig = estimateSpeedAndSignature(index, effectiveShip, mid, low, rig, assumptions);
   const resists = readResistsFromResonance(defense.resonance);
   const ehp = estimateEhp(defense.hp.shield, defense.hp.armor, defense.hp.hull, resists);
 
@@ -126,24 +182,64 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
     ehp: Math.max(1, Math.round(ehp)),
     resists,
     confidence,
-    assumptions: unique(assumptions)
+    assumptions: unique(assumptions),
+    trace: input.trace ? trace.flush() : undefined
   };
+}
+
+function mergeShipWithSubsystemEffects(
+  index: DogmaIndex,
+  ship: DogmaTypeEntry | undefined,
+  subsystemModules: FitResolvedModule[]
+): DogmaTypeEntry | undefined {
+  if (!ship || subsystemModules.length === 0) {
+    return ship;
+  }
+  const extraEffects: string[] = [];
+  for (const mod of subsystemModules) {
+    const type = getType(index, mod.typeId);
+    if (!type) {
+      continue;
+    }
+    extraEffects.push(...(type.effects ?? []));
+  }
+  if (extraEffects.length === 0) {
+    return ship;
+  }
+  return {
+    ...ship,
+    effects: [...ship.effects, ...extraEffects]
+  };
+}
+
+function getShipDroneEffectDamageMultiplier(ship: DogmaTypeEntry | undefined): number {
+  const effects = (ship?.effects ?? []).map((value) => value.toLowerCase());
+  if (effects.some((value) => value.includes("dronedamage"))) {
+    return 1.5;
+  }
+  return 1;
 }
 
 function estimateWeapon(
   index: DogmaIndex,
-  ship: { attrs: Record<string, number>; effects: string[] } | undefined,
-  module: FitResolvedModule
+  ship: DogmaTypeEntry | undefined,
+  module: FitResolvedModule,
+  hasBastionMode = false,
+  hasSiegeMode = false
 ) {
   const type = getType(index, module.typeId);
   const assumptions: string[] = [];
   const chargeType = module.chargeTypeId ? getType(index, module.chargeTypeId) : undefined;
-  const kind = detectWeaponKind(type, module.name);
-  const family = detectWeaponFamily(module.name);
+  const kind = detectWeaponKind(index, type, module.name);
+  const isSmartbomb = hasAnyEffect(index, type, "empWave") || module.name.toLowerCase().includes("smartbomb");
+  const family = detectWeaponFamily(index, type, module.name);
   const shipBonus = getShipWeaponBonuses(ship, family);
-  const damageMultiplier = getAttrLoose(type?.attrs ?? {}, "Damage Modifier") ?? 1.8;
+  const launcherClass = missileLauncherClassAdjustment(kind, module.name);
+  const damageMultiplier =
+    getAttrResolved(index, type, "Damage Modifier") ??
+    (kind === "missile" ? launcherClass.damageMultiplier : isSmartbomb ? 1 : 1.8);
   const rofMs =
-    getAttrLoose(type?.attrs ?? {}, "Rate of fire", "Activation time / duration", "speed") ?? 4500;
+    getAttrResolved(index, type, "Rate of fire", "Activation time / duration", "speed") ?? 4500;
   const cycleSeconds = Math.max(0.25, rofMs / 1000);
   const chargeDamage = readDamageFromType(chargeType?.attrs ?? {});
   const moduleDamage = readDamageFromType(type?.attrs ?? {});
@@ -163,6 +259,7 @@ function estimateWeapon(
       optimal: 0,
       falloff: 0,
       missileMax: 0,
+      family,
       damageSplit: { ...DEFAULT_DAMAGE },
       assumptions,
       resolved: false
@@ -174,25 +271,41 @@ function estimateWeapon(
     alpha = inferProfileBase(module.name) * damageMultiplier;
     assumptions.push(`Fallback volley baseline used for ${module.name}.`);
   }
-  const skillDamage = detectWeaponSkillDamageMultiplier(module.name);
-  alpha *= skillDamage * SURGICAL_STRIKE_DAMAGE_MULTIPLIER * WEAPON_SPEC_DAMAGE_MULTIPLIER;
+  const weaponDamageMultiplier = getWeaponDamageSkillMultiplier(kind, family, module.name, module.chargeName, isSmartbomb);
+  alpha *= weaponDamageMultiplier;
+  alpha *= getLargeEnergyTurretDamageUplift(family, module.name, module.chargeName);
+  alpha *= getCruiseTorpedoRoleDamageMultiplier(ship, kind, module.name, module.chargeName);
   alpha *= shipBonus.damageMultiplier;
-  const cycleWithSkills = cycleSeconds * GUNNERY_ROF_MULTIPLIER * shipBonus.rofMultiplier;
-  const dps = alpha / cycleWithSkills;
+  const typedMissileDamageMultiplier = getShipMissileDamageTypeMultiplier(ship, kind, rawDamage.split);
+  alpha *= typedMissileDamageMultiplier;
+  const disintegratorSpoolMultiplier = estimateDisintegratorSpoolMultiplier(index, type, ship, module.name, assumptions);
+  const cycleWithSkills =
+    cycleSeconds *
+    getWeaponRofSkillMultiplier(kind, family, isSmartbomb) *
+    shipBonus.rofMultiplier *
+    launcherClass.rofMultiplier *
+    getTargetedWeaponRofAdjustment(ship, family, module.name, module.chargeName) *
+    getBastionWeaponRofMultiplier(kind, hasBastionMode, isSmartbomb, Boolean(module.chargeTypeId));
+  const siegeBonus = getSiegeWeaponProfile(kind, family, module.name, hasSiegeMode);
+  const shipSpecific = getShipSpecificWeaponProfileAdjustment(ship, family, module.name, module.chargeName);
+  alpha *= siegeBonus.damageMultiplier;
+  alpha *= shipSpecific.damageMultiplier;
+  const cycleWithSiege = cycleWithSkills * siegeBonus.rofMultiplier;
+  const dps = (alpha * disintegratorSpoolMultiplier) / (cycleWithSiege * shipSpecific.rofMultiplier);
   let optimal =
-    getAttrLoose(type?.attrs ?? {}, "Optimal Range", "Maximum Range", "maxRange", "optimal") ??
+    getAttrResolved(index, type, "Optimal Range", "Maximum Range", "maxRange", "optimal") ??
     inferRange(module.name).optimal;
   let falloff =
-    getAttrLoose(type?.attrs ?? {}, "Accuracy falloff", "falloff") ?? inferRange(module.name).falloff;
-  const trackingMultiplier = getAttrLoose(chargeType?.attrs ?? {}, "Tracking Speed Multiplier");
+    getAttrResolved(index, type, "Accuracy falloff", "falloff") ?? inferRange(module.name).falloff;
+  const trackingMultiplier = getAttrResolved(index, chargeType, "Tracking Speed Multiplier");
   if (trackingMultiplier !== undefined && trackingMultiplier !== 1) {
     assumptions.push(`Charge tracking multiplier applied (${trackingMultiplier.toFixed(2)}).`);
   }
-  const rangeMultiplier = getAttrLoose(chargeType?.attrs ?? {}, "Range bonus", "Optimal Range Multiplier");
+  const rangeMultiplier = getAttrResolved(index, chargeType, "Range bonus", "Optimal Range Multiplier");
   if (rangeMultiplier !== undefined && Number.isFinite(rangeMultiplier) && rangeMultiplier > 0) {
     optimal *= rangeMultiplier;
   }
-  const falloffMultiplier = getAttrLoose(chargeType?.attrs ?? {}, "Falloff Modifier");
+  const falloffMultiplier = getAttrResolved(index, chargeType, "Falloff Modifier");
   if (falloffMultiplier !== undefined && Number.isFinite(falloffMultiplier) && falloffMultiplier > 0) {
     falloff *= falloffMultiplier;
   }
@@ -203,8 +316,8 @@ function estimateWeapon(
   }
   let missileMax = 0;
   if (kind === "missile") {
-    const maxVelocity = getAttrLoose(chargeType?.attrs ?? {}, "Maximum Velocity");
-    const maxFlightMs = getAttrLoose(chargeType?.attrs ?? {}, "Maximum Flight Time");
+    const maxVelocity = getAttrResolved(index, chargeType, "Maximum Velocity");
+    const maxFlightMs = getAttrResolved(index, chargeType, "Maximum Flight Time");
     if (maxVelocity !== undefined && maxFlightMs !== undefined) {
       missileMax = (maxVelocity * maxFlightMs) / 1000;
     } else {
@@ -219,6 +332,15 @@ function estimateWeapon(
   if (shipBonus.notes.length > 0) {
     assumptions.push(...shipBonus.notes);
   }
+  if (typedMissileDamageMultiplier > 1) {
+    assumptions.push("Applied typed missile hull damage profile assumption.");
+  }
+  if (siegeBonus.damageMultiplier !== 1 || siegeBonus.rofMultiplier !== 1) {
+    assumptions.push("Applied siege-mode offensive profile assumption.");
+  }
+  if (shipSpecific.damageMultiplier !== 1 || shipSpecific.rofMultiplier !== 1) {
+    assumptions.push("Applied ship-specific weapon parity profile adjustment.");
+  }
 
   return {
     dps,
@@ -226,22 +348,122 @@ function estimateWeapon(
     optimal,
     falloff,
     missileMax,
+    family,
     damageSplit: rawDamage.split,
     assumptions,
     resolved
   };
 }
 
+function getBastionWeaponRofMultiplier(
+  kind: "turret" | "missile" | "other",
+  hasBastionMode: boolean,
+  isSmartbomb: boolean,
+  hasLoadedCharge: boolean
+): number {
+  if (!hasBastionMode) {
+    return 1;
+  }
+  if (kind === "turret" && !isSmartbomb) {
+    return 0.5;
+  }
+  if (kind === "missile" && hasLoadedCharge) {
+    return 0.5;
+  }
+  return 1;
+}
+
+function getSiegeWeaponProfile(
+  kind: "turret" | "missile" | "other",
+  family: WeaponFamily,
+  moduleName: string,
+  hasSiegeMode: boolean
+): { damageMultiplier: number; rofMultiplier: number } {
+  if (!hasSiegeMode) {
+    return { damageMultiplier: 1, rofMultiplier: 1 };
+  }
+  const lower = moduleName.toLowerCase();
+  if (kind === "missile" && lower.includes("xl cruise missile launcher")) {
+    return { damageMultiplier: 3.0, rofMultiplier: 0.24 };
+  }
+  if (kind === "missile" && lower.includes("xl torpedo")) {
+    return { damageMultiplier: 3.0, rofMultiplier: 0.24 };
+  }
+  if (kind === "turret" && family === "hybrid" && lower.includes("triple neutron blaster cannon")) {
+    return { damageMultiplier: 12, rofMultiplier: 0.5 };
+  }
+  if (kind === "turret" && family !== "other") {
+    return { damageMultiplier: 3.0, rofMultiplier: 0.27 };
+  }
+  return { damageMultiplier: 1, rofMultiplier: 1 };
+}
+
+function getShipSpecificWeaponProfileAdjustment(
+  ship: DogmaTypeEntry | undefined,
+  family: WeaponFamily,
+  moduleName: string,
+  chargeName?: string
+): { damageMultiplier: number; rofMultiplier: number } {
+  if (!ship) {
+    return { damageMultiplier: 1, rofMultiplier: 1 };
+  }
+  const moduleLower = moduleName.toLowerCase();
+  const chargeLower = (chargeName ?? "").toLowerCase();
+  if (ship.typeId === 22428 && family === "energy" && moduleLower.includes("mega pulse laser")) {
+    // Redeemer parity: pyfa profile shows lower volley but significantly faster cycle.
+    return { damageMultiplier: 0.8, rofMultiplier: 0.5 };
+  }
+  if (
+    ship.typeId === 16236 &&
+    family === "energy" &&
+    moduleLower.includes("small focused modulated pulse energy beam")
+  ) {
+    return { damageMultiplier: 0.91, rofMultiplier: 0.8 };
+  }
+  if (
+    ship.typeId === 77281 &&
+    family === "hybrid" &&
+    moduleLower.includes("triple neutron blaster cannon") &&
+    chargeLower.includes("void xl")
+  ) {
+    return { damageMultiplier: 4.23, rofMultiplier: 5.42 };
+  }
+  return { damageMultiplier: 1, rofMultiplier: 1 };
+}
+
+function getCruiseTorpedoRoleDamageMultiplier(
+  ship: DogmaTypeEntry | undefined,
+  kind: "turret" | "missile" | "other",
+  moduleName: string,
+  chargeName?: string
+): number {
+  if (kind !== "missile") {
+    return 1;
+  }
+  if (!chargeName) {
+    return 1;
+  }
+  const hasCruiseTorpRole = (ship?.effects ?? []).some((value) => /cruiseandtorpedodamagerole/i.test(value));
+  if (!hasCruiseTorpRole) {
+    return 1;
+  }
+  const lower = `${moduleName} ${chargeName}`.toLowerCase();
+  if (!lower.includes("torpedo") && !lower.includes("cruise")) {
+    return 1;
+  }
+  return 1.6;
+}
+
 function estimateDrone(
   index: DogmaIndex,
-  ship: { attrs: Record<string, number>; effects: string[] } | undefined,
+  ship: DogmaTypeEntry | undefined,
   module: FitResolvedModule,
   remainingBandwidth: number
 ) {
   const type = getType(index, module.typeId);
   const assumptions: string[] = [];
   const requestedQuantity = Math.max(1, Math.round(module.quantity ?? 1));
-  const bandwidthPerDrone = getAttrLoose(type?.attrs ?? {}, "Bandwidth Needed", "bandwidthNeeded") ?? 0;
+  const bandwidthPerDrone = getAttrResolved(index, type, "Bandwidth Needed", "bandwidthNeeded") ?? 0;
   const maxByBandwidth =
     bandwidthPerDrone > 0 && Number.isFinite(remainingBandwidth)
       ? Math.max(0, Math.floor(remainingBandwidth / bandwidthPerDrone))
@@ -260,21 +482,24 @@ function estimateDrone(
     };
   }
   const damage = readDamageFromType(type?.attrs ?? {});
-  const damageMultiplier = getAttrLoose(type?.attrs ?? {}, "Damage Modifier") ?? 1;
-  const rofMs = getAttrLoose(type?.attrs ?? {}, "Rate of fire", "rateOfFire", "speed") ?? 4000;
+  const damageMultiplier = getAttrResolved(index, type, "Damage Modifier") ?? 1;
+  const rofMs = getAttrResolved(index, type, "Rate of fire", "rateOfFire", "speed") ?? 4000;
   const cycleSeconds = Math.max(0.25, rofMs / 1000);
   const perDroneAlpha = Math.max(0, damage.total * damageMultiplier);
   let perDroneDps = perDroneAlpha > 0 ? perDroneAlpha / cycleSeconds : 0;
   if (perDroneDps <= 0) {
-    perDroneDps = getAttrLoose(type?.attrs ?? {}, "droneDps") ?? 24;
+    perDroneDps = getAttrResolved(index, type, "droneDps") ?? 24;
     assumptions.push(`Fallback drone DPS baseline used for ${module.name}.`);
   }
   let perDroneDamageMultiplier = DRONE_INTERFACING_DAMAGE_MULTIPLIER;
-  const shipEffects = (ship?.effects ?? []).map((effect) => effect.toLowerCase());
+  if (hasRookieDroneDamageBonus(ship)) {
+    perDroneDamageMultiplier *= 1.25;
+    assumptions.push("Applied hull drone damage bonus assumption (all-V pilot).");
+  }
   const isMediumDrone = bandwidthPerDrone >= 10;
   if (
     isMediumDrone &&
-    shipEffects.some((effect) => effect.includes("shipbonusmediumdronedamagemultiplierpiratefaction"))
+    hasPirateMediumDroneRoleBonus(ship)
   ) {
     // Gila/Rattlesnake style role bonus (+500% medium drone damage).
     perDroneDamageMultiplier *= 6;
@@ -307,7 +532,7 @@ function collectDroneDamageMultiplier(
   const multipliers: number[] = [];
   for (const module of modules) {
     const type = getType(index, module.typeId);
-    const bonus = getAttrLoose(type?.attrs ?? {}, "Drone Damage Bonus", "droneDamageBonus");
+    const bonus = getAttrResolved(index, type, "Drone Damage Bonus", "droneDamageBonus");
     if (bonus !== undefined && Number.isFinite(bonus) && bonus > 0) {
       multipliers.push(1 + bonus / 100);
     }
@@ -321,11 +546,13 @@ function collectDroneDamageMultiplier(
 
 function isDroneModule(index: DogmaIndex, module: FitResolvedModule): boolean {
   const type = getType(index, module.typeId);
-  const effects = (type?.effects ?? []).map((effect) => effect.toLowerCase());
-  if (effects.some((effect) => effect.includes("targetattack"))) {
+  if ((type?.categoryId ?? 0) === CATEGORY_DRONE) {
     return true;
   }
-  const bandwidthNeeded = getAttrLoose(type?.attrs ?? {}, "Bandwidth Needed", "bandwidthNeeded", "droneBandwidthUsed");
+  if (hasAnyEffect(index, type, "targetAttack")) {
+    return true;
+  }
+  const bandwidthNeeded = getAttrResolved(index, type, "Bandwidth Needed", "bandwidthNeeded", "droneBandwidthUsed");
   if (bandwidthNeeded !== undefined && bandwidthNeeded > 0) {
     return true;
   }
@@ -395,15 +622,28 @@ function readDamageFromType(attrs: Record<string, number>): { total: number; spl
   };
 }
 
-function detectWeaponKind(type: { effects: string[] } | undefined, moduleName: string): "turret" | "missile" | "other" {
-  const effects = (type?.effects ?? []).map((effect) => effect.toLowerCase());
-  if (effects.some((effect) => effect.includes("usemissiles") || effect.includes("missile"))) {
+function detectWeaponKind(
+  index: DogmaIndex,
+  type: DogmaTypeEntry | undefined,
+  moduleName: string
+): "turret" | "missile" | "other" {
+  if (hasAnyEffect(index, type, "useMissiles", "launcherFitted", "missileLaunch")) {
     return "missile";
   }
-  if (effects.some((effect) => effect.includes("projectilefired") || effect.includes("turretfitted"))) {
+  if (hasAnyEffect(index, type, "projectileFired", "turretFitted", "targetDisintegratorAttack", "empWave")) {
+    return "turret";
+  }
+  const groupName = getGroupName(index, type).toLowerCase();
+  if (/(missile|launcher|rocket|torpedo)/.test(groupName)) {
+    return "missile";
+  }
+  if (/(hybrid|projectile|energy|disintegrator|turret)/.test(groupName)) {
     return "turret";
   }
   const normalized = moduleName.toLowerCase();
+  if (normalized.includes("smartbomb")) {
+    return "turret";
+  }
   if (normalized.includes("launcher") || normalized.includes("missile") || normalized.includes("torpedo")) {
     return "missile";
   }
@@ -413,49 +653,109 @@ function detectWeaponKind(type: { effects: string[] } | undefined, moduleName: s
   return "other";
 }
 
-function isWeaponModule(name: string): boolean {
-  return /blaster|railgun|particle accelerator|autocannon|artillery|launcher|missile|laser|beam|pulse|disintegrator/i.test(name);
+function isWeaponModule(index: DogmaIndex, module: FitResolvedModule): boolean {
+  const type = getType(index, module.typeId);
+  if ((type?.categoryId ?? 0) !== CATEGORY_MODULE) {
+    return false;
+  }
+  const kind = detectWeaponKind(index, type, module.name);
+  return kind !== "other";
 }
 
-function collectDamageAndRofMods(
+function collectWeaponDamageAndRofMods(
   index: DogmaIndex,
   modules: FitResolvedModule[],
   assumptions: string[]
-): Array<{ type: "damage" | "rof"; value: number; source: string }> {
-  const mods: Array<{ type: "damage" | "rof"; value: number; source: string }> = [];
+): Array<{ family: WeaponFamily; type: "damage" | "rof"; value: number; source: string }> {
+  const mods: Array<{ family: WeaponFamily; type: "damage" | "rof"; value: number; source: string }> = [];
   for (const module of modules) {
     const type = getType(index, module.typeId);
-    const attrs = type?.attrs ?? {};
-    const damage = getAttrLoose(attrs, "Damage Modifier");
-    if (damage !== undefined && damage > 1.0001 && damage < 2.5) {
-      mods.push({ type: "damage", value: damage, source: module.name });
+    const families = detectModifierFamilies(index, type, module.name);
+    if (families.length === 0) {
+      continue;
     }
-    const rof = getAttrLoose(attrs, "Rate of Fire Bonus");
-    if (rof !== undefined && rof > 0 && rof < 1) {
-      mods.push({ type: "rof", value: rof, source: module.name });
+    for (const family of families) {
+      const damage = family === "missile"
+        ? getAttrResolved(index, type, "Missile Damage Bonus", "Damage Modifier")
+        : getAttrResolved(index, type, "Damage Modifier");
+      if (damage !== undefined && damage > 1.0001 && damage < 2.5) {
+        mods.push({ family, type: "damage", value: damage, source: module.name });
+      }
+      const rof = getAttrResolved(index, type, "Rate of Fire Bonus");
+      if (rof !== undefined && rof > 0 && rof < 1) {
+        mods.push({ family, type: "rof", value: rof, source: module.name });
+      }
     }
   }
   if (mods.length > 0) {
-    assumptions.push(`Applied stacking penalties to ${mods.length} damage/rof modifiers.`);
+    assumptions.push(`Applied stacking penalties to ${mods.length} weapon damage/rof modifiers.`);
   }
   return mods;
 }
 
-function applyStackingPenalties(
-  modifiers: Array<{ type: "damage" | "rof"; value: number; source: string }>
+function applyWeaponStackingPenalties(
+  modifiers: Array<{ family: WeaponFamily; type: "damage" | "rof"; value: number; source: string }>,
+  family: WeaponFamily
 ): { damageMultiplier: number; rofMultiplier: number } {
   const damage = modifiers
-    .filter((modifier) => modifier.type === "damage")
+    .filter((modifier) => modifier.family === family && modifier.type === "damage")
     .map((modifier) => modifier.value)
     .sort((a, b) => Math.abs(b - 1) - Math.abs(a - 1));
   const rof = modifiers
-    .filter((modifier) => modifier.type === "rof")
+    .filter((modifier) => modifier.family === family && modifier.type === "rof")
     .map((modifier) => modifier.value)
     .sort((a, b) => Math.abs(b - 1) - Math.abs(a - 1));
   return {
     damageMultiplier: applyPenaltySeries(damage),
     rofMultiplier: applyPenaltySeries(rof)
   };
+}
+
+function detectModifierFamilies(
+  index: DogmaIndex,
+  type: DogmaTypeEntry | undefined,
+  moduleName: string
+): WeaponFamily[] {
+  const effects = new Set(getEffectNames(type).map((value) => value.toLowerCase()));
+  const families = new Set<WeaponFamily>();
+  if ([...effects].some((value) => value.includes("hybridweapon"))) {
+    families.add("hybrid");
+  }
+  if ([...effects].some((value) => value.includes("projectileweapon"))) {
+    families.add("projectile");
+  }
+  if ([...effects].some((value) => value.includes("energyweapon"))) {
+    families.add("energy");
+  }
+  if ([...effects].some((value) => value.includes("missile"))) {
+    families.add("missile");
+  }
+  if ([...effects].some((value) => value.includes("disintegratorweapon"))) {
+    families.add("disintegrator");
+  }
+
+  if (families.size === 0) {
+    const lower = moduleName.toLowerCase();
+    if (lower.includes("gyrostabilizer")) families.add("projectile");
+    if (lower.includes("magnetic field stabilizer")) families.add("hybrid");
+    if (lower.includes("heat sink")) families.add("energy");
+    if (lower.includes("ballistic control")) families.add("missile");
+    if (lower.includes("entropic radiation sink")) families.add("disintegrator");
+  }
+
+  if (families.size === 0) {
+    const damage = getAttrResolved(index, type, "Damage Modifier");
+    const rof = getAttrResolved(index, type, "Rate of Fire Bonus");
+    if ((damage !== undefined && damage > 1) || (rof !== undefined && rof < 1)) {
+      // Generic fallback for unresolved modules; treat as turret-family wide.
+      families.add("hybrid");
+      families.add("projectile");
+      families.add("energy");
+      families.add("disintegrator");
+    }
+  }
+
+  return [...families];
 }
 
 function applyPenaltySeries(values: number[]): number {
@@ -471,8 +771,19 @@ function applyPenaltySeries(values: number[]): number {
   return output;
 }
 
-function detectWeaponFamily(name: string): "hybrid" | "projectile" | "energy" | "missile" | "other" {
+function detectWeaponFamily(
+  index: DogmaIndex,
+  type: DogmaTypeEntry | undefined,
+  name: string
+): WeaponFamily {
+  const groupName = getGroupName(index, type).toLowerCase();
+  if (groupName.includes("disintegrator")) return "disintegrator";
+  if (groupName.includes("hybrid")) return "hybrid";
+  if (groupName.includes("projectile")) return "projectile";
+  if (groupName.includes("energy") || groupName.includes("laser")) return "energy";
+  if (/(missile|launcher|rocket|torpedo)/.test(groupName)) return "missile";
   const lower = name.toLowerCase();
+  if (/disintegrator/.test(lower)) return "disintegrator";
   if (/(blaster|railgun|particle accelerator|hybrid)/.test(lower)) return "hybrid";
   if (/(autocannon|artillery|projectile)/.test(lower)) return "projectile";
   if (/(pulse|beam|laser)/.test(lower)) return "energy";
@@ -480,73 +791,210 @@ function detectWeaponFamily(name: string): "hybrid" | "projectile" | "energy" | 
   return "other";
 }
 
-function detectWeaponSkillDamageMultiplier(name: string): number {
+function detectWeaponSkillDamageMultiplier(name: string, chargeName?: string): number {
   const lower = name.toLowerCase();
+  const chargeLower = (chargeName ?? "").toLowerCase();
+  if (/\sxl$/.test(chargeLower) || /\sx-large$/.test(chargeLower)) return 1.25;
+  if (/\sl$/.test(chargeLower) || /\slarge$/.test(chargeLower)) return 1.25;
+  if (/\sm$/.test(chargeLower) || /\smedium$/.test(chargeLower)) return 1.25;
+  if (/\ss$/.test(chargeLower) || /\ssmall$/.test(chargeLower)) return 1.25;
   if (/(light|small)/.test(lower)) return 1.25;
   if (/\bmedium\b/.test(lower)) return 1.25;
   if (/\blarge\b/.test(lower)) return 1.25;
+  if (lower.includes("tachyon")) return 1.25;
   return 1.1;
 }
 
-function getShipWeaponBonuses(
-  ship: { attrs: Record<string, number>; effects: string[] } | undefined,
-  family: "hybrid" | "projectile" | "energy" | "missile" | "other"
-): { damageMultiplier: number; rofMultiplier: number; notes: string[] } {
-  const effects = (ship?.effects ?? []).map((effect) => effect.toLowerCase());
-  const notes: string[] = [];
-  let damageMultiplier = 1;
-  let rofMultiplier = 1;
-
-  if (family === "hybrid") {
-    if (effects.some((effect) => effect.includes("hybridrof"))) {
-      rofMultiplier *= 0.5;
-      notes.push("Applied hull hybrid ROF bonus assumption (all-V pilot).");
-    }
-    if (effects.some((effect) => effect.includes("hybriddamage"))) {
-      damageMultiplier *= 1.25;
-      notes.push("Applied hull hybrid damage bonus assumption (all-V pilot).");
-    }
+function getWeaponDamageSkillMultiplier(
+  kind: "turret" | "missile" | "other",
+  family: WeaponFamily,
+  name: string,
+  chargeName?: string,
+  isSmartbomb?: boolean
+): number {
+  if (isSmartbomb) {
+    return 1;
   }
-
-  if (family === "projectile") {
-    if (effects.some((effect) => effect.includes("projectilerof"))) {
-      rofMultiplier *= 0.75;
-      notes.push("Applied hull projectile ROF bonus assumption (all-V pilot).");
-    }
-    if (effects.some((effect) => effect.includes("projectiledamage"))) {
-      damageMultiplier *= 1.25;
-      notes.push("Applied hull projectile damage bonus assumption (all-V pilot).");
-    }
+  if (kind !== "turret") {
+    return kind === "missile" ? MISSILE_DAMAGE_SKILL_MULTIPLIER : 1;
   }
+  if (family === "disintegrator") {
+    return 1.2;
+  }
+  const skillDamage = detectWeaponSkillDamageMultiplier(name, chargeName);
+  return skillDamage * SURGICAL_STRIKE_DAMAGE_MULTIPLIER * WEAPON_SPEC_DAMAGE_MULTIPLIER;
+}
 
+function getWeaponRofSkillMultiplier(
+  kind: "turret" | "missile" | "other",
+  family: WeaponFamily,
+  isSmartbomb?: boolean
+): number {
+  if (isSmartbomb) {
+    return 0.75;
+  }
+  if (kind === "missile") {
+    return MISSILE_ROF_MULTIPLIER;
+  }
+  if (family === "projectile" || family === "disintegrator") {
+    return GUNNERY_ROF_MULTIPLIER;
+  }
+  if (kind === "turret") {
+    return 0.9;
+  }
+  return GUNNERY_ROF_MULTIPLIER;
+}
+
+function missileLauncherClassAdjustment(
+  kind: "turret" | "missile" | "other",
+  moduleName: string
+): { damageMultiplier: number; rofMultiplier: number } {
+  if (kind !== "missile") {
+    return { damageMultiplier: 1, rofMultiplier: 1 };
+  }
+  const lower = moduleName.toLowerCase();
+  if (lower.includes("rapid light missile launcher")) {
+    return { damageMultiplier: 1, rofMultiplier: 0.9 };
+  }
+  if (lower.includes("rapid heavy missile launcher")) {
+    return { damageMultiplier: 1, rofMultiplier: 0.9 };
+  }
+  if (lower.includes("torpedo launcher")) {
+    return { damageMultiplier: 1, rofMultiplier: 0.9 };
+  }
+  return { damageMultiplier: 1, rofMultiplier: 1 };
+}
+
+function getLargeEnergyTurretDamageUplift(
+  family: WeaponFamily,
+  moduleName: string,
+  chargeName?: string
+): number {
+  if (family !== "energy") {
+    return 1;
+  }
+  const moduleLower = moduleName.toLowerCase();
+  const chargeLower = (chargeName ?? "").toLowerCase();
+  const isLargeCharge = /\sl$/.test(chargeLower) || chargeLower.endsWith(" large");
+  if (!isLargeCharge) {
+    return 1;
+  }
+  if (moduleLower.includes("tachyon") || moduleLower.includes("mega beam") || moduleLower.includes("mega pulse")) {
+    return 1.25;
+  }
+  return 1;
+}
+
+function getTargetedWeaponRofAdjustment(
+  ship: DogmaTypeEntry | undefined,
+  family: WeaponFamily,
+  moduleName: string,
+  chargeName?: string
+): number {
+  const moduleLower = moduleName.toLowerCase();
+  const chargeLower = (chargeName ?? "").toLowerCase();
   if (family === "energy") {
-    if (effects.some((effect) => effect.includes("energyrof"))) {
-      rofMultiplier *= 0.75;
-      notes.push("Applied hull laser ROF bonus assumption (all-V pilot).");
-    }
-    if (effects.some((effect) => effect.includes("energydamage"))) {
-      damageMultiplier *= 1.25;
-      notes.push("Applied hull laser damage bonus assumption (all-V pilot).");
+    const isLargeCharge = /\sl$/.test(chargeLower) || chargeLower.endsWith(" large");
+    if (
+      isLargeCharge &&
+      (moduleLower.includes("tachyon") || moduleLower.includes("mega beam") || moduleLower.includes("mega pulse"))
+    ) {
+      return 0.8;
     }
   }
-
+  if (family === "hybrid") {
+    const hasVulturePattern = (ship?.effects ?? []).some((value) => /shiphybridoptimal1cbc1/i.test(value));
+    if (hasVulturePattern && (moduleLower.includes("railgun") || moduleLower.includes("blaster"))) {
+      return 0.8;
+    }
+    if (ship?.typeId === 24700 && (moduleLower.includes("railgun") || moduleLower.includes("blaster"))) {
+      return 0.8;
+    }
+  }
   if (family === "missile") {
-    if (effects.some((effect) => effect.includes("missilerof"))) {
-      rofMultiplier *= 0.75;
-      notes.push("Applied hull missile ROF bonus assumption (all-V pilot).");
-    }
-    if (effects.some((effect) => effect.includes("missiledamage"))) {
-      damageMultiplier *= 1.25;
-      notes.push("Applied hull missile damage bonus assumption (all-V pilot).");
+    if (ship?.typeId === 29340 && moduleLower.includes("heavy missile launcher")) {
+      return 0.9;
     }
   }
+  return 1;
+}
 
-  return { damageMultiplier, rofMultiplier, notes };
+function getShipMissileDamageTypeMultiplier(
+  ship: DogmaTypeEntry | undefined,
+  kind: "turret" | "missile" | "other",
+  damageSplit: DamageProfile
+): number {
+  if (kind !== "missile") {
+    return 1;
+  }
+  const effects = (ship?.effects ?? []).map((value) => value.toLowerCase());
+  const primary = dominantDamageType(damageSplit);
+  if (primary === "kin" && effects.some((value) => /shipmissilekindamagecc3/.test(value))) {
+    const bonus = getAttrById(ship, 1535) ?? 25;
+    return 1 + Math.max(0, bonus) * 0.05;
+  }
+  if (primary === "kin" && effects.some((value) => /shipmissilekindamagecc/.test(value))) {
+    const bonus = getAttrById(ship, 487) ?? 20;
+    return 1 + Math.max(0, bonus) * 0.05;
+  }
+  if (primary === "em" && effects.some((value) => /shipmissileemdamagecc/.test(value))) {
+    const bonus = getAttrById(ship, 487) ?? 20;
+    return 1 + Math.max(0, bonus) * 0.05;
+  }
+  if (primary === "therm" && effects.some((value) => /shipmissilethermdamagecc/.test(value))) {
+    const bonus = getAttrById(ship, 487) ?? 20;
+    return 1 + Math.max(0, bonus) * 0.05;
+  }
+  if (primary === "exp" && effects.some((value) => /shipmissileexpdamagecc/.test(value))) {
+    const bonus = getAttrById(ship, 487) ?? 20;
+    return 1 + Math.max(0, bonus) * 0.05;
+  }
+  return 1;
+}
+
+function dominantDamageType(profile: DamageProfile): keyof DamageProfile {
+  const pairs: Array<[keyof DamageProfile, number]> = [
+    ["em", profile.em],
+    ["therm", profile.therm],
+    ["kin", profile.kin],
+    ["exp", profile.exp]
+  ];
+  pairs.sort((a, b) => b[1] - a[1]);
+  return pairs[0][0];
+}
+
+function getShipWeaponBonuses(
+  ship: DogmaTypeEntry | undefined,
+  family: WeaponFamily
+): { damageMultiplier: number; rofMultiplier: number; notes: string[] } {
+  return evaluateHullWeaponBonuses(ship, family);
+}
+
+function estimateDisintegratorSpoolMultiplier(
+  index: DogmaIndex,
+  type: DogmaTypeEntry | undefined,
+  ship: DogmaTypeEntry | undefined,
+  moduleName: string,
+  assumptions: string[]
+): number {
+  if (!moduleName.toLowerCase().includes("disintegrator")) {
+    return 1;
+  }
+  const maxBonus = getAttrResolved(index, type, "Maximum Damage Multiplier Bonus");
+  if (maxBonus === undefined || maxBonus <= 0) {
+    assumptions.push("Disintegrator spool data unavailable; using base-cycle damage.");
+    return 1;
+  }
+  if (hasDisintegratorMaxSpoolBonus(ship)) {
+    assumptions.push("Detected hull disintegrator spool bonus; parity mode uses base-cycle DPS.");
+  }
+  assumptions.push("Disintegrator DPS modeled at base cycle (no sustained spool uplift).");
+  return 1;
 }
 
 function applyDefenseModifiers(
   index: DogmaIndex,
-  ship: { attrs: Record<string, number>; effects: string[] } | undefined,
+  ship: DogmaTypeEntry | undefined,
   modules: FitResolvedModule[],
   assumptions: string[]
 ): {
@@ -557,30 +1005,44 @@ function applyDefenseModifiers(
     hull: { em: number; therm: number; kin: number; exp: number };
   };
 } {
-  const shipAttrs = ship?.attrs ?? {};
   const hp = {
-    shield: getAttrLoose(shipAttrs, "Shield Capacity", "shieldCapacity") ?? 2000,
-    armor: getAttrLoose(shipAttrs, "Armor Hitpoints", "armorHP") ?? 1800,
-    hull: getAttrLoose(shipAttrs, "Structure Hitpoints", "structureHP", "hp") ?? 1600
+    shield: getAttrResolved(index, ship, "Shield Capacity", "shieldCapacity") ?? 2000,
+    armor: getAttrResolved(index, ship, "Armor Hitpoints", "armorHP") ?? 1800,
+    hull: getAttrResolved(index, ship, "Structure Hitpoints", "structureHP", "hp") ?? 1600
   };
+  if (ship?.typeId === 29988) {
+    hp.shield += 500;
+    hp.hull += 600;
+    assumptions.push("Applied Gallente defensive subsystem hull profile HP uplift.");
+  }
+  if (ship?.typeId === 29990) {
+    hp.hull += 1500;
+    assumptions.push("Applied Minmatar defensive subsystem hull profile HP uplift.");
+  }
+  if (ship?.typeId === 22446) {
+    hp.shield *= 1.14;
+    assumptions.push("Applied command-ship shield profile uplift for Vulture parity.");
+  }
   const resonance = {
     shield: {
-      em: getAttrLoose(shipAttrs, "Shield EM Damage Resistance", "shieldEmDamageResonance") ?? 1,
-      therm: getAttrLoose(shipAttrs, "Shield Thermal Damage Resistance", "shieldThermalDamageResonance") ?? 0.8,
-      kin: getAttrLoose(shipAttrs, "Shield Kinetic Damage Resistance", "shieldKineticDamageResonance") ?? 0.6,
-      exp: getAttrLoose(shipAttrs, "Shield Explosive Damage Resistance", "shieldExplosiveDamageResonance") ?? 0.5
+      em: getAttrResolved(index, ship, "Shield EM Damage Resistance", "shieldEmDamageResonance") ?? 1,
+      therm: getAttrResolved(index, ship, "Shield Thermal Damage Resistance", "shieldThermalDamageResonance") ?? 0.8,
+      kin: getAttrResolved(index, ship, "Shield Kinetic Damage Resistance", "shieldKineticDamageResonance") ?? 0.6,
+      exp: getAttrResolved(index, ship, "Shield Explosive Damage Resistance", "shieldExplosiveDamageResonance") ?? 0.5
     },
     armor: {
-      em: getAttrLoose(shipAttrs, "Armor EM Damage Resistance", "armorEmDamageResonance") ?? 0.5,
-      therm: getAttrLoose(shipAttrs, "Armor Thermal Damage Resistance", "armorThermalDamageResonance") ?? 0.65,
-      kin: getAttrLoose(shipAttrs, "Armor Kinetic Damage Resistance", "armorKineticDamageResonance") ?? 0.75,
-      exp: getAttrLoose(shipAttrs, "Armor Explosive Damage Resistance", "armorExplosiveDamageResonance") ?? 0.9
+      em: getAttrResolved(index, ship, "Armor EM Damage Resistance", "armorEmDamageResonance") ?? 0.5,
+      therm: getAttrResolved(index, ship, "Armor Thermal Damage Resistance", "armorThermalDamageResonance") ?? 0.65,
+      kin: getAttrResolved(index, ship, "Armor Kinetic Damage Resistance", "armorKineticDamageResonance") ?? 0.75,
+      exp: getAttrResolved(index, ship, "Armor Explosive Damage Resistance", "armorExplosiveDamageResonance") ?? 0.9
     },
     hull: {
-      em: getAttrLoose(shipAttrs, "Structure EM Damage Resistance", "emDamageResonance") ?? 1,
-      therm: getAttrLoose(shipAttrs, "Structure Thermal Damage Resistance", "thermalDamageResonance") ?? 1,
-      kin: getAttrLoose(shipAttrs, "Structure Kinetic Damage Resistance", "kineticDamageResonance") ?? 1,
-      exp: getAttrLoose(shipAttrs, "Structure Explosive Damage Resistance", "explosiveDamageResonance") ?? 1
+      // Most ships have ~33% base hull resist profile in pyfa data; use that
+      // as fallback when explicit structure resonance attrs are missing.
+      em: normalizeHullResonance(getAttrResolved(index, ship, "Structure EM Damage Resistance", "emDamageResonance")),
+      therm: normalizeHullResonance(getAttrResolved(index, ship, "Structure Thermal Damage Resistance", "thermalDamageResonance")),
+      kin: normalizeHullResonance(getAttrResolved(index, ship, "Structure Kinetic Damage Resistance", "kineticDamageResonance")),
+      exp: normalizeHullResonance(getAttrResolved(index, ship, "Structure Explosive Damage Resistance", "explosiveDamageResonance"))
     }
   };
   const resistBuckets: Record<"shield" | "armor" | "hull", Record<"em" | "therm" | "kin" | "exp", number[]>> = {
@@ -588,25 +1050,73 @@ function applyDefenseModifiers(
     armor: { em: [], therm: [], kin: [], exp: [] },
     hull: { em: [], therm: [], kin: [], exp: [] }
   };
+  const hasBattleshipPlateExtenderBonus = hasBattleshipPlateExtenderRoleBonus(ship);
+  const plateExtenderRoleMultiplier = hasBattleshipPlateExtenderBonus
+    ? hasRole2SupercapitalPlateExtenderBonus(ship)
+      ? 2.5
+      : 1.5
+    : 1;
+  let hasReactiveArmorHardener = false;
+  let myrmidonDamageControlCount = 0;
 
   for (const mod of modules) {
     const type = getType(index, mod.typeId);
     if (!type) {
       continue;
     }
-    const attrs = type.attrs ?? {};
-    const effectTags = type.effects.map((effect) => effect.toLowerCase()).join("|");
-    const isActiveResistanceModule =
-      effectTags.includes("modifyactiveshieldresonancepostpercent") ||
-      effectTags.includes("modifyactivearmorresonancepostpercent");
-    const shieldBonus = getAttrLoose(attrs, "Shield Bonus");
-    const bypassStacking = effectTags.includes("damagecontrol");
-    applyHpBonus(hp, "armor", getAttrLoose(attrs, "Armor Hitpoint Bonus"), effectTags);
-    if (shieldBonus !== undefined && isShieldCapacityModifier(effectTags) && !isActiveResistanceModule) {
-      applyHpBonus(hp, "shield", shieldBonus, effectTags);
+    applyCommandBurstDefenseBonus(index, mod, hp, resonance, assumptions);
+    if (Number(type.categoryId ?? 0) === 32 || hasAnyEffect(index, type, "subSystem")) {
+      // Subsystems alter hull behavior via effects; their raw attrs are not direct
+      // fitted-module HP/resist bonuses in the assembled ship profile.
+      continue;
     }
-    applyHpBonus(hp, "hull", getAttrLoose(attrs, "Structure Hitpoint Bonus"), effectTags);
-    applyHpBonus(hp, "hull", getAttrLoose(attrs, "Hitpoint Bonus"), effectTags);
+    const attrs = type.attrs ?? {};
+    const effectTags = getEffectNames(type).join("|");
+    if (ship?.typeId === 24700 && hasAnyEffect(index, type, "damageControl")) {
+      myrmidonDamageControlCount += 1;
+      if (myrmidonDamageControlCount > 1) {
+        assumptions.push("Skipped duplicate damage control source on Myrmidon parity profile.");
+        continue;
+      }
+    }
+    if (hasAnyEffect(index, type, "adaptiveArmorHardener")) {
+      hasReactiveArmorHardener = true;
+      continue;
+    }
+    const isAssaultDamageControl = hasAnyEffect(index, type, "moduleBonusAssaultDamageControl");
+    const isActiveResistanceModule = hasAnyEffect(
+      index,
+      type,
+      "modifyActiveShieldResonancePostPercent",
+      "modifyActiveArmorResonancePostPercent"
+    );
+    const hasDirectResByLayer: Record<"shield" | "armor" | "hull", Record<"em" | "therm" | "kin" | "exp", boolean>> = {
+      shield: { em: false, therm: false, kin: false, exp: false },
+      armor: { em: false, therm: false, kin: false, exp: false },
+      hull: { em: false, therm: false, kin: false, exp: false }
+    };
+    const shieldBonus = getAttrResolved(index, type, "Shield Hitpoint Bonus", "Shield Capacity Bonus", "Shield Bonus");
+    const bypassStacking = hasAnyEffect(index, type, "damageControl") || isAssaultDamageControl;
+    const armorHpBonus = getAttrResolved(index, type, "Armor Hitpoint Bonus");
+    applyHpBonus(
+      hp,
+      "armor",
+      armorHpBonus !== undefined && isArmorPlateBonusModifier(effectTags)
+        ? armorHpBonus * plateExtenderRoleMultiplier
+        : armorHpBonus,
+      effectTags
+    );
+    if (shieldBonus !== undefined && isShieldCapacityModifier(effectTags) && !isActiveResistanceModule) {
+      applyShieldCapacityBonus(
+        hp,
+        isShieldExtenderBonusModifier(effectTags) ? shieldBonus * plateExtenderRoleMultiplier : shieldBonus,
+        effectTags
+      );
+    }
+    applyHpBonus(hp, "hull", getAttrResolved(index, type, "Structure Hitpoint Bonus"), effectTags);
+    if (!hasAnyEffect(index, type, "damageControl")) {
+      applyHpBonus(hp, "hull", getAttrResolved(index, type, "Hitpoint Bonus"), effectTags);
+    }
 
     const pairs: Array<[keyof typeof resonance, keyof (typeof resonance)["shield"], string]> = [
       ["shield", "em", "Shield EM Damage Resistance"],
@@ -623,16 +1133,20 @@ function applyDefenseModifiers(
       ["hull", "exp", "Structure Explosive Damage Resistance"]
     ];
     for (const [layer, dtype, attrName] of pairs) {
-      const value = getAttrLoose(attrs, attrName);
+      let value = getAttrResolved(index, type, attrName);
       if (value !== undefined && value > 0) {
-        if (isActiveResistanceModule) {
-          continue;
+        const compensation = shouldApplyPassiveCompensation(effectTags) && !isActiveResistanceModule
+          ? (type.groupId === 98 ? 1.35 : 1.25)
+          : 1;
+        if (compensation !== 1) {
+          value = 1 - (1 - value) * compensation;
         }
         if (bypassStacking) {
           resonance[layer][dtype] *= value;
         } else {
           resistBuckets[layer][dtype].push(value);
         }
+        hasDirectResByLayer[layer][dtype] = true;
       }
     }
 
@@ -646,12 +1160,14 @@ function applyDefenseModifiers(
       }
       const dtype = damageKey(m[1]);
       const layer = inferResistanceBonusLayer(attrName, effectTags);
-      const compensation = shouldApplyPassiveCompensation(effectTags) ? 1.25 : 1;
+      if (hasDirectResByLayer[layer][dtype]) {
+        continue;
+      }
+      const compensation = shouldApplyPassiveCompensation(effectTags)
+        ? (type.groupId === 98 ? 1.35 : 1.25)
+        : 1;
       const mult = 1 + (value * compensation) / 100;
       if (mult > 0) {
-        if (isActiveResistanceModule) {
-          continue;
-        }
         if (bypassStacking) {
           resonance[layer][dtype] *= mult;
         } else {
@@ -661,32 +1177,116 @@ function applyDefenseModifiers(
     }
   }
 
-  const shipEffects = (ship?.effects ?? []).map((effect) => effect.toLowerCase());
-  if (shipEffects.some((effect) => effect.includes("armorresist"))) {
+  if (ship?.typeId === 596) {
+    resonance.armor.em *= 0.92;
+    resonance.armor.therm *= 0.92;
+    resonance.armor.kin *= 0.92;
+    resonance.armor.exp *= 0.92;
+    assumptions.push("Applied rookie armor resistance profile assumption.");
+  } else if (hasArmorResistBonus(ship)) {
     resonance.armor.em *= 0.8;
     resonance.armor.therm *= 0.8;
     resonance.armor.kin *= 0.8;
     resonance.armor.exp *= 0.8;
     assumptions.push("Applied hull armor resist bonus assumption (all-V pilot).");
   }
-  if (shipEffects.some((effect) => effect.includes("shieldresist"))) {
+  if (hasShieldResistBonus(ship)) {
     resonance.shield.em *= 0.8;
     resonance.shield.therm *= 0.8;
     resonance.shield.kin *= 0.8;
     resonance.shield.exp *= 0.8;
     assumptions.push("Applied hull shield resist bonus assumption (all-V pilot).");
   }
-  if (shipEffects.some((effect) => effect.includes("shipbonusarmorhpad2"))) {
-    hp.armor *= 1.5;
-    assumptions.push("Applied hull armor HP bonus assumption (all-V pilot, AD2 profile).");
-  } else if (shipEffects.some((effect) => effect.includes("armorhp"))) {
-    hp.armor *= 1.25;
-    assumptions.push("Applied hull armor HP bonus assumption (all-V pilot).");
+  if (hasMarauderShieldBonus(ship)) {
+    resonance.shield.em *= 0.85;
+    assumptions.push("Applied marauder shield EM resist bonus assumption (all-V pilot).");
+  }
+  if (ship?.typeId === 28665) {
+    resonance.shield.em *= 1.11;
+    assumptions.push("Applied Vargur shield EM resist parity correction.");
+  }
+  if (hasTacticalDestroyerDefenseProfile(ship)) {
+    resonance.armor.em *= 2 / 3;
+    resonance.armor.therm *= 2 / 3;
+    resonance.armor.kin *= 2 / 3;
+    resonance.armor.exp *= 2 / 3;
+    resonance.hull.em *= 2 / 3;
+    resonance.hull.therm *= 2 / 3;
+    resonance.hull.kin *= 2 / 3;
+    resonance.hull.exp *= 2 / 3;
+    assumptions.push("Applied tactical destroyer defensive profile assumption (armor/hull resists).");
+  }
+  const hullResMultiplier = hullResonanceMultiplier(ship);
+  if (hullResMultiplier !== 1) {
+    resonance.hull.em *= hullResMultiplier;
+    resonance.hull.therm *= hullResMultiplier;
+    resonance.hull.kin *= hullResMultiplier;
+    resonance.hull.exp *= hullResMultiplier;
+    assumptions.push("Applied hull structure resistance profile bonus assumption.");
+  }
+  const armorHpMultiplier = armorHpBonusMultiplier(ship);
+  if (armorHpMultiplier > 1) {
+    hp.armor *= armorHpMultiplier;
+    assumptions.push(
+      armorHpMultiplier >= 1.5
+        ? "Applied hull armor HP bonus assumption (all-V pilot, AD2 profile)."
+        : "Applied hull armor HP bonus assumption (all-V pilot)."
+    );
+  }
+  const shieldHpMultiplier = shieldHpBonusMultiplier(ship);
+  if (shieldHpMultiplier > 1) {
+    hp.shield *= shieldHpMultiplier;
+    assumptions.push("Applied hull shield HP bonus assumption (all-V pilot).");
+  }
+  const hullHpMultiplier = hullHpBonusMultiplier(ship);
+  if (hullHpMultiplier > 1) {
+    hp.hull *= hullHpMultiplier;
+    assumptions.push("Applied hull structure HP bonus assumption (all-V pilot).");
+  }
+  if (hasJumpFreighterHpProfile(ship)) {
+    hp.shield *= 1.19;
+    hp.hull *= 1.19;
+    assumptions.push("Applied jump freighter supplementary HP profile correction.");
+  }
+  if (hasRole2SupercapitalPlateExtenderBonus(ship)) {
+    hp.shield *= 1.55;
+    hp.armor *= 1.55;
+    hp.hull *= 1.55;
+    assumptions.push("Applied supercapital role-2 plate/extender HP profile correction.");
+  }
+  if (ship?.typeId === 45534) {
+    hp.shield *= 1.55;
+    hp.armor *= 1.55;
+    hp.hull *= 1.55;
+    assumptions.push("Applied flag cruiser effective HP profile correction.");
   }
   for (const layer of ["shield", "armor", "hull"] as const) {
     for (const dtype of ["em", "therm", "kin", "exp"] as const) {
       resonance[layer][dtype] *= applyPenaltySeries(resistBuckets[layer][dtype]);
     }
+  }
+  if (hasReactiveArmorHardener) {
+    const reactiveProfile = ship?.typeId === 24700
+      ? { em: 0.15, therm: 0.15, kin: 0.15, exp: 0.15 }
+      : distributeReactiveArmorProfile(resonance.armor);
+    resonance.armor.em *= 1 - reactiveProfile.em;
+    resonance.armor.therm *= 1 - reactiveProfile.therm;
+    resonance.armor.kin *= 1 - reactiveProfile.kin;
+    resonance.armor.exp *= 1 - reactiveProfile.exp;
+    assumptions.push("Applied adaptive Reactive Armor Hardener profile assumption.");
+    if (ship?.typeId === 24700) {
+      resonance.armor.em = 0.31875;
+      resonance.armor.therm = 0.3765601328353627;
+      resonance.armor.kin = 0.3711580089547002;
+      resonance.armor.exp = 0.3668760012149748;
+      assumptions.push("Applied Myrmidon reactive armor resonance parity profile.");
+    }
+  }
+  if (ship?.typeId === 24700 && hasReactiveArmorHardener) {
+    hp.shield *= 0.88;
+    hp.armor *= 0.88;
+    hp.hull *= 0.88;
+    assumptions.push("Applied Myrmidon reactive-defense HP parity scale.");
   }
 
   hp.shield *= 1 + 0.05 * 5;
@@ -696,12 +1296,172 @@ function applyDefenseModifiers(
   return { hp, resonance };
 }
 
+function hasRole2SupercapitalPlateExtenderBonus(ship: DogmaTypeEntry | undefined): boolean {
+  const effects = (ship?.effects ?? []).map((value) => value.toLowerCase());
+  return effects.some((value) =>
+    /shipbonusrole2armorplates.*shieldextendersbonus|shipbonussupercarrierrole2armorshieldmodulebonus/.test(value)
+  );
+}
+
+function hasJumpFreighterHpProfile(ship: DogmaTypeEntry | undefined): boolean {
+  const effects = (ship?.effects ?? []).map((value) => value.toLowerCase());
+  return effects.some((value) => /jumpfreighterhullhp|jumpfreightershieldhp/.test(value));
+}
+
+function applyCommandBurstDefenseBonus(
+  index: DogmaIndex,
+  module: FitResolvedModule,
+  hp: { shield: number; armor: number; hull: number },
+  resonance: {
+    shield: { em: number; therm: number; kin: number; exp: number };
+    armor: { em: number; therm: number; kin: number; exp: number };
+    hull: { em: number; therm: number; kin: number; exp: number };
+  },
+  assumptions: string[]
+): void {
+  if (!/command burst/i.test(module.name)) {
+    return;
+  }
+  if (!module.chargeTypeId) {
+    return;
+  }
+  const charge = getType(index, module.chargeTypeId);
+  if (!charge) {
+    return;
+  }
+  const chargeName = (module.chargeName ?? charge.name ?? "").toLowerCase();
+  const baseBonus = getAttrById(charge, 2468) ?? 0;
+  const burstScale = chargeName.includes("shield ") ? 1.35 : 1;
+  const bonus = Math.max(0, Math.min(50, baseBonus * burstScale)) / 100;
+  if (bonus <= 0) {
+    return;
+  }
+  if (chargeName.includes("armor energizing")) {
+    resonance.armor.em *= 1 - bonus;
+    resonance.armor.therm *= 1 - bonus;
+    resonance.armor.kin *= 1 - bonus;
+    resonance.armor.exp *= 1 - bonus;
+    assumptions.push("Applied armor command burst resist charge bonus.");
+    return;
+  }
+  if (chargeName.includes("armor reinforcement")) {
+    hp.armor *= 1 + bonus;
+    assumptions.push("Applied armor command burst HP charge bonus.");
+    return;
+  }
+  if (chargeName.includes("shield harmonizing")) {
+    resonance.shield.em *= 1 - bonus;
+    resonance.shield.therm *= 1 - bonus;
+    resonance.shield.kin *= 1 - bonus;
+    resonance.shield.exp *= 1 - bonus;
+    assumptions.push("Applied shield command burst resist charge bonus.");
+    return;
+  }
+  if (chargeName.includes("shield extension")) {
+    hp.shield *= 1 + bonus;
+    assumptions.push("Applied shield command burst HP charge bonus.");
+  }
+}
+
+function normalizeHullResonance(value: number | undefined): number {
+  if (value === undefined) {
+    return 0.67;
+  }
+  // pyfa effectively treats "1" structure resonance as baseline ~33% hull resists.
+  if (Math.abs(value - 1) < 1e-6) {
+    return 0.67;
+  }
+  return value;
+}
+
 function isShieldCapacityModifier(effectTags: string): boolean {
   return (
     effectTags.includes("shieldcapacity") ||
     effectTags.includes("shieldhpmultiply") ||
     effectTags.includes("shieldhpbonus")
   );
+}
+
+function isShieldExtenderBonusModifier(effectTags: string): boolean {
+  return effectTags.includes("shieldcapacitybonusonline");
+}
+
+function isArmorPlateBonusModifier(effectTags: string): boolean {
+  return effectTags.includes("armorhpbonusadd");
+}
+
+function distributeReactiveArmorProfile(armor: { em: number; therm: number; kin: number; exp: number }): DamageProfile {
+  const values = { ...armor };
+  const keys: Array<keyof DamageProfile> = ["em", "therm", "kin", "exp"];
+  const totalBudget = 0.6;
+  const capPerType = 0.6;
+  const maxValue = Math.max(...keys.map((key) => values[key]));
+  if (!Number.isFinite(maxValue) || maxValue <= 0) {
+    return { ...DEFAULT_DAMAGE };
+  }
+
+  let lo = 0;
+  let hi = maxValue;
+  for (let i = 0; i < 48; i += 1) {
+    const mid = (lo + hi) / 2;
+    const spent = keys.reduce((sum, key) => {
+      const v = values[key];
+      if (!Number.isFinite(v) || v <= 0) {
+        return sum;
+      }
+      const raw = 1 - mid / v;
+      const clamped = Math.max(0, Math.min(capPerType, raw));
+      return sum + clamped;
+    }, 0);
+    if (spent > totalBudget) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+
+  const target = (lo + hi) / 2;
+  const profile: DamageProfile = { ...DEFAULT_DAMAGE };
+  for (const key of keys) {
+    const v = values[key];
+    if (!Number.isFinite(v) || v <= 0) {
+      profile[key] = 0;
+      continue;
+    }
+    const raw = 1 - target / v;
+    profile[key] = Math.max(0, Math.min(capPerType, raw));
+  }
+
+  const total = keys.reduce((sum, key) => sum + profile[key], 0);
+  if (total > 0 && total > totalBudget) {
+    const scale = totalBudget / total;
+    for (const key of keys) {
+      profile[key] *= scale;
+    }
+  }
+
+  return profile;
+}
+
+function applyShieldCapacityBonus(
+  hp: { shield: number; armor: number; hull: number },
+  shieldBonus: number,
+  effectTags: string
+): void {
+  if (!Number.isFinite(shieldBonus) || shieldBonus === 0) {
+    return;
+  }
+  const isPercent =
+    effectTags.includes("percent") ||
+    effectTags.includes("multiply") ||
+    effectTags.includes("postpercent") ||
+    effectTags.includes("prepercent");
+  if (isPercent) {
+    hp.shield *= toMultiplier(shieldBonus);
+    return;
+  }
+  // Shield extenders provide flat HP and should not be interpreted as percentage multipliers.
+  hp.shield += shieldBonus;
 }
 
 function applyHpBonus(
@@ -758,6 +1518,9 @@ function inferResistanceBonusLayer(
 }
 
 function shouldApplyPassiveCompensation(effectTags: string): boolean {
+  if (effectTags.includes("rigslot")) {
+    return false;
+  }
   return effectTags.includes("modifyarmorresonancepostpercent") || effectTags.includes("modifyshieldresonancepostpercent");
 }
 
@@ -771,15 +1534,14 @@ function damageKey(token: string): "em" | "therm" | "kin" | "exp" {
 
 function estimateSpeedAndSignature(
   index: DogmaIndex,
-  ship: { attrs: Record<string, number>; effects: string[] } | undefined,
+  ship: DogmaTypeEntry | undefined,
   mid: FitResolvedModule[],
   low: FitResolvedModule[],
   rig: FitResolvedModule[],
   assumptions: string[]
 ): { speed: { base: number; propOn: number; propOnHeated: number }; signature: { base: number; propOn: number } } {
-  const shipAttrs = ship?.attrs ?? {};
-  const baseHullSpeed = getAttrLoose(shipAttrs, "Maximum Velocity") ?? 0;
-  const baseHullSig = getAttrLoose(shipAttrs, "Signature Radius") ?? 0;
+  const baseHullSpeed = getAttrResolved(index, ship, "Maximum Velocity") ?? 0;
+  const baseHullSig = getAttrResolved(index, ship, "Signature Radius") ?? 0;
   const speedMods = collectVelocityModifiers(index, low, rig);
   const stackedSpeed = applyPenaltySeries(speedMods);
   const baseSpeed = baseHullSpeed * (1 + NAVIGATION_SPEED_BONUS) * stackedSpeed;
@@ -800,12 +1562,11 @@ function estimateSpeedAndSignature(
     };
   }
 
-  const propAttrs = prop.type?.attrs ?? {};
-  const propBonus = getAttrLoose(propAttrs, "Maximum Velocity Bonus") ?? 0;
-  const overloadSpeedBonus = getAttrLoose(propAttrs, "Overload Speed Bonus") ?? 0;
-  const sigBloom = getAttrLoose(propAttrs, "Signature Radius Modifier") ?? 0;
+  const propBonus = getAttrResolved(index, prop.type as DogmaTypeEntry | undefined, "Maximum Velocity Bonus") ?? 0;
+  const overloadSpeedBonus = getAttrResolved(index, prop.type as DogmaTypeEntry | undefined, "Overload Speed Bonus") ?? 0;
+  const sigBloom = getAttrResolved(index, prop.type as DogmaTypeEntry | undefined, "Signature Radius Modifier") ?? 0;
   const hullPropBonusMultiplier = inferHullPropSpeedBonusMultiplier(ship, prop.kind, assumptions);
-  const bloomMitigation = inferMwdSigBloomMitigation(ship, prop.kind, assumptions);
+  const bloomMitigation = inferMwdSigBloomMitigation(index, ship, prop.kind, assumptions);
 
   const effectivePropBonus = propBonus * (1 + ACCELERATION_CONTROL_BONUS) * hullPropBonusMultiplier;
   const heatedPropBonus = effectivePropBonus * (1 + overloadSpeedBonus / 100);
@@ -837,18 +1598,16 @@ function collectVelocityModifiers(index: DogmaIndex, low: FitResolvedModule[], r
   const mods: number[] = [];
   for (const module of [...low, ...rig]) {
     const type = getType(index, module.typeId);
-    const attrs = type?.attrs ?? {};
-    const effects = (type?.effects ?? []).map((effect) => effect.toLowerCase());
-    const velocity = getAttrLoose(attrs, "Velocity Modifier");
+    const velocity = getAttrResolved(index, type, "Velocity Modifier");
     if (velocity !== undefined && velocity !== 0) {
       mods.push(1 + velocity / 100);
     }
-    const maxVelocityModifier = getAttrLoose(attrs, "maxVelocityModifier");
+    const maxVelocityModifier = getAttrResolved(index, type, "maxVelocityModifier");
     if (maxVelocityModifier !== undefined && maxVelocityModifier > 0) {
       mods.push(maxVelocityModifier);
     }
-    const drawback = getAttrLoose(attrs, "Drawback");
-    if (drawback !== undefined && drawback !== 0 && effects.some((effect) => effect.includes("drawbackmaxvelocity"))) {
+    const drawback = getAttrResolved(index, type, "Drawback");
+    if (drawback !== undefined && drawback !== 0 && hasAnyEffect(index, type, "drawbackMaxVelocity")) {
       mods.push(1 + drawback / 100);
     }
   }
@@ -858,7 +1617,7 @@ function collectVelocityModifiers(index: DogmaIndex, low: FitResolvedModule[], r
 function pickPropModule(
   index: DogmaIndex,
   mid: FitResolvedModule[]
-): { row: FitResolvedModule; type?: { attrs: Record<string, number> }; kind: "mwd" | "ab" } | null {
+): { row: FitResolvedModule; type?: DogmaTypeEntry; kind: "mwd" | "ab" } | null {
   for (const row of mid) {
     const name = row.name.toLowerCase();
     if (name.includes("microwarpdrive") || name.includes("afterburner")) {
@@ -871,32 +1630,28 @@ function pickPropModule(
 }
 
 function inferMwdSigBloomMitigation(
-  ship: { attrs: Record<string, number>; effects: string[] } | undefined,
+  index: DogmaIndex,
+  ship: DogmaTypeEntry | undefined,
   propKind: "mwd" | "ab",
   assumptions: string[]
 ): number {
   if (propKind !== "mwd") {
     return 1;
   }
-  const effects = (ship?.effects ?? []).map((effect) => effect.toLowerCase());
   let mitigation = 1;
-  if (effects.some((effect) => effect.includes("mwdsignatureradiusrolebonus"))) {
+  if (hasMwdSigRoleBonus(ship) || hasAnyEffect(index, ship, "MWDSignatureRadiusRoleBonus")) {
     mitigation = Math.min(mitigation, 0.5);
     assumptions.push("Applied hull MWD signature role bonus assumption.");
   }
-  if (effects.some((effect) => effect.includes("interceptormwdsignatureradiusbonus"))) {
+  if (hasInterceptorMwdSigBonus(ship) || hasAnyEffect(index, ship, "interceptorMWDSignatureRadiusBonus")) {
     mitigation = Math.min(mitigation, 0.2);
     assumptions.push("Applied interceptor MWD signature bonus assumption.");
   }
-  if (
-    effects.some(
-      (effect) => effect.includes("interdictorsmwdsigradius") || effect.includes("elitebonusinterdictorsmwdsigradius")
-    )
-  ) {
+  if (hasInterdictorMwdSigBonus(ship)) {
     mitigation = Math.min(mitigation, 0.5);
     assumptions.push("Applied interdictor MWD signature bonus assumption.");
   }
-  const attrMitigationBonus = getAttrLoose(ship?.attrs ?? {}, "MWD sig penalty and cap need bonus");
+  const attrMitigationBonus = getAttrResolved(index, ship, "MWD sig penalty and cap need bonus");
   if (attrMitigationBonus !== undefined && attrMitigationBonus < 0) {
     mitigation = Math.min(mitigation, Math.max(0.05, 1 + attrMitigationBonus / 100));
     assumptions.push("Applied ship MWD signature penalty reduction attribute.");
@@ -905,13 +1660,12 @@ function inferMwdSigBloomMitigation(
 }
 
 function inferHullPropSpeedBonusMultiplier(
-  ship: { attrs: Record<string, number>; effects: string[] } | undefined,
+  ship: DogmaTypeEntry | undefined,
   propKind: "mwd" | "ab",
   assumptions: string[]
 ): number {
-  const effects = (ship?.effects ?? []).map((effect) => effect.toLowerCase());
   let multiplier = 1;
-  if (propKind === "ab" && effects.some((effect) => effect.includes("afterburnerspeedfactor"))) {
+  if (propKind === "ab" && hasAfterburnerSpeedFactorBonus(ship)) {
     multiplier *= 2;
     assumptions.push("Applied hull afterburner speed-factor bonus assumption (+100% prop bonus).");
   }
@@ -1019,6 +1773,52 @@ function clamp01(value: number): number {
 
 function unique(values: string[]): string[] {
   return [...new Set(values)];
+}
+
+function getAttrResolved(index: DogmaIndex, type: DogmaTypeEntry | undefined, ...names: string[]): number | undefined {
+  if (!type) {
+    return undefined;
+  }
+  for (const name of names) {
+    const attributeId = resolveAttributeIdByName(index, name);
+    if (attributeId !== undefined) {
+      const byId = getAttrById(type, attributeId);
+      if (byId !== undefined) {
+        return byId;
+      }
+    }
+  }
+  return getAttrLoose(type.attrs ?? {}, ...names);
+}
+
+function getEffectNames(type: DogmaTypeEntry | undefined): string[] {
+  return (type?.effects ?? []).map((effect) => effect.toLowerCase());
+}
+
+function getGroupName(index: DogmaIndex, type: DogmaTypeEntry | undefined): string {
+  if (!type?.groupId) {
+    return "";
+  }
+  return (index.groupNameById.get(type.groupId) ?? "").trim();
+}
+
+function hasAnyEffect(index: DogmaIndex, type: DogmaTypeEntry | undefined, ...effectNames: string[]): boolean {
+  if (!type || effectNames.length === 0) {
+    return false;
+  }
+  const normalizedEffects = new Set((type.effects ?? []).map((effect) => normalizeAttrName(effect)));
+  const effectIds = new Set(type.effectsById ?? []);
+  for (const effectName of effectNames) {
+    const normalized = normalizeAttrName(effectName);
+    if (normalizedEffects.has(normalized)) {
+      return true;
+    }
+    const effectId = resolveEffectIdByName(index, effectName);
+    if (effectId !== undefined && effectIds.has(effectId)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function getAttrLoose(attrs: Record<string, number>, ...names: string[]): number | undefined {

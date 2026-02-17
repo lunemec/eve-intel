@@ -1,0 +1,898 @@
+{
+  "generatedAt": "2026-02-17T09:00:54.286374Z",
+  "count": 11,
+  "failures": [],
+  "fits": [
+    {
+      "fitId": "crow-mwd-1",
+      "shipTypeId": 11176,
+      "old": {
+        "dpsTotal": 9.25,
+        "alpha": 37.0,
+        "ehp": 1845.415778251599,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.30000000000000004,
+            "kin": 1,
+            "exp": 0.5
+          },
+          "armor": {
+            "em": 0.5,
+            "therm": 0.55,
+            "kin": 0.25,
+            "exp": 0.09999999999999998
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 22.704405577666616,
+        "alpha": 55.962500000000006,
+        "ehp": 2797.8411513859273,
+        "resists": {
+          "armor": {
+            "em": 0.5,
+            "exp": 0.09999999999999998,
+            "kin": 0.25,
+            "therm": 0.55
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "exp": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "therm": 0.32999999999999996
+          },
+          "shield": {
+            "em": 0.0,
+            "exp": 0.5,
+            "kin": 1.0,
+            "therm": 0.30000000000000004
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": 13.454405577666616,
+        "alpha": 18.962500000000006,
+        "ehp": 952.4253731343283,
+        "resists": {
+          "shield": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          },
+          "armor": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          },
+          "hull": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Crow, Rockets]\n\nRocket Launcher II, Caldari Navy Nova Rocket\n\n5MN Y-T8 Compact Microwarpdrive\n\nBallistic Control System II"
+    },
+    {
+      "fitId": "eris-void-1",
+      "shipTypeId": 22460,
+      "old": {
+        "dpsTotal": 67.284,
+        "alpha": 235.49400000000003,
+        "ehp": 3542.8999072434435,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.4,
+            "kin": 1,
+            "exp": 0.5
+          },
+          "armor": {
+            "em": 0.5,
+            "therm": 0.5125,
+            "kin": 0.675,
+            "exp": 0.09999999999999998
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 290.58251396648046,
+        "alpha": 409.61237625,
+        "ehp": 4801.759212412513,
+        "resists": {
+          "armor": {
+            "em": 0.5,
+            "exp": 0.09999999999999998,
+            "kin": 0.675,
+            "therm": 0.5125
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "exp": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "therm": 0.32999999999999996
+          },
+          "shield": {
+            "em": 0.0,
+            "exp": 0.5,
+            "kin": 1.0,
+            "therm": 0.4
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": 223.29851396648047,
+        "alpha": 174.11837624999998,
+        "ehp": 1258.8593051690696,
+        "resists": {
+          "shield": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          },
+          "armor": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          },
+          "hull": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Eris, Void test]\n\nLight Neutron Blaster II, Void S\nLight Neutron Blaster II, Void S\nLight Neutron Blaster II, Void S\n\n5MN Y-T8 Compact Microwarpdrive\n\nMagnetic Field Stabilizer II\n\nSmall Transverse Bulkhead II"
+    },
+    {
+      "fitId": "gila-drone-1",
+      "shipTypeId": 17715,
+      "old": {
+        "dpsTotal": 872.05,
+        "alpha": 3515.24,
+        "ehp": 15616.1482,
+        "resists": {
+          "shield": {
+            "em": 0.2,
+            "therm": 0.36,
+            "kin": 0.52,
+            "exp": 0.6
+          },
+          "armor": {
+            "em": 0.5,
+            "therm": 0.45,
+            "kin": 0.25,
+            "exp": 0.1
+          },
+          "hull": {
+            "em": 0.33,
+            "therm": 0.33,
+            "kin": 0.33,
+            "exp": 0.33
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 91.21347969387185,
+        "alpha": 391.875,
+        "ehp": 18936.7101275233,
+        "resists": {
+          "armor": {
+            "em": 0.5,
+            "exp": 0.09999999999999998,
+            "kin": 0.25,
+            "therm": 0.44999999999999996
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "exp": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "therm": 0.32999999999999996
+          },
+          "shield": {
+            "em": 0.45999999999999996,
+            "exp": 0.73,
+            "kin": 1.0,
+            "therm": 0.5679999999999998
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": -780.8365203061281,
+        "alpha": -3123.365,
+        "ehp": 3320.5619275233003,
+        "resists": {
+          "shield": {
+            "em": 0.25999999999999995,
+            "therm": 0.20799999999999985,
+            "kin": 0.48,
+            "exp": 0.13
+          },
+          "armor": {
+            "em": 0.0,
+            "therm": -5.551115123125783e-17,
+            "kin": 0.0,
+            "exp": -2.7755575615628914e-17
+          },
+          "hull": {
+            "em": -5.551115123125783e-17,
+            "therm": -5.551115123125783e-17,
+            "kin": -5.551115123125783e-17,
+            "exp": -5.551115123125783e-17
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Gila, Drone baseline]\n\nRapid Light Missile Launcher II, Caldari Navy Scourge Light Missile\nRapid Light Missile Launcher II, Caldari Navy Scourge Light Missile\n\n10MN Y-S8 Compact Afterburner\nMultispectrum Shield Hardener II\n\nDrone Damage Amplifier II\n\nCaldari Navy Vespa x4"
+    },
+    {
+      "fitId": "gnosis-mixed-1",
+      "shipTypeId": 3756,
+      "old": {
+        "dpsTotal": 438.26,
+        "alpha": 1629.25,
+        "ehp": 21766.6457,
+        "resists": {
+          "shield": {
+            "em": 0.275,
+            "therm": 0.275,
+            "kin": 0.275,
+            "exp": 0.275
+          },
+          "armor": {
+            "em": 0.325,
+            "therm": 0.325,
+            "kin": 0.325,
+            "exp": 0.325
+          },
+          "hull": {
+            "em": 0.33,
+            "therm": 0.33,
+            "kin": 0.33,
+            "exp": 0.33
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 200.65974162011173,
+        "alpha": 678.851971875,
+        "ehp": 21766.645698709515,
+        "resists": {
+          "armor": {
+            "em": 0.32499999999999996,
+            "exp": 0.32499999999999996,
+            "kin": 0.32499999999999996,
+            "therm": 0.32499999999999996
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "exp": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "therm": 0.32999999999999996
+          },
+          "shield": {
+            "em": 0.275,
+            "exp": 0.275,
+            "kin": 1.0,
+            "therm": 0.275
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": -237.60025837988826,
+        "alpha": -950.398028125,
+        "ehp": -1.290485670324415e-06,
+        "resists": {
+          "shield": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.725,
+            "exp": 0.0
+          },
+          "armor": {
+            "em": -5.551115123125783e-17,
+            "therm": -5.551115123125783e-17,
+            "kin": -5.551115123125783e-17,
+            "exp": -5.551115123125783e-17
+          },
+          "hull": {
+            "em": -5.551115123125783e-17,
+            "therm": -5.551115123125783e-17,
+            "kin": -5.551115123125783e-17,
+            "exp": -5.551115123125783e-17
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Gnosis, Mixed]\n\nHeavy Neutron Blaster II, Void M\nHeavy Neutron Blaster II, Void M\n\n50MN Cold-Gas Enduring Microwarpdrive\n\nMagnetic Field Stabilizer II\n\nHammerhead II x5"
+    },
+    {
+      "fitId": "heretic-rocket-1",
+      "shipTypeId": 22452,
+      "old": {
+        "dpsTotal": 25.65,
+        "alpha": 102.6,
+        "ehp": 3539.5213282698933,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.19999999999999996,
+            "kin": 1,
+            "exp": 0.75
+          },
+          "armor": {
+            "em": 0.5,
+            "therm": 0.35,
+            "kin": 0.4375,
+            "exp": 0.6
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 68.30065359477123,
+        "alpha": 141.075,
+        "ehp": 9242.735467409608,
+        "resists": {
+          "armor": {
+            "em": 0.6599999999999999,
+            "exp": 0.728,
+            "kin": 0.6174999999999999,
+            "therm": 0.558
+          },
+          "hull": {
+            "em": 0.598,
+            "exp": 0.598,
+            "kin": 0.598,
+            "therm": 0.598
+          },
+          "shield": {
+            "em": 0.125,
+            "exp": 0.78125,
+            "kin": 1.0,
+            "therm": 0.29999999999999993
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": 42.650653594771235,
+        "alpha": 38.474999999999994,
+        "ehp": 5703.2141391397145,
+        "resists": {
+          "shield": {
+            "em": 0.125,
+            "therm": 0.09999999999999998,
+            "kin": 0.0,
+            "exp": 0.03125
+          },
+          "armor": {
+            "em": 0.15999999999999992,
+            "therm": 0.20800000000000007,
+            "kin": 0.17999999999999994,
+            "exp": 0.128
+          },
+          "hull": {
+            "em": 0.268,
+            "therm": 0.268,
+            "kin": 0.268,
+            "exp": 0.268
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Heretic, Rockets]\n\nRocket Launcher II, Nova Rage Rocket\nRocket Launcher II, Nova Rage Rocket\n\n5MN Quad LiF Restrained Microwarpdrive\n\nDamage Control II\n\nSmall Trimark Armor Pump II"
+    },
+    {
+      "fitId": "impel-armor-1",
+      "shipTypeId": 12753,
+      "old": {
+        "dpsTotal": 0.0,
+        "alpha": 0.0,
+        "ehp": 20282.93802117891,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.19999999999999996,
+            "kin": 1,
+            "exp": 0.875
+          },
+          "armor": {
+            "em": 0.5,
+            "therm": 0.35,
+            "kin": 0.625,
+            "exp": 0.8
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 0.0,
+        "alpha": 0.0,
+        "ehp": 81192.06001455041,
+        "resists": {
+          "armor": {
+            "em": 0.745,
+            "exp": 0.898,
+            "kin": 0.80875,
+            "therm": 0.6685
+          },
+          "hull": {
+            "em": 0.598,
+            "exp": 0.598,
+            "kin": 0.598,
+            "therm": 0.598
+          },
+          "shield": {
+            "em": 0.125,
+            "exp": 0.890625,
+            "kin": 1.0,
+            "therm": 0.29999999999999993
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": 0.0,
+        "alpha": 0.0,
+        "ehp": 60909.121993371504,
+        "resists": {
+          "shield": {
+            "em": 0.125,
+            "therm": 0.09999999999999998,
+            "kin": 0.0,
+            "exp": 0.015625
+          },
+          "armor": {
+            "em": 0.245,
+            "therm": 0.3185,
+            "kin": 0.18374999999999997,
+            "exp": 0.09799999999999998
+          },
+          "hull": {
+            "em": 0.268,
+            "therm": 0.268,
+            "kin": 0.268,
+            "exp": 0.268
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Impel, Plate tank]\n\nDamage Control II\nMultispectrum Energized Membrane II\n1600mm Steel Plates II\n\nMedium Trimark Armor Pump II"
+    },
+    {
+      "fitId": "myrmidon-drone-1",
+      "shipTypeId": 24700,
+      "old": {
+        "dpsTotal": 286.31,
+        "alpha": 1145.23,
+        "ehp": 23229.7564,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.2,
+            "kin": 0.4,
+            "exp": 0.5
+          },
+          "armor": {
+            "em": 0.5,
+            "therm": 0.35,
+            "kin": 0.35,
+            "exp": 0.1
+          },
+          "hull": {
+            "em": 0.33,
+            "therm": 0.33,
+            "kin": 0.33,
+            "exp": 0.33
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 0.0,
+        "alpha": 0.0,
+        "ehp": 23229.756390461487,
+        "resists": {
+          "armor": {
+            "em": 0.5,
+            "exp": 0.09999999999999998,
+            "kin": 0.35,
+            "therm": 0.35
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "exp": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "therm": 0.32999999999999996
+          },
+          "shield": {
+            "em": 0.0,
+            "exp": 0.5,
+            "kin": 1.0,
+            "therm": 0.19999999999999996
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": -286.31,
+        "alpha": -1145.23,
+        "ehp": -9.538511221762747e-06,
+        "resists": {
+          "shield": {
+            "em": 0.0,
+            "therm": -5.551115123125783e-17,
+            "kin": 0.6,
+            "exp": 0.0
+          },
+          "armor": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": -2.7755575615628914e-17
+          },
+          "hull": {
+            "em": -5.551115123125783e-17,
+            "therm": -5.551115123125783e-17,
+            "kin": -5.551115123125783e-17,
+            "exp": -5.551115123125783e-17
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Myrmidon, Drones]\n\nDrone Link Augmentor I\n\n50MN Microwarpdrive II\n\nDrone Damage Amplifier II\n\nHammerhead II x5"
+    },
+    {
+      "fitId": "nergal-svcfitstat-1",
+      "shipTypeId": 52250,
+      "old": {
+        "dpsTotal": 398.48,
+        "alpha": 584.67,
+        "ehp": 9507.2603024444,
+        "resists": {
+          "shield": {
+            "em": 0.075,
+            "therm": 0.5375,
+            "kin": 0.445,
+            "exp": 0.8612
+          },
+          "armor": {
+            "em": 0.736,
+            "therm": 0.868,
+            "kin": 0.7561,
+            "exp": 0.8152
+          },
+          "hull": {
+            "em": 0.598,
+            "therm": 0.598,
+            "kin": 0.598,
+            "exp": 0.598
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 59.89583333333332,
+        "alpha": 150.9375,
+        "ehp": 9693.519595223946,
+        "resists": {
+          "armor": {
+            "em": 0.7576594470429221,
+            "exp": 0.8303616129300455,
+            "kin": 0.7646898003304359,
+            "therm": 0.878829723521461
+          },
+          "hull": {
+            "em": 0.531,
+            "exp": 0.531,
+            "kin": 0.531,
+            "therm": 0.531
+          },
+          "shield": {
+            "em": 0.07499999999999996,
+            "exp": 0.86125,
+            "kin": 1.0,
+            "therm": 0.5375
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": -338.5841666666667,
+        "alpha": -433.73249999999996,
+        "ehp": 186.25929277954674,
+        "resists": {
+          "shield": {
+            "em": -4.163336342344337e-17,
+            "therm": 0.0,
+            "kin": 0.5549999999999999,
+            "exp": 4.999999999999449e-05
+          },
+          "armor": {
+            "em": 0.02165944704292211,
+            "therm": 0.010829723521461054,
+            "kin": 0.008589800330435882,
+            "exp": 0.015161612930045476
+          },
+          "hull": {
+            "em": -0.06699999999999995,
+            "therm": -0.06699999999999995,
+            "kin": -0.06699999999999995,
+            "exp": -0.06699999999999995
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Nergal, Nergsdfasdfl fit]\n\nSmall Armor Repairer II\nAssault Damage Control II\nAdaptive Nano Plating II\nAdaptive Nano Plating II\n\nSmall Hull Repairer II\nSmall Shield Booster I\nSmall Compact Pb-Acid Cap Battery\n\nLight Entropic Disintegrator I, Tetryon Exotic Plasma S\n[Empty High slot]\n\nSmall Anti-Kinetic Pump I\nSmall Anti-Kinetic Pump I\n\nHobgoblin II x5"
+    },
+    {
+      "fitId": "raven-cruise-1",
+      "shipTypeId": 638,
+      "old": {
+        "dpsTotal": 26.058041112454656,
+        "alpha": 431.0,
+        "ehp": 30580.00419359143,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.19999999999999996,
+            "kin": 1,
+            "exp": 0.5
+          },
+          "armor": {
+            "em": 0.5,
+            "therm": 0.44999999999999996,
+            "kin": 0.25,
+            "exp": 0.09999999999999998
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 85.28033642907118,
+        "alpha": 651.8875,
+        "ehp": 38225.00524198929,
+        "resists": {
+          "armor": {
+            "em": 0.5,
+            "exp": 0.09999999999999998,
+            "kin": 0.25,
+            "therm": 0.44999999999999996
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "exp": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "therm": 0.32999999999999996
+          },
+          "shield": {
+            "em": 0.0,
+            "exp": 0.5,
+            "kin": 1.0,
+            "therm": 0.19999999999999996
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": 59.222295316616524,
+        "alpha": 220.88750000000005,
+        "ehp": 7645.0010483978585,
+        "resists": {
+          "shield": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          },
+          "armor": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          },
+          "hull": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Raven, Cruise]\n\nCruise Missile Launcher II, Caldari Navy Scourge Cruise Missile\n\n100MN Afterburner II\n\nBallistic Control System II"
+    },
+    {
+      "fitId": "sabre-shield-extender-1",
+      "shipTypeId": 22456,
+      "old": {
+        "dpsTotal": 89.2584,
+        "alpha": 334.719,
+        "ehp": 3408.771649772528,
+        "resists": {
+          "shield": {
+            "em": 0.5,
+            "therm": 0.4,
+            "kin": 1,
+            "exp": 0.5
+          },
+          "armor": {
+            "em": 0.8,
+            "therm": 0.5125,
+            "kin": 0.25,
+            "exp": 0.09999999999999998
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 301.15966305865913,
+        "alpha": 727.7523257812501,
+        "ehp": 7883.721516082688,
+        "resists": {
+          "armor": {
+            "em": 0.8,
+            "exp": 0.09999999999999998,
+            "kin": 0.25,
+            "therm": 0.5125
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "exp": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "therm": 0.32999999999999996
+          },
+          "shield": {
+            "em": 0.5,
+            "exp": 0.5,
+            "kin": 1.0,
+            "therm": 0.4
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": 211.90126305865914,
+        "alpha": 393.0333257812501,
+        "ehp": 4474.94986631016,
+        "resists": {
+          "shield": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          },
+          "armor": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          },
+          "hull": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Sabre, Inferred 100%]\n\nHigh Slots:\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\nInterdiction Sphere Launcher I,Warp Disrupt Probe\n\nMid Slots:\n5MN Y-T8 Compact Microwarpdrive\nFaint Epsilon Scoped Warp Scrambler\nFleeting Compact Stasis Webifier\nMedium Shield Extender II\n\nLow Slots:\nGyrostabilizer II\nNanofiber Internal Structure II\n\nRig Slots:\nSmall Core Defense Field Extender I\nSmall Core Defense Field Extender I"
+    },
+    {
+      "fitId": "wolf-mwd-1",
+      "shipTypeId": 11371,
+      "old": {
+        "dpsTotal": 11.087999999999997,
+        "alpha": 41.58,
+        "ehp": 3860.5182007347084,
+        "resists": {
+          "shield": {
+            "em": 0.75,
+            "therm": 0.6,
+            "kin": 1,
+            "exp": 0.5
+          },
+          "armor": {
+            "em": 0.9,
+            "therm": 0.675,
+            "kin": 0.25,
+            "exp": 0.09999999999999998
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        }
+      },
+      "new": {
+        "dpsTotal": 46.76392283519552,
+        "alpha": 113.00501953125,
+        "ehp": 4825.647750918386,
+        "resists": {
+          "armor": {
+            "em": 0.9,
+            "exp": 0.09999999999999998,
+            "kin": 0.25,
+            "therm": 0.675
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "exp": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "therm": 0.32999999999999996
+          },
+          "shield": {
+            "em": 0.75,
+            "exp": 0.5,
+            "kin": 1.0,
+            "therm": 0.6
+          }
+        }
+      },
+      "delta": {
+        "dpsTotal": 35.67592283519552,
+        "alpha": 71.42501953125,
+        "ehp": 965.1295501836776,
+        "resists": {
+          "shield": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          },
+          "armor": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          },
+          "hull": {
+            "em": 0.0,
+            "therm": 0.0,
+            "kin": 0.0,
+            "exp": 0.0
+          }
+        }
+      },
+      "changed": true,
+      "eft": "[Wolf, MWD]\n\n200mm AutoCannon II, EMP S\n\n5MN Y-T8 Compact Microwarpdrive\n\nGyrostabilizer II"
+    }
+  ]
+}

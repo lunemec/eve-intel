@@ -1,0 +1,829 @@
+{
+  "fits": [
+    {
+      "fitId": "rand-zkill-133433470",
+      "shipTypeId": 28710,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 1380.9092357120435,
+      "alpha": 5509.9873267442,
+      "ehp": 85519.15166598617,
+      "resists": {
+        "shield": {
+          "em": 0.7107804439268226,
+          "therm": 0.7506039999999999,
+          "kin": 0.7817784999999999,
+          "exp": 0.79217
+        },
+        "armor": {
+          "em": 0.65,
+          "therm": 0.71125,
+          "kin": 0.540625,
+          "exp": 0.37
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133433470
+      }
+    },
+    {
+      "fitId": "rand-zkill-133445723",
+      "shipTypeId": 638,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 923.0089847454302,
+      "alpha": 1833.386441273157,
+      "ehp": 62608.0567969494,
+      "resists": {
+        "shield": {
+          "em": 0.5633721965980705,
+          "therm": 0.6506977572784562,
+          "kin": 0.645625,
+          "exp": 0.7046874999999999
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.5325,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133445723
+      }
+    },
+    {
+      "fitId": "rand-zkill-133445847",
+      "shipTypeId": 28710,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 1726.4366318451814,
+      "alpha": 7099.395386389307,
+      "ehp": 83174.5733156896,
+      "resists": {
+        "shield": {
+          "em": 0.7508714986335169,
+          "therm": 0.7164999999999999,
+          "kin": 0.7519374999999999,
+          "exp": 0.76375
+        },
+        "armor": {
+          "em": 0.65,
+          "therm": 0.71125,
+          "kin": 0.540625,
+          "exp": 0.37
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133445847
+      }
+    },
+    {
+      "fitId": "rand-zkill-133349010",
+      "shipTypeId": 22466,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 882.9028631284915,
+      "alpha": 1866.8429226562503,
+      "ehp": 54015.217816499586,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.6499999999999999,
+          "kin": 0.86875,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.7761320659624996,
+          "therm": 0.8544858428756248,
+          "kin": 0.9272429214378124,
+          "exp": 0.5970377187324993
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133349010
+      }
+    },
+    {
+      "fitId": "rand-zkill-133446123",
+      "shipTypeId": 11186,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 29.644380900508356,
+      "alpha": 261.25,
+      "ehp": 3023.928548648698,
+      "resists": {
+        "shield": {
+          "em": 0.09999999999999998,
+          "therm": 0.2799999999999999,
+          "kin": 0.45999999999999996,
+          "exp": 0.6399999999999999
+        },
+        "armor": {
+          "em": 0.6499999999999999,
+          "therm": 0.5449999999999999,
+          "kin": 0.47499999999999987,
+          "exp": 0.51
+        },
+        "hull": {
+          "em": 0.5645,
+          "therm": 0.5645,
+          "kin": 0.5645,
+          "exp": 0.5645
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133446123
+      }
+    },
+    {
+      "fitId": "rand-zkill-133423603",
+      "shipTypeId": 22468,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 121.61797292516246,
+      "alpha": 522.5,
+      "ehp": 186498.80393658928,
+      "resists": {
+        "shield": {
+          "em": 0.9235835082039177,
+          "therm": 0.8777336131262683,
+          "kin": 0.8166004196894026,
+          "exp": 0.8471670164078354
+        },
+        "armor": {
+          "em": 0.915,
+          "therm": 0.72375,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133423603
+      }
+    },
+    {
+      "fitId": "rand-zkill-133442553",
+      "shipTypeId": 28665,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 2537.6340724666106,
+      "alpha": 5820.413494958216,
+      "ehp": 77304.78610374607,
+      "resists": {
+        "shield": {
+          "em": 0.6882550000000001,
+          "therm": 0.7090380000000001,
+          "kin": 0.7506039999999999,
+          "exp": 0.79217
+        },
+        "armor": {
+          "em": 0.79,
+          "therm": 0.601875,
+          "kin": 0.4750000000000001,
+          "exp": 0.37
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133442553
+      }
+    },
+    {
+      "fitId": "rand-zkill-133442037",
+      "shipTypeId": 11371,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 369.61686726141704,
+      "alpha": 724.6764182735308,
+      "ehp": 5967.887590000708,
+      "resists": {
+        "shield": {
+          "em": 0.7625,
+          "therm": 0.62,
+          "kin": 0.43000000000000005,
+          "exp": 0.525
+        },
+        "armor": {
+          "em": 0.9075,
+          "therm": 0.699375,
+          "kin": 0.3062499999999999,
+          "exp": 0.4588749999999999
+        },
+        "hull": {
+          "em": 0.49749999999999994,
+          "therm": 0.49749999999999994,
+          "kin": 0.49749999999999994,
+          "exp": 0.49749999999999994
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133442037
+      }
+    },
+    {
+      "fitId": "rand-zkill-133367198",
+      "shipTypeId": 22466,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 1056.006314820033,
+      "alpha": 2029.0939711658866,
+      "ehp": 124655.8682841999,
+      "resists": {
+        "shield": {
+          "em": 0.0,
+          "therm": 0.6,
+          "kin": 0.85,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.7563580384404552,
+          "therm": 0.8416327249862959,
+          "kin": 0.9208163624931479,
+          "exp": 0.735058161410718
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133367198
+      }
+    },
+    {
+      "fitId": "rand-zkill-133438682",
+      "shipTypeId": 52250,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 100.11160714285714,
+      "alpha": 252.28125,
+      "ehp": 8222.16128031423,
+      "resists": {
+        "shield": {
+          "em": 0.07499999999999996,
+          "therm": 0.5375,
+          "kin": 0.44499999999999995,
+          "exp": 0.86125
+        },
+        "armor": {
+          "em": 0.739765,
+          "therm": 0.8698825,
+          "kin": 0.6096474999999999,
+          "exp": 0.8178355
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133438682
+      }
+    },
+    {
+      "fitId": "rand-zkill-133447595",
+      "shipTypeId": 626,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 74.66666666666667,
+      "alpha": 560.0,
+      "ehp": 16884.6170255401,
+      "resists": {
+        "shield": {
+          "em": 0.0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.35,
+          "kin": 0.35,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133447595
+      }
+    },
+    {
+      "fitId": "rand-zkill-133445409",
+      "shipTypeId": 24688,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 266.6666666666667,
+      "alpha": 2000.0,
+      "ehp": 49801.912373000894,
+      "resists": {
+        "shield": {
+          "em": 0.19999999999999996,
+          "therm": 0.3599999999999999,
+          "kin": 0.52,
+          "exp": 0.6
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.44999999999999996,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133445409
+      }
+    },
+    {
+      "fitId": "rand-zkill-133444226",
+      "shipTypeId": 35683,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 566.4799577868544,
+      "alpha": 986.887943983178,
+      "ehp": 13448.968985678006,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.475,
+          "kin": 0.7375,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.7166666666666667,
+          "therm": 0.72375,
+          "kin": 0.8158333333333334,
+          "exp": 0.49
+        },
+        "hull": {
+          "em": 0.732,
+          "therm": 0.732,
+          "kin": 0.732,
+          "exp": 0.732
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133444226
+      }
+    },
+    {
+      "fitId": "rand-zkill-133432876",
+      "shipTypeId": 642,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 429.1106145251396,
+      "alpha": 3456.486,
+      "ehp": 148861.83057576083,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.475,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.7139035138701164,
+          "therm": 0.6620155895818056,
+          "kin": 0.6531453971808213,
+          "exp": 0.6651462737340588
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133432876
+      }
+    },
+    {
+      "fitId": "rand-zkill-133367239",
+      "shipTypeId": 22466,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 1056.006314820033,
+      "alpha": 2029.0939711658866,
+      "ehp": 100620.14256221667,
+      "resists": {
+        "shield": {
+          "em": 0.0,
+          "therm": 0.6,
+          "kin": 0.85,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.7284706230594151,
+          "therm": 0.8235059049886199,
+          "kin": 0.91175295249431,
+          "exp": 0.720840004706969
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133367239
+      }
+    },
+    {
+      "fitId": "rand-zkill-133447017",
+      "shipTypeId": 22460,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 443.3034375,
+      "alpha": 598.4596406250001,
+      "ehp": 11002.644534273488,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.475,
+          "kin": 0.7375,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.6566,
+          "therm": 0.6651849999999999,
+          "kin": 0.77679,
+          "exp": 0.6097066779098795
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133447017
+      }
+    },
+    {
+      "fitId": "rand-zkill-133444442",
+      "shipTypeId": 24700,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 285.71210937499995,
+      "alpha": 617.1381562500001,
+      "ehp": 37364.0082550732,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.475,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.68125,
+          "therm": 0.6234398671646373,
+          "kin": 0.6288419910452998,
+          "exp": 0.6331239987850252
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133444442
+      }
+    },
+    {
+      "fitId": "rand-zkill-133429565",
+      "shipTypeId": 22446,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 318.9411043618153,
+      "alpha": 1087.9344969558338,
+      "ehp": 205594.26908036874,
+      "resists": {
+        "shield": {
+          "em": 0.7962226885437806,
+          "therm": 0.9196677420870225,
+          "kin": 0.8795016131305337,
+          "exp": 0.7991693552175562
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.8831249999999999,
+          "kin": 0.68125,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133429565
+      }
+    },
+    {
+      "fitId": "rand-zkill-133447118",
+      "shipTypeId": 621,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 344.52264566226546,
+      "alpha": 848.7900191079428,
+      "ehp": 14264.164639951023,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.475,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.5325,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133447118
+      }
+    },
+    {
+      "fitId": "rand-zkill-133447740",
+      "shipTypeId": 621,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 297.9680851534224,
+      "alpha": 780.8783386206287,
+      "ehp": 32419.63402018255,
+      "resists": {
+        "shield": {
+          "em": 0.5633721965980705,
+          "therm": 0.5274999999999999,
+          "kin": 0.6456249999999999,
+          "exp": 0.7046874999999999
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.5325,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133447740
+      }
+    },
+    {
+      "fitId": "rand-zkill-133445909",
+      "shipTypeId": 29990,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 712.3828821113425,
+      "alpha": 1276.5305893450911,
+      "ehp": 21010.75504828797,
+      "resists": {
+        "shield": {
+          "em": 0.5,
+          "therm": 0.4,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.8,
+          "therm": 0.5125,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133445909
+      }
+    },
+    {
+      "fitId": "rand-zkill-133431164",
+      "shipTypeId": 52250,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 100.11160714285714,
+      "alpha": 252.28125,
+      "ehp": 9400.223171664573,
+      "resists": {
+        "shield": {
+          "em": 0.07499999999999996,
+          "therm": 0.5375,
+          "kin": 0.44499999999999995,
+          "exp": 0.86125
+        },
+        "armor": {
+          "em": 0.73,
+          "therm": 0.865,
+          "kin": 0.7933149555325383,
+          "exp": 0.811
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133431164
+      }
+    },
+    {
+      "fitId": "rand-zkill-133444616",
+      "shipTypeId": 642,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 531.8284983410491,
+      "alpha": 3550.98005467643,
+      "ehp": 39975.79297001582,
+      "resists": {
+        "shield": {
+          "em": 0.0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.35,
+          "kin": 0.25,
+          "exp": 0.19999999999999996
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133444616
+      }
+    },
+    {
+      "fitId": "rand-zkill-133447046",
+      "shipTypeId": 29340,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 282.23975730589484,
+      "alpha": 1782.9373111248424,
+      "ehp": 34067.11003294082,
+      "resists": {
+        "shield": {
+          "em": 0.5633721965980705,
+          "therm": 0.5275,
+          "kin": 0.645625,
+          "exp": 0.7046874999999999
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.5325,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133447046
+      }
+    },
+    {
+      "fitId": "rand-zkill-133447544",
+      "shipTypeId": 621,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 237.5517367633862,
+      "alpha": 1357.9549929298198,
+      "ehp": 32200.656422293323,
+      "resists": {
+        "shield": {
+          "em": 0.5633721965980705,
+          "therm": 0.6506977572784562,
+          "kin": 0.6456249999999999,
+          "exp": 0.7046874999999999
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.5325,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133447544
+      }
+    }
+  ]
+}

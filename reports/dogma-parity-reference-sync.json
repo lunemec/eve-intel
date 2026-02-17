@@ -1,0 +1,128 @@
+{
+  "generatedAt": "2026-02-17T08:20:38.419Z",
+  "goldenCount": 11,
+  "existingBefore": 4,
+  "existingAfter": 4,
+  "mode": "direct-cli",
+  "timeoutMs": 10000,
+  "hardKillMs": 15000,
+  "tracePath": "reports/dogma-parity-reference-trace.jsonl",
+  "added": [],
+  "skipped": [
+    {
+      "fitId": "nergal-svcfitstat-1",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "gila-drone-1",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "gnosis-mixed-1",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "myrmidon-drone-1",
+      "reason": "already_present"
+    }
+  ],
+  "failed": [
+    {
+      "fitId": "eris-void-1",
+      "reason": "pyfa_failed",
+      "error": "pyfa command timed out",
+      "mode": "direct-cli",
+      "timeoutMs": 10000,
+      "hardKillMs": 15000,
+      "stage": "timeout",
+      "elapsedMs": 20205,
+      "stdoutTail": "",
+      "stderrTail": "",
+      "normalizedEftHash": "a379c72f1aa342d18d07c75b5962ba96f517c26cf9678c83d808255ed779b0af"
+    },
+    {
+      "fitId": "impel-armor-1",
+      "reason": "pyfa_failed",
+      "error": "pyfa command timed out",
+      "mode": "direct-cli",
+      "timeoutMs": 10000,
+      "hardKillMs": 15000,
+      "stage": "timeout",
+      "elapsedMs": 20198,
+      "stdoutTail": "",
+      "stderrTail": "",
+      "normalizedEftHash": "278b3aead1d80d8bfb469fc1149b6455c375a3643f19be9629ccc178a4703e4b"
+    },
+    {
+      "fitId": "heretic-rocket-1",
+      "reason": "pyfa_failed",
+      "error": "pyfa command timed out",
+      "mode": "direct-cli",
+      "timeoutMs": 10000,
+      "hardKillMs": 15000,
+      "stage": "timeout",
+      "elapsedMs": 20207,
+      "stdoutTail": "",
+      "stderrTail": "",
+      "normalizedEftHash": "98a21d1a9ad03add1827d289a1ee37b5977a4071c8c186b4dd19520340161226"
+    },
+    {
+      "fitId": "wolf-mwd-1",
+      "reason": "pyfa_failed",
+      "error": "pyfa command timed out",
+      "mode": "direct-cli",
+      "timeoutMs": 10000,
+      "hardKillMs": 15000,
+      "stage": "timeout",
+      "elapsedMs": 20203,
+      "stdoutTail": "",
+      "stderrTail": "",
+      "normalizedEftHash": "25f22e6f2c789a619831797b6f87227aff34642e1b135c37b7bd2090777f1c30"
+    },
+    {
+      "fitId": "crow-mwd-1",
+      "reason": "pyfa_failed",
+      "error": "pyfa command timed out",
+      "mode": "direct-cli",
+      "timeoutMs": 10000,
+      "hardKillMs": 15000,
+      "stage": "timeout",
+      "elapsedMs": 20281,
+      "stdoutTail": "",
+      "stderrTail": "",
+      "normalizedEftHash": "f514a68caaafd87cf9ac11f22e928f66b407c0f63ef5a91950ebb360b76af233"
+    },
+    {
+      "fitId": "raven-cruise-1",
+      "reason": "pyfa_failed",
+      "error": "pyfa command timed out",
+      "mode": "direct-cli",
+      "timeoutMs": 10000,
+      "hardKillMs": 15000,
+      "stage": "timeout",
+      "elapsedMs": 20230,
+      "stdoutTail": "",
+      "stderrTail": "",
+      "normalizedEftHash": "73057e6ddafec20b2f2147a10b647ddfd71869ca0c01b3f1c869d6c7ccc22284"
+    },
+    {
+      "fitId": "sabre-shield-extender-1",
+      "reason": "pyfa_failed",
+      "error": "pyfa command timed out",
+      "mode": "direct-cli",
+      "timeoutMs": 10000,
+      "hardKillMs": 15000,
+      "stage": "timeout",
+      "elapsedMs": 20252,
+      "stdoutTail": "",
+      "stderrTail": "",
+      "normalizedEftHash": "a53879db8c3c95011264ca842aa45cd440f553d1617d7443f6fdfe15cc38f7a8"
+    }
+  ],
+  "directPyfaRun": {
+    "attempted": 7,
+    "succeeded": 7,
+    "failed": 0,
+    "failedFits": []
+  }
+}
