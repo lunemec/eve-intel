@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-02-17T13:44:59.333Z",
-  "mode": "ci",
+  "generatedAt": "2026-02-17T14:16:44.208Z",
+  "mode": "sample",
   "comparedFits": 85,
   "failingFits": 0,
   "goldenFits": 85,
@@ -74,18 +74,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -279,18 +279,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -484,18 +484,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -689,18 +689,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -894,18 +894,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -1099,18 +1099,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -1304,18 +1304,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -1509,18 +1509,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -1714,18 +1714,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -1919,18 +1919,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -2124,18 +2124,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -2329,18 +2329,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -2534,18 +2534,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -2737,18 +2737,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -2940,18 +2940,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -3143,18 +3143,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -3346,18 +3346,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -3549,18 +3549,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -3752,18 +3752,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -3955,18 +3955,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -4158,18 +4158,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -4361,18 +4361,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -4564,18 +4564,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -4767,18 +4767,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -4970,18 +4970,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -5173,18 +5173,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -5376,18 +5376,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -5581,18 +5581,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -5786,18 +5786,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -5991,18 +5991,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -6196,18 +6196,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -6401,18 +6401,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -6606,18 +6606,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -6811,18 +6811,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -7016,18 +7016,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -7221,18 +7221,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -7426,18 +7426,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -7631,18 +7631,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -7836,18 +7836,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -8041,18 +8041,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -8246,18 +8246,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -8451,18 +8451,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -8656,18 +8656,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -8861,18 +8861,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -9066,18 +9066,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -9271,18 +9271,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -9476,18 +9476,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -9681,18 +9681,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -9886,18 +9886,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -10091,18 +10091,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -10296,18 +10296,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -10501,18 +10501,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -10706,18 +10706,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -10911,18 +10911,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -11116,18 +11116,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -11321,18 +11321,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -11526,18 +11526,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -11731,18 +11731,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -11936,18 +11936,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -12141,18 +12141,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -12346,18 +12346,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -12551,18 +12551,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -12756,18 +12756,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -12961,18 +12961,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -13166,18 +13166,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -13371,18 +13371,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -13576,18 +13576,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -13781,18 +13781,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -13986,18 +13986,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -14191,18 +14191,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -14396,18 +14396,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -14601,18 +14601,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -14806,18 +14806,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -15011,18 +15011,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -15216,18 +15216,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -15421,18 +15421,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -15626,18 +15626,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -15831,18 +15831,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -16036,18 +16036,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -16241,18 +16241,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -16446,18 +16446,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -16651,18 +16651,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -16856,18 +16856,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -17061,18 +17061,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
@@ -17266,18 +17266,18 @@
       },
       "thresholds": {
         "dps": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "alpha": {
-          "rel": 0.05,
-          "abs": 15
+          "rel": 0.08,
+          "abs": 25
         },
         "ehp": {
-          "rel": 0.07,
-          "abs": 350
+          "rel": 0.1,
+          "abs": 500
         },
-        "resistAbs": 0.03
+        "resistAbs": 0.05
       },
       "pass": true,
       "deltas": [
