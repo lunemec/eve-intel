@@ -252,6 +252,9 @@ describe("App paste flow", () => {
     await waitFor(() => {
       expect(screen.getAllByText(/Character not found in ESI\./i).length).toBeGreaterThan(0);
     });
+
+    expect(vi.mocked(fetchRecentKills)).not.toHaveBeenCalled();
+    expect(vi.mocked(fetchRecentLosses)).not.toHaveBeenCalled();
   });
 
   it("deduplicates repeated pilot lines into one card", async () => {
