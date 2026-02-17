@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { collectShipTypeIdsForNaming, deriveFitCandidates, derivePilotStats, deriveShipPredictions } from "./intel";
+import {
+  collectShipTypeIdsForNaming,
+  deriveFitCandidates,
+  derivePilotStats,
+  deriveShipPredictions,
+  summarizeEvidenceCoverage,
+  summarizeTopEvidenceShips
+} from "./intel";
 import type { ParsedPilotInput } from "../types";
 import type { ZkillKillmail } from "./api/zkill";
 
@@ -780,5 +787,130 @@ describe("deriveFitCandidates", () => {
     expect(fits[0].eftSections?.high.filter((entry) => entry === "Modal Light Neutron Particle Accelerator I,Caldari Navy Antimatter Charge S")).toHaveLength(2);
     expect(fits[0].eftSections?.other).toContain("Warrior II x3");
     expect(fits[0].modulesBySlot?.other[0].quantity).toBe(3);
+  });
+});
+
+describe("summaries", () => {
+  it("summarizes evidence coverage counters", () => {
+    const characterId = 777;
+    const kills: ZkillKillmail[] = [
+      {
+        killmail_id: 1,
+        killmail_time: "2026-02-10T00:00:00Z",
+        victim: {},
+        attackers: [],
+        zkb: {}
+      },
+      {
+        killmail_id: 2,
+        killmail_time: "2026-02-09T00:00:00Z",
+        victim: {},
+        attackers: [{ character_id: 999, ship_type_id: 123 }],
+        zkb: {}
+      },
+      {
+        killmail_id: 3,
+        killmail_time: "2026-02-08T00:00:00Z",
+        victim: {},
+        attackers: [{ character_id: characterId, ship_type_id: 321 }],
+        zkb: {}
+      }
+    ];
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 4,
+        killmail_time: "2026-02-07T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 456
+        },
+        attackers: [],
+        zkb: {}
+      },
+      {
+        killmail_id: 5,
+        killmail_time: "2026-02-06T00:00:00Z",
+        victim: {
+          character_id: 42,
+          ship_type_id: 457
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const summary = summarizeEvidenceCoverage(characterId, kills, losses);
+
+    expect(summary.totalKills).toBe(3);
+    expect(summary.totalLosses).toBe(2);
+    expect(summary.killRowsWithoutAttackers).toBe(1);
+    expect(summary.killRowsWithAttackersButNoCharacterMatch).toBe(1);
+    expect(summary.killRowsWithMatchedAttackerShip).toBe(1);
+    expect(summary.lossRowsWithVictimShip).toBe(1);
+  });
+
+  it("returns top evidence ships in descending total order with fallback names", () => {
+    const characterId = 100;
+    const kills: ZkillKillmail[] = [
+      makeKillmail({
+        id: 10,
+        time: "2026-02-10T00:00:00Z",
+        attackerCharacterId: characterId,
+        attackerShipTypeId: 2001
+      }),
+      makeKillmail({
+        id: 11,
+        time: "2026-02-09T00:00:00Z",
+        attackerCharacterId: characterId,
+        attackerShipTypeId: 2001
+      }),
+      makeKillmail({
+        id: 12,
+        time: "2026-02-08T00:00:00Z",
+        attackerCharacterId: characterId,
+        attackerShipTypeId: 2002
+      })
+    ];
+    const losses: ZkillKillmail[] = [
+      makeKillmail({
+        id: 13,
+        time: "2026-02-07T00:00:00Z",
+        victimCharacterId: characterId,
+        victimShipTypeId: 2002
+      }),
+      makeKillmail({
+        id: 14,
+        time: "2026-02-06T00:00:00Z",
+        victimCharacterId: characterId,
+        victimShipTypeId: 2999
+      })
+    ];
+
+    const rows = summarizeTopEvidenceShips({
+      characterId,
+      kills,
+      losses,
+      shipNamesByTypeId: new Map([
+        [2001, "Rifter"],
+        [2002, "Thrasher"]
+      ]),
+      limit: 2
+    });
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      shipTypeId: 2001,
+      shipName: "Rifter",
+      kills: 2,
+      losses: 0,
+      total: 2
+    });
+    expect(rows[1]).toMatchObject({
+      shipTypeId: 2002,
+      shipName: "Thrasher",
+      kills: 1,
+      losses: 1,
+      total: 2
+    });
   });
 });
