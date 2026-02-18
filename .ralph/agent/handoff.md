@@ -1,11 +1,11 @@
 # Session Handoff
 
-_Generated: 2026-02-18 12:17:49 UTC_
+_Generated: 2026-02-18 13:21:31 UTC_
 
 ## Git Context
 
 - **Branch:** `better_combat_capability`
-- **HEAD:** 3dad833: chore: auto-commit before merge (loop primary)
+- **HEAD:** 6dfea7e: chore: auto-commit before merge (loop primary)
 
 ## Tasks
 
@@ -21,6 +21,21 @@ _Generated: 2026-02-18 12:17:49 UTC_
 - [x] Final verify + changelog from git history
 - [x] Add CLI entrypoint orchestration tests and import-safe main
 - [x] Run final objective verification and release notes sweep
+- [x] Dogma new-fit scope contract + tests
+- [x] Scoped parity compare helper + tests
+- [x] Scoped pyfa reference sync merge + tests
+- [x] New-fit orchestrator CLI exit-policy + tests
+- [x] New-fit report + diagnostics artifacts + tests
+- [x] npm script wiring + arg contract tests
+- [x] Guardrail handling for partial failures + tests
+- [x] Final verification + changelog update
+- [x] Scoped parity compare helper + tests
+- [x] Scoped pyfa reference sync merge + tests
+- [x] New-fit orchestrator CLI exit-policy + tests
+- [x] New-fit report + diagnostics artifacts + tests
+- [x] npm script wiring + arg contract tests
+- [x] Guardrail handling for partial failures + tests
+- [x] Final verification + changelog update
 
 
 ## Key Files
@@ -29,14 +44,14 @@ Recently modified:
 
 - `.ralph/agent/handoff.md`
 - `.ralph/agent/memories.md`
-- `.ralph/agent/memories.md.lock`
 - `.ralph/agent/scratchpad.md`
 - `.ralph/agent/summary.md`
 - `.ralph/agent/tasks.jsonl`
-- `.ralph/agent/tasks.jsonl.lock`
 - `.ralph/current-events`
 - `.ralph/current-loop-id`
-- `.ralph/events-20260218-112745.jsonl`
+- `.ralph/events-20260218-124243.jsonl`
+- `.ralph/history.jsonl`
+- `.ralph/loop.lock`
 
 ## Next Session
 
@@ -45,15 +60,13 @@ Session completed successfully. No pending work.
 **Original objective:**
 
 ```
-# Ralph Implementation Prompt: zKill Fit Fetch CLI
+# Ralph Implementation Prompt: Dogma New-Fit Failing Test Generation
 
 ## Objective
-Implement the spec in `specs/zkill-fit-fetch-cli/` to deliver an agent-friendly CLI that fetches real zKill fits by ship type IDs and outputs deterministic JSONL fit payload records (normalized + raw snapshots), with robust retry/backoff and partial-failure continuation.
+Implement the design in `specs/dogma-failing-test-generation/` to add a one-command workflow that turns newly appended zKill fits into scoped Dogma parity failures, with deterministic artifacts and non-zero exit on mismatch.
 
 ## Spec Reference
-- `specs/zkill-fit-fetch-cli/requirements.md`
-- `specs/zkill-fit-fetch-cli/design.md`
-- `specs/zkill-fit-fetch-cli/plan.md`
-
-## Key Requirements...
+- `specs/dogma-failing-test-generation/requirements.md`
+- `specs/dogma-failing-test-generation/research/dogma-fit-test-workflow.md`
+- `specs/dogma-failing-test-generation/de...
 ```

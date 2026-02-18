@@ -1,0 +1,3536 @@
+{
+  "generatedAt": "2026-02-18T15:08:33.577Z",
+  "thresholdPolicy": {
+    "mode": "followup-10pct",
+    "relMax": 0.1
+  },
+  "comparedFits": 178,
+  "failingFits": 7,
+  "passingFits": 171,
+  "perFit": [
+    {
+      "fitId": "crow-mwd-1",
+      "shipTypeId": 11176,
+      "pass": false,
+      "maxRelDelta": 0.10149596604869347,
+      "failingMetrics": [
+        {
+          "metric": "dpsTotal",
+          "absDelta": 2.3044055776666177,
+          "relDelta": 0.10149596604869347
+        }
+      ]
+    },
+    {
+      "fitId": "eris-void-1",
+      "shipTypeId": 22460,
+      "pass": true,
+      "maxRelDelta": 0.00006017579406576893,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "gila-drone-1",
+      "shipTypeId": 17715,
+      "pass": true,
+      "maxRelDelta": 0.053773325230166605,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "gnosis-mixed-1",
+      "shipTypeId": 3756,
+      "pass": true,
+      "maxRelDelta": 0.00020063007937324288,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "heretic-rocket-1",
+      "shipTypeId": 22452,
+      "pass": true,
+      "maxRelDelta": 0.03394400591857857,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "impel-armor-1",
+      "shipTypeId": 12753,
+      "pass": true,
+      "maxRelDelta": 7.391677265399794e-7,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "manual-capsule-minimal-1",
+      "shipTypeId": 670,
+      "pass": true,
+      "maxRelDelta": 0.0005319544111437125,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "manual-expedition-command-ship-minimal-1",
+      "shipTypeId": 89607,
+      "pass": true,
+      "maxRelDelta": 0.00001114539177573339,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "manual-jump-freighter-minimal-1",
+      "shipTypeId": 28844,
+      "pass": true,
+      "maxRelDelta": 0.0076844954305233006,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "manual-prototype-exploration-ship-minimal-1",
+      "shipTypeId": 2078,
+      "pass": true,
+      "maxRelDelta": 0.0003958326098282089,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "manual-shuttle-minimal-1",
+      "shipTypeId": 672,
+      "pass": true,
+      "maxRelDelta": 0.00016865392903322584,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "myrmidon-drone-1",
+      "shipTypeId": 24700,
+      "pass": true,
+      "maxRelDelta": 0.000010486960535361374,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "nergal-svcfitstat-1",
+      "shipTypeId": 52250,
+      "pass": true,
+      "maxRelDelta": 0.022023002344910763,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133349010",
+      "shipTypeId": 22466,
+      "pass": true,
+      "maxRelDelta": 0.020531042657729245,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133423603",
+      "shipTypeId": 22468,
+      "pass": true,
+      "maxRelDelta": 0.05369366304351223,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133429565",
+      "shipTypeId": 22446,
+      "pass": true,
+      "maxRelDelta": 0.06378713345965034,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133431164",
+      "shipTypeId": 52250,
+      "pass": true,
+      "maxRelDelta": 0.0018818283166109377,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133433470",
+      "shipTypeId": 28710,
+      "pass": true,
+      "maxRelDelta": 0.021108156837623727,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133442037",
+      "shipTypeId": 11371,
+      "pass": true,
+      "maxRelDelta": 0.00004563444721014175,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133442553",
+      "shipTypeId": 28665,
+      "pass": true,
+      "maxRelDelta": 0.023017774271833154,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133444226",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.022631060529010472,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133444442",
+      "shipTypeId": 24700,
+      "pass": true,
+      "maxRelDelta": 0.0006688721605078305,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133445409",
+      "shipTypeId": 24688,
+      "pass": true,
+      "maxRelDelta": 0.0001249999999998863,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133445909",
+      "shipTypeId": 29990,
+      "pass": true,
+      "maxRelDelta": 0.0444174875946723,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133446123",
+      "shipTypeId": 11186,
+      "pass": true,
+      "maxRelDelta": 0.09932340669856475,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133447017",
+      "shipTypeId": 22460,
+      "pass": true,
+      "maxRelDelta": 0.0421534192082672,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "rand-zkill-133447046",
+      "shipTypeId": 29340,
+      "pass": true,
+      "maxRelDelta": 0.03648357509214545,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "raven-cruise-1",
+      "shipTypeId": 638,
+      "pass": true,
+      "maxRelDelta": 0.09944070091848663,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "sabre-shield-extender-1",
+      "shipTypeId": 22456,
+      "pass": true,
+      "maxRelDelta": 0.00013393872516385884,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "wolf-mwd-1",
+      "shipTypeId": 11371,
+      "pass": true,
+      "maxRelDelta": 0.0007714743036339588,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-apocalypse-133445346",
+      "shipTypeId": 642,
+      "pass": true,
+      "maxRelDelta": 0.0000023669121099337974,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-astarte-133424956",
+      "shipTypeId": 22466,
+      "pass": true,
+      "maxRelDelta": 0.000005117095180482088,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-attack-battlecruiser-133447773",
+      "shipTypeId": 4302,
+      "pass": true,
+      "maxRelDelta": 0.013259860171388752,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-basilisk-133440259",
+      "shipTypeId": 11985,
+      "pass": true,
+      "maxRelDelta": 0.0484330904918895,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-black-ops-133447642",
+      "shipTypeId": 22428,
+      "pass": true,
+      "maxRelDelta": 0.045765902704274115,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-blockade-runner-133448704",
+      "shipTypeId": 12729,
+      "pass": true,
+      "maxRelDelta": 0.0059264899119673775,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-capital-industrial-ship-133419370",
+      "shipTypeId": 28352,
+      "pass": true,
+      "maxRelDelta": 8.040277772041325e-8,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-carrier-133436113",
+      "shipTypeId": 23757,
+      "pass": true,
+      "maxRelDelta": 0.000714285714285826,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-claymore-133432657",
+      "shipTypeId": 22468,
+      "pass": true,
+      "maxRelDelta": 8.02973867635988e-7,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-command-destroyer-133448856",
+      "shipTypeId": 37480,
+      "pass": true,
+      "maxRelDelta": 0.005477338267804503,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133450595",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.0087661902137878,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133451740",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.013038047544231017,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133452217",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.0000384792009974502,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133455844",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.000017415687418483723,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133455983",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.00007563306670058287,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133457973",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.0000676288323556667,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133458796",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.0000676288323556667,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133460642",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.07363343941567453,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133461350",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.000010349378047780833,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133462140",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.00896536599356981,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133462596",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.011219730687800595,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133463265",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.01714613216619254,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133465825",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.00004920175807651093,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133466846",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.000036954475218246914,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-confessor-133470381",
+      "shipTypeId": 34317,
+      "pass": true,
+      "maxRelDelta": 0.014128205023195037,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-corvette-133446733",
+      "shipTypeId": 596,
+      "pass": true,
+      "maxRelDelta": 0.003344481605351218,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-covert-ops-133448514",
+      "shipTypeId": 11172,
+      "pass": true,
+      "maxRelDelta": 0.00013469107961296302,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-crow-126043648",
+      "shipTypeId": 11176,
+      "pass": true,
+      "maxRelDelta": 0.09869090909090913,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-curse-133444492",
+      "shipTypeId": 20125,
+      "pass": true,
+      "maxRelDelta": 0.022321329645245674,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-destroyer-133448049",
+      "shipTypeId": 16236,
+      "pass": true,
+      "maxRelDelta": 0.0010335020943689503,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-drake-133444423",
+      "shipTypeId": 24698,
+      "pass": true,
+      "maxRelDelta": 0.000007148590899837203,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-dreadnought-133448144",
+      "shipTypeId": 19726,
+      "pass": true,
+      "maxRelDelta": 0.0000035792064585068708,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-electronic-attack-ship-133448772",
+      "shipTypeId": 11174,
+      "pass": false,
+      "maxRelDelta": 0.20028745957599703,
+      "failingMetrics": [
+        {
+          "metric": "dpsTotal",
+          "absDelta": 2.6798076923076906,
+          "relDelta": 0.20028745957599703
+        }
+      ]
+    },
+    {
+      "fitId": "zkill-exhumer-133448858",
+      "shipTypeId": 22544,
+      "pass": true,
+      "maxRelDelta": 0.017343046648547182,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-expedition-frigate-133446782",
+      "shipTypeId": 33697,
+      "pass": true,
+      "maxRelDelta": 0.000020876164554544475,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-flag-cruiser-133418808",
+      "shipTypeId": 45534,
+      "pass": true,
+      "maxRelDelta": 0.021739130434782507,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-force-auxiliary-133448105",
+      "shipTypeId": 37604,
+      "pass": true,
+      "maxRelDelta": 0.03461328872675906,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-force-recon-ship-133447466",
+      "shipTypeId": 11957,
+      "pass": true,
+      "maxRelDelta": 0.000002911462558443065,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-freighter-133351247",
+      "shipTypeId": 34328,
+      "pass": true,
+      "maxRelDelta": 3.2872396930546797e-7,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-gila-126059140",
+      "shipTypeId": 17715,
+      "pass": true,
+      "maxRelDelta": 0.026775108202486093,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-golem-133445887",
+      "shipTypeId": 28710,
+      "pass": true,
+      "maxRelDelta": 0.022193890206213082,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-harbinger-133445759",
+      "shipTypeId": 24696,
+      "pass": true,
+      "maxRelDelta": 0.010608674111994416,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hauler-133446261",
+      "shipTypeId": 648,
+      "pass": true,
+      "maxRelDelta": 0.030698500077025837,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-heavy-assault-cruiser-56615140",
+      "shipTypeId": 2836,
+      "pass": true,
+      "maxRelDelta": 0.000001002918908918699,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-heavy-interdiction-cruiser-133448632",
+      "shipTypeId": 11995,
+      "pass": true,
+      "maxRelDelta": 0.000009271816072325435,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-126092096",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.022433128100325037,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133467218",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.00017021276595744682,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133467711",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.000013432140017152884,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133467785",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.0000023050094026433228,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133467937",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.000019351270716459034,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133468117",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.000024472606939380477,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133468906",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.00003728969853537219,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133469025",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.0000023050094026433228,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133469036",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.000002064156743757687,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133469052",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.0000023050094026433228,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133469082",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.000002064156743757687,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133469110",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.0000023050094026433228,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133470429",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.0000023050094026433228,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hecate-133471121",
+      "shipTypeId": 35683,
+      "pass": true,
+      "maxRelDelta": 0.0000023050094026433228,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-hurricane-133446205",
+      "shipTypeId": 24702,
+      "pass": false,
+      "maxRelDelta": 0.13444816053511693,
+      "failingMetrics": [
+        {
+          "metric": "resists.hull.em",
+          "absDelta": 0.08039999999999992,
+          "relDelta": 0.13444816053511693
+        }
+      ]
+    },
+    {
+      "fitId": "zkill-industrial-command-ship-133448827",
+      "shipTypeId": 28606,
+      "pass": true,
+      "maxRelDelta": 0.0000012750359011241943,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133463674",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.000037470315379785396,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133463856",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.00001232922816278269,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133464259",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.007132417185963474,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133464774",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.00002495353234904356,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133464988",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.0000021167937767400545,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133465534",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.000021206705521584242,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133466198",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.0000010834614752608599,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133466922",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.00003158438956488264,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133467628",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.000006222557041077577,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133469527",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.011992079411173555,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133469569",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.00000865700404889123,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133470287",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.000018503690850763226,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133470448",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.0068793227242556175,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133470726",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.00485351624212733,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-jackdaw-133471050",
+      "shipTypeId": 34828,
+      "pass": true,
+      "maxRelDelta": 0.000013082968589440769,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-kronos-133442214",
+      "shipTypeId": 28661,
+      "pass": true,
+      "maxRelDelta": 0.044071447921241555,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-lancer-dreadnought-133431340",
+      "shipTypeId": 77281,
+      "pass": true,
+      "maxRelDelta": 0.0008782529647647616,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-legion-133446555",
+      "shipTypeId": 29986,
+      "pass": true,
+      "maxRelDelta": 0.026160789709469532,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-legion-133457081",
+      "shipTypeId": 29986,
+      "pass": true,
+      "maxRelDelta": 0.035503528709086275,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-legion-133463344",
+      "shipTypeId": 29986,
+      "pass": true,
+      "maxRelDelta": 0.006096637323252477,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-legion-133463711",
+      "shipTypeId": 29986,
+      "pass": true,
+      "maxRelDelta": 0.09095362175275726,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-legion-133464432",
+      "shipTypeId": 29986,
+      "pass": true,
+      "maxRelDelta": 0.06486292949975382,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-legion-133464521",
+      "shipTypeId": 29986,
+      "pass": true,
+      "maxRelDelta": 0.00022631638417952427,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-legion-133465561",
+      "shipTypeId": 29986,
+      "pass": true,
+      "maxRelDelta": 0.04476201423365532,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-legion-133466796",
+      "shipTypeId": 29986,
+      "pass": true,
+      "maxRelDelta": 0.09930471545216603,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-legion-133466849",
+      "shipTypeId": 29986,
+      "pass": true,
+      "maxRelDelta": 0.020281923904230073,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-legion-133470209",
+      "shipTypeId": 29986,
+      "pass": true,
+      "maxRelDelta": 0.0398533047930699,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-logistics-frigate-133448652",
+      "shipTypeId": 37457,
+      "pass": true,
+      "maxRelDelta": 0.06740680895482239,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-loki-133446334",
+      "shipTypeId": 29990,
+      "pass": true,
+      "maxRelDelta": 0.041220243595451005,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-loki-133467258",
+      "shipTypeId": 29990,
+      "pass": true,
+      "maxRelDelta": 0.05329966653283571,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-loki-133467497",
+      "shipTypeId": 29990,
+      "pass": true,
+      "maxRelDelta": 0.0632247469726312,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-loki-133467674",
+      "shipTypeId": 29990,
+      "pass": true,
+      "maxRelDelta": 0.05000619090728856,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-loki-133467761",
+      "shipTypeId": 29990,
+      "pass": true,
+      "maxRelDelta": 0.0314446641747333,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-loki-133468507",
+      "shipTypeId": 29990,
+      "pass": true,
+      "maxRelDelta": 0.02933344567573119,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-loki-133468890",
+      "shipTypeId": 29990,
+      "pass": true,
+      "maxRelDelta": 0.04474409588135734,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-loki-133469584",
+      "shipTypeId": 29990,
+      "pass": true,
+      "maxRelDelta": 0.022493815134810764,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-loki-133469920",
+      "shipTypeId": 29990,
+      "pass": true,
+      "maxRelDelta": 0.07905395384768012,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-malediction-126066291",
+      "shipTypeId": 11186,
+      "pass": false,
+      "maxRelDelta": 0.3273057851239668,
+      "failingMetrics": [
+        {
+          "metric": "dpsTotal",
+          "absDelta": 6.471241830065356,
+          "relDelta": 0.3273057851239668
+        }
+      ]
+    },
+    {
+      "fitId": "zkill-megathron-133445295",
+      "shipTypeId": 641,
+      "pass": true,
+      "maxRelDelta": 0.00045454545454542874,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "pass": false,
+      "maxRelDelta": 1.7999999999999998,
+      "failingMetrics": [
+        {
+          "metric": "resists.armor.exp",
+          "absDelta": 0.17999999999999994,
+          "relDelta": 1.7999999999999998
+        },
+        {
+          "metric": "resists.armor.kin",
+          "absDelta": 0.1875,
+          "relDelta": 0.75
+        },
+        {
+          "metric": "resists.armor.therm",
+          "absDelta": 0.22749999999999992,
+          "relDelta": 0.6499999999999998
+        },
+        {
+          "metric": "resists.armor.em",
+          "absDelta": 0.20000000000000007,
+          "relDelta": 0.3333333333333335
+        },
+        {
+          "metric": "resists.shield.kin",
+          "absDelta": 0.14668703775364655,
+          "relDelta": 0.24653283656075053
+        },
+        {
+          "metric": "ehp",
+          "absDelta": 4033.6868626217547,
+          "relDelta": 0.2454280504974429
+        },
+        {
+          "metric": "resists.shield.exp",
+          "absDelta": 0.15811599844003232,
+          "relDelta": 0.2386656580226903
+        },
+        {
+          "metric": "resists.shield.therm",
+          "absDelta": 0.0938649579264429,
+          "relDelta": 0.2040542563618324
+        }
+      ]
+    },
+    {
+      "fitId": "zkill-nighthawk-133442175",
+      "shipTypeId": 22470,
+      "pass": true,
+      "maxRelDelta": 0.000004269994018231179,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-osprey-navy-issue-133444477",
+      "shipTypeId": 29340,
+      "pass": false,
+      "maxRelDelta": 0.8415271733576386,
+      "failingMetrics": [
+        {
+          "metric": "resists.hull.kin",
+          "absDelta": 0.2777039672080207,
+          "relDelta": 0.8415271733576386
+        }
+      ]
+    },
+    {
+      "fitId": "zkill-paladin-133444564",
+      "shipTypeId": 28659,
+      "pass": true,
+      "maxRelDelta": 0.051874602924037144,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-proteus-133444509",
+      "shipTypeId": 29988,
+      "pass": true,
+      "maxRelDelta": 0.000009225824106930301,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-proteus-133462016",
+      "shipTypeId": 29988,
+      "pass": true,
+      "maxRelDelta": 0.000015683444305741648,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-proteus-133462621",
+      "shipTypeId": 29988,
+      "pass": true,
+      "maxRelDelta": 0.000015683444305741648,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-proteus-133464801",
+      "shipTypeId": 29988,
+      "pass": true,
+      "maxRelDelta": 0.009071308563731907,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-proteus-133464865",
+      "shipTypeId": 29988,
+      "pass": true,
+      "maxRelDelta": 0.059016393442623154,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-proteus-133464925",
+      "shipTypeId": 29988,
+      "pass": true,
+      "maxRelDelta": 0.06854192795828501,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-proteus-133467339",
+      "shipTypeId": 29988,
+      "pass": true,
+      "maxRelDelta": 0.0000018746534150577026,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-proteus-133467601",
+      "shipTypeId": 29988,
+      "pass": true,
+      "maxRelDelta": 0.00001457436987934381,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-proteus-133467896",
+      "shipTypeId": 29988,
+      "pass": true,
+      "maxRelDelta": 0.00000994810820548541,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-proteus-133468027",
+      "shipTypeId": 29988,
+      "pass": true,
+      "maxRelDelta": 0.009511653758293107,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-raven-133446381",
+      "shipTypeId": 638,
+      "pass": false,
+      "maxRelDelta": 0.31095927828092684,
+      "failingMetrics": [
+        {
+          "metric": "resists.hull.exp",
+          "absDelta": 0.18595364841199424,
+          "relDelta": 0.31095927828092684
+        }
+      ]
+    },
+    {
+      "fitId": "zkill-rokh-133445409",
+      "shipTypeId": 24688,
+      "pass": true,
+      "maxRelDelta": 0.0001249999999998863,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-scimitar-133441504",
+      "shipTypeId": 11978,
+      "pass": true,
+      "maxRelDelta": 0.0000036619811907809195,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-stealth-bomber-133446781",
+      "shipTypeId": 12034,
+      "pass": true,
+      "maxRelDelta": 0.00008402522042777454,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-supercarrier-132527614",
+      "shipTypeId": 3514,
+      "pass": true,
+      "maxRelDelta": 0.038640211414617896,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133456936",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.000020362285469591382,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133457072",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.000020362285469591382,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133457077",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.000020362285469591382,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133457080",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.00001496609768164009,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133462611",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.00004083067118159751,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133463251",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.000030251549871939687,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133464041",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.000030251549871939687,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133465586",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.0463118484064185,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133466141",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.000008097604256141533,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133467911",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.00006357322106579396,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133468844",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.000020362285469591382,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133469384",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.0463118484064185,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133470707",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.008018704628478505,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133471171",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.00001681698626050649,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-svipul-133471172",
+      "shipTypeId": 34562,
+      "pass": true,
+      "maxRelDelta": 0.0373507831548781,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tempest-133439148",
+      "shipTypeId": 639,
+      "pass": true,
+      "maxRelDelta": 0.000004050379950793411,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tengu-133445382",
+      "shipTypeId": 29984,
+      "pass": true,
+      "maxRelDelta": 0.03454433965586738,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tengu-133463746",
+      "shipTypeId": 29984,
+      "pass": true,
+      "maxRelDelta": 0.0513972602739726,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tengu-133464005",
+      "shipTypeId": 29984,
+      "pass": true,
+      "maxRelDelta": 0.030167520043795408,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tengu-133464386",
+      "shipTypeId": 29984,
+      "pass": true,
+      "maxRelDelta": 0.024249007344276787,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tengu-133464501",
+      "shipTypeId": 29984,
+      "pass": true,
+      "maxRelDelta": 0.011819873683448664,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tengu-133464642",
+      "shipTypeId": 29984,
+      "pass": true,
+      "maxRelDelta": 0.024559549506771614,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tengu-133467333",
+      "shipTypeId": 29984,
+      "pass": true,
+      "maxRelDelta": 0.030236990773510445,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tengu-133468631",
+      "shipTypeId": 29984,
+      "pass": true,
+      "maxRelDelta": 0.023390085637675844,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tengu-133469643",
+      "shipTypeId": 29984,
+      "pass": true,
+      "maxRelDelta": 0.05397349927150267,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-tengu-133470154",
+      "shipTypeId": 29984,
+      "pass": true,
+      "maxRelDelta": 0.0294308863048795,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-titan-132932303",
+      "shipTypeId": 671,
+      "pass": true,
+      "maxRelDelta": 0.010003091785182248,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-vargur-133444556",
+      "shipTypeId": 28665,
+      "pass": true,
+      "maxRelDelta": 0.029119876867953556,
+      "failingMetrics": []
+    },
+    {
+      "fitId": "zkill-vulture-133442589",
+      "shipTypeId": 22446,
+      "pass": true,
+      "maxRelDelta": 0.013886483475037799,
+      "failingMetrics": []
+    }
+  ],
+  "perHull": [
+    {
+      "shipTypeId": 596,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 638,
+      "comparedFits": 2,
+      "passingFits": 1,
+      "failingFits": 1,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 639,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 641,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 642,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 648,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 670,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 671,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 672,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 2078,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 2836,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 3514,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 3756,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 4302,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 11172,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 11174,
+      "comparedFits": 1,
+      "passingFits": 0,
+      "failingFits": 1,
+      "requiredFits": 10,
+      "deficit": 10
+    },
+    {
+      "shipTypeId": 11176,
+      "comparedFits": 2,
+      "passingFits": 1,
+      "failingFits": 1,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 11186,
+      "comparedFits": 2,
+      "passingFits": 1,
+      "failingFits": 1,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 11371,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 11957,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 11978,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 11985,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 11995,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 12034,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 12729,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 12753,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 16236,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 17476,
+      "comparedFits": 1,
+      "passingFits": 0,
+      "failingFits": 1,
+      "requiredFits": 10,
+      "deficit": 10
+    },
+    {
+      "shipTypeId": 17715,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 19726,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 20125,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 22428,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 22446,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 22452,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 22456,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 22460,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 22466,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 22468,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 22470,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 22544,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 23757,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 24688,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 24696,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 24698,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 24700,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 24702,
+      "comparedFits": 1,
+      "passingFits": 0,
+      "failingFits": 1,
+      "requiredFits": 10,
+      "deficit": 10
+    },
+    {
+      "shipTypeId": 28352,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 28606,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 28659,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 28661,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 28665,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 28710,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 28844,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 29340,
+      "comparedFits": 2,
+      "passingFits": 1,
+      "failingFits": 1,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 29984,
+      "comparedFits": 10,
+      "passingFits": 10,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 0
+    },
+    {
+      "shipTypeId": 29986,
+      "comparedFits": 10,
+      "passingFits": 10,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 0
+    },
+    {
+      "shipTypeId": 29988,
+      "comparedFits": 10,
+      "passingFits": 10,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 0
+    },
+    {
+      "shipTypeId": 29990,
+      "comparedFits": 10,
+      "passingFits": 10,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 0
+    },
+    {
+      "shipTypeId": 33697,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 34317,
+      "comparedFits": 15,
+      "passingFits": 15,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 0
+    },
+    {
+      "shipTypeId": 34328,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 34562,
+      "comparedFits": 15,
+      "passingFits": 15,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 0
+    },
+    {
+      "shipTypeId": 34828,
+      "comparedFits": 15,
+      "passingFits": 15,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 0
+    },
+    {
+      "shipTypeId": 35683,
+      "comparedFits": 15,
+      "passingFits": 15,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 0
+    },
+    {
+      "shipTypeId": 37457,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 37480,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 37604,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 45534,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 52250,
+      "comparedFits": 2,
+      "passingFits": 2,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 8
+    },
+    {
+      "shipTypeId": 77281,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    },
+    {
+      "shipTypeId": 89607,
+      "comparedFits": 1,
+      "passingFits": 1,
+      "failingFits": 0,
+      "requiredFits": 10,
+      "deficit": 9
+    }
+  ],
+  "topMismatches": [
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "metric": "resists.armor.exp",
+      "absDelta": 0.17999999999999994,
+      "relDelta": 1.7999999999999998
+    },
+    {
+      "fitId": "zkill-osprey-navy-issue-133444477",
+      "shipTypeId": 29340,
+      "metric": "resists.hull.kin",
+      "absDelta": 0.2777039672080207,
+      "relDelta": 0.8415271733576386
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "metric": "resists.armor.kin",
+      "absDelta": 0.1875,
+      "relDelta": 0.75
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "metric": "resists.armor.therm",
+      "absDelta": 0.22749999999999992,
+      "relDelta": 0.6499999999999998
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "metric": "resists.armor.em",
+      "absDelta": 0.20000000000000007,
+      "relDelta": 0.3333333333333335
+    },
+    {
+      "fitId": "zkill-malediction-126066291",
+      "shipTypeId": 11186,
+      "metric": "dpsTotal",
+      "absDelta": 6.471241830065356,
+      "relDelta": 0.3273057851239668
+    },
+    {
+      "fitId": "zkill-raven-133446381",
+      "shipTypeId": 638,
+      "metric": "resists.hull.exp",
+      "absDelta": 0.18595364841199424,
+      "relDelta": 0.31095927828092684
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "metric": "resists.shield.kin",
+      "absDelta": 0.14668703775364655,
+      "relDelta": 0.24653283656075053
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "metric": "ehp",
+      "absDelta": 4033.6868626217547,
+      "relDelta": 0.2454280504974429
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "metric": "resists.shield.exp",
+      "absDelta": 0.15811599844003232,
+      "relDelta": 0.2386656580226903
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "metric": "resists.shield.therm",
+      "absDelta": 0.0938649579264429,
+      "relDelta": 0.2040542563618324
+    },
+    {
+      "fitId": "zkill-electronic-attack-ship-133448772",
+      "shipTypeId": 11174,
+      "metric": "dpsTotal",
+      "absDelta": 2.6798076923076906,
+      "relDelta": 0.20028745957599703
+    },
+    {
+      "fitId": "zkill-hurricane-133446205",
+      "shipTypeId": 24702,
+      "metric": "resists.hull.em",
+      "absDelta": 0.08039999999999992,
+      "relDelta": 0.13444816053511693
+    },
+    {
+      "fitId": "crow-mwd-1",
+      "shipTypeId": 11176,
+      "metric": "dpsTotal",
+      "absDelta": 2.3044055776666177,
+      "relDelta": 0.10149596604869347
+    }
+  ],
+  "gateEvaluation": {
+    "thresholdPolicy": {
+      "mode": "followup-10pct",
+      "relMax": 0.1
+    },
+    "requiredFitsPerHull": 10,
+    "comparedFits": 178,
+    "fitPassCount": 171,
+    "fitFailCount": 7,
+    "fits": [
+      {
+        "fitId": "crow-mwd-1",
+        "shipTypeId": 11176,
+        "pass": false,
+        "maxRelDelta": 0.10149596604869347,
+        "failingMetrics": [
+          {
+            "metric": "dpsTotal",
+            "absDelta": 2.3044055776666177,
+            "relDelta": 0.10149596604869347
+          }
+        ]
+      },
+      {
+        "fitId": "eris-void-1",
+        "shipTypeId": 22460,
+        "pass": true,
+        "maxRelDelta": 0.00006017579406576893,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "gila-drone-1",
+        "shipTypeId": 17715,
+        "pass": true,
+        "maxRelDelta": 0.053773325230166605,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "gnosis-mixed-1",
+        "shipTypeId": 3756,
+        "pass": true,
+        "maxRelDelta": 0.00020063007937324288,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "heretic-rocket-1",
+        "shipTypeId": 22452,
+        "pass": true,
+        "maxRelDelta": 0.03394400591857857,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "impel-armor-1",
+        "shipTypeId": 12753,
+        "pass": true,
+        "maxRelDelta": 7.391677265399794e-7,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "manual-capsule-minimal-1",
+        "shipTypeId": 670,
+        "pass": true,
+        "maxRelDelta": 0.0005319544111437125,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "manual-expedition-command-ship-minimal-1",
+        "shipTypeId": 89607,
+        "pass": true,
+        "maxRelDelta": 0.00001114539177573339,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "manual-jump-freighter-minimal-1",
+        "shipTypeId": 28844,
+        "pass": true,
+        "maxRelDelta": 0.0076844954305233006,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "manual-prototype-exploration-ship-minimal-1",
+        "shipTypeId": 2078,
+        "pass": true,
+        "maxRelDelta": 0.0003958326098282089,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "manual-shuttle-minimal-1",
+        "shipTypeId": 672,
+        "pass": true,
+        "maxRelDelta": 0.00016865392903322584,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "myrmidon-drone-1",
+        "shipTypeId": 24700,
+        "pass": true,
+        "maxRelDelta": 0.000010486960535361374,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "nergal-svcfitstat-1",
+        "shipTypeId": 52250,
+        "pass": true,
+        "maxRelDelta": 0.022023002344910763,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133349010",
+        "shipTypeId": 22466,
+        "pass": true,
+        "maxRelDelta": 0.020531042657729245,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133423603",
+        "shipTypeId": 22468,
+        "pass": true,
+        "maxRelDelta": 0.05369366304351223,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133429565",
+        "shipTypeId": 22446,
+        "pass": true,
+        "maxRelDelta": 0.06378713345965034,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133431164",
+        "shipTypeId": 52250,
+        "pass": true,
+        "maxRelDelta": 0.0018818283166109377,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133433470",
+        "shipTypeId": 28710,
+        "pass": true,
+        "maxRelDelta": 0.021108156837623727,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133442037",
+        "shipTypeId": 11371,
+        "pass": true,
+        "maxRelDelta": 0.00004563444721014175,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133442553",
+        "shipTypeId": 28665,
+        "pass": true,
+        "maxRelDelta": 0.023017774271833154,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133444226",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.022631060529010472,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133444442",
+        "shipTypeId": 24700,
+        "pass": true,
+        "maxRelDelta": 0.0006688721605078305,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133445409",
+        "shipTypeId": 24688,
+        "pass": true,
+        "maxRelDelta": 0.0001249999999998863,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133445909",
+        "shipTypeId": 29990,
+        "pass": true,
+        "maxRelDelta": 0.0444174875946723,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133446123",
+        "shipTypeId": 11186,
+        "pass": true,
+        "maxRelDelta": 0.09932340669856475,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133447017",
+        "shipTypeId": 22460,
+        "pass": true,
+        "maxRelDelta": 0.0421534192082672,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "rand-zkill-133447046",
+        "shipTypeId": 29340,
+        "pass": true,
+        "maxRelDelta": 0.03648357509214545,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "raven-cruise-1",
+        "shipTypeId": 638,
+        "pass": true,
+        "maxRelDelta": 0.09944070091848663,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "sabre-shield-extender-1",
+        "shipTypeId": 22456,
+        "pass": true,
+        "maxRelDelta": 0.00013393872516385884,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "wolf-mwd-1",
+        "shipTypeId": 11371,
+        "pass": true,
+        "maxRelDelta": 0.0007714743036339588,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-apocalypse-133445346",
+        "shipTypeId": 642,
+        "pass": true,
+        "maxRelDelta": 0.0000023669121099337974,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-astarte-133424956",
+        "shipTypeId": 22466,
+        "pass": true,
+        "maxRelDelta": 0.000005117095180482088,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-attack-battlecruiser-133447773",
+        "shipTypeId": 4302,
+        "pass": true,
+        "maxRelDelta": 0.013259860171388752,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-basilisk-133440259",
+        "shipTypeId": 11985,
+        "pass": true,
+        "maxRelDelta": 0.0484330904918895,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-black-ops-133447642",
+        "shipTypeId": 22428,
+        "pass": true,
+        "maxRelDelta": 0.045765902704274115,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-blockade-runner-133448704",
+        "shipTypeId": 12729,
+        "pass": true,
+        "maxRelDelta": 0.0059264899119673775,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-capital-industrial-ship-133419370",
+        "shipTypeId": 28352,
+        "pass": true,
+        "maxRelDelta": 8.040277772041325e-8,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-carrier-133436113",
+        "shipTypeId": 23757,
+        "pass": true,
+        "maxRelDelta": 0.000714285714285826,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-claymore-133432657",
+        "shipTypeId": 22468,
+        "pass": true,
+        "maxRelDelta": 8.02973867635988e-7,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-command-destroyer-133448856",
+        "shipTypeId": 37480,
+        "pass": true,
+        "maxRelDelta": 0.005477338267804503,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133450595",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.0087661902137878,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133451740",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.013038047544231017,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133452217",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.0000384792009974502,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133455844",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.000017415687418483723,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133455983",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.00007563306670058287,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133457973",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.0000676288323556667,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133458796",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.0000676288323556667,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133460642",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.07363343941567453,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133461350",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.000010349378047780833,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133462140",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.00896536599356981,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133462596",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.011219730687800595,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133463265",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.01714613216619254,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133465825",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.00004920175807651093,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133466846",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.000036954475218246914,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-confessor-133470381",
+        "shipTypeId": 34317,
+        "pass": true,
+        "maxRelDelta": 0.014128205023195037,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-corvette-133446733",
+        "shipTypeId": 596,
+        "pass": true,
+        "maxRelDelta": 0.003344481605351218,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-covert-ops-133448514",
+        "shipTypeId": 11172,
+        "pass": true,
+        "maxRelDelta": 0.00013469107961296302,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-crow-126043648",
+        "shipTypeId": 11176,
+        "pass": true,
+        "maxRelDelta": 0.09869090909090913,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-curse-133444492",
+        "shipTypeId": 20125,
+        "pass": true,
+        "maxRelDelta": 0.022321329645245674,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-destroyer-133448049",
+        "shipTypeId": 16236,
+        "pass": true,
+        "maxRelDelta": 0.0010335020943689503,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-drake-133444423",
+        "shipTypeId": 24698,
+        "pass": true,
+        "maxRelDelta": 0.000007148590899837203,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-dreadnought-133448144",
+        "shipTypeId": 19726,
+        "pass": true,
+        "maxRelDelta": 0.0000035792064585068708,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-electronic-attack-ship-133448772",
+        "shipTypeId": 11174,
+        "pass": false,
+        "maxRelDelta": 0.20028745957599703,
+        "failingMetrics": [
+          {
+            "metric": "dpsTotal",
+            "absDelta": 2.6798076923076906,
+            "relDelta": 0.20028745957599703
+          }
+        ]
+      },
+      {
+        "fitId": "zkill-exhumer-133448858",
+        "shipTypeId": 22544,
+        "pass": true,
+        "maxRelDelta": 0.017343046648547182,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-expedition-frigate-133446782",
+        "shipTypeId": 33697,
+        "pass": true,
+        "maxRelDelta": 0.000020876164554544475,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-flag-cruiser-133418808",
+        "shipTypeId": 45534,
+        "pass": true,
+        "maxRelDelta": 0.021739130434782507,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-force-auxiliary-133448105",
+        "shipTypeId": 37604,
+        "pass": true,
+        "maxRelDelta": 0.03461328872675906,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-force-recon-ship-133447466",
+        "shipTypeId": 11957,
+        "pass": true,
+        "maxRelDelta": 0.000002911462558443065,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-freighter-133351247",
+        "shipTypeId": 34328,
+        "pass": true,
+        "maxRelDelta": 3.2872396930546797e-7,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-gila-126059140",
+        "shipTypeId": 17715,
+        "pass": true,
+        "maxRelDelta": 0.026775108202486093,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-golem-133445887",
+        "shipTypeId": 28710,
+        "pass": true,
+        "maxRelDelta": 0.022193890206213082,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-harbinger-133445759",
+        "shipTypeId": 24696,
+        "pass": true,
+        "maxRelDelta": 0.010608674111994416,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hauler-133446261",
+        "shipTypeId": 648,
+        "pass": true,
+        "maxRelDelta": 0.030698500077025837,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-heavy-assault-cruiser-56615140",
+        "shipTypeId": 2836,
+        "pass": true,
+        "maxRelDelta": 0.000001002918908918699,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-heavy-interdiction-cruiser-133448632",
+        "shipTypeId": 11995,
+        "pass": true,
+        "maxRelDelta": 0.000009271816072325435,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-126092096",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.022433128100325037,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133467218",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.00017021276595744682,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133467711",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.000013432140017152884,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133467785",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.0000023050094026433228,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133467937",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.000019351270716459034,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133468117",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.000024472606939380477,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133468906",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.00003728969853537219,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133469025",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.0000023050094026433228,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133469036",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.000002064156743757687,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133469052",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.0000023050094026433228,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133469082",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.000002064156743757687,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133469110",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.0000023050094026433228,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133470429",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.0000023050094026433228,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hecate-133471121",
+        "shipTypeId": 35683,
+        "pass": true,
+        "maxRelDelta": 0.0000023050094026433228,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-hurricane-133446205",
+        "shipTypeId": 24702,
+        "pass": false,
+        "maxRelDelta": 0.13444816053511693,
+        "failingMetrics": [
+          {
+            "metric": "resists.hull.em",
+            "absDelta": 0.08039999999999992,
+            "relDelta": 0.13444816053511693
+          }
+        ]
+      },
+      {
+        "fitId": "zkill-industrial-command-ship-133448827",
+        "shipTypeId": 28606,
+        "pass": true,
+        "maxRelDelta": 0.0000012750359011241943,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133463674",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.000037470315379785396,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133463856",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.00001232922816278269,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133464259",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.007132417185963474,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133464774",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.00002495353234904356,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133464988",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.0000021167937767400545,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133465534",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.000021206705521584242,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133466198",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.0000010834614752608599,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133466922",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.00003158438956488264,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133467628",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.000006222557041077577,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133469527",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.011992079411173555,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133469569",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.00000865700404889123,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133470287",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.000018503690850763226,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133470448",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.0068793227242556175,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133470726",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.00485351624212733,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-jackdaw-133471050",
+        "shipTypeId": 34828,
+        "pass": true,
+        "maxRelDelta": 0.000013082968589440769,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-kronos-133442214",
+        "shipTypeId": 28661,
+        "pass": true,
+        "maxRelDelta": 0.044071447921241555,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-lancer-dreadnought-133431340",
+        "shipTypeId": 77281,
+        "pass": true,
+        "maxRelDelta": 0.0008782529647647616,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-legion-133446555",
+        "shipTypeId": 29986,
+        "pass": true,
+        "maxRelDelta": 0.026160789709469532,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-legion-133457081",
+        "shipTypeId": 29986,
+        "pass": true,
+        "maxRelDelta": 0.035503528709086275,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-legion-133463344",
+        "shipTypeId": 29986,
+        "pass": true,
+        "maxRelDelta": 0.006096637323252477,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-legion-133463711",
+        "shipTypeId": 29986,
+        "pass": true,
+        "maxRelDelta": 0.09095362175275726,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-legion-133464432",
+        "shipTypeId": 29986,
+        "pass": true,
+        "maxRelDelta": 0.06486292949975382,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-legion-133464521",
+        "shipTypeId": 29986,
+        "pass": true,
+        "maxRelDelta": 0.00022631638417952427,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-legion-133465561",
+        "shipTypeId": 29986,
+        "pass": true,
+        "maxRelDelta": 0.04476201423365532,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-legion-133466796",
+        "shipTypeId": 29986,
+        "pass": true,
+        "maxRelDelta": 0.09930471545216603,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-legion-133466849",
+        "shipTypeId": 29986,
+        "pass": true,
+        "maxRelDelta": 0.020281923904230073,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-legion-133470209",
+        "shipTypeId": 29986,
+        "pass": true,
+        "maxRelDelta": 0.0398533047930699,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-logistics-frigate-133448652",
+        "shipTypeId": 37457,
+        "pass": true,
+        "maxRelDelta": 0.06740680895482239,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-loki-133446334",
+        "shipTypeId": 29990,
+        "pass": true,
+        "maxRelDelta": 0.041220243595451005,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-loki-133467258",
+        "shipTypeId": 29990,
+        "pass": true,
+        "maxRelDelta": 0.05329966653283571,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-loki-133467497",
+        "shipTypeId": 29990,
+        "pass": true,
+        "maxRelDelta": 0.0632247469726312,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-loki-133467674",
+        "shipTypeId": 29990,
+        "pass": true,
+        "maxRelDelta": 0.05000619090728856,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-loki-133467761",
+        "shipTypeId": 29990,
+        "pass": true,
+        "maxRelDelta": 0.0314446641747333,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-loki-133468507",
+        "shipTypeId": 29990,
+        "pass": true,
+        "maxRelDelta": 0.02933344567573119,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-loki-133468890",
+        "shipTypeId": 29990,
+        "pass": true,
+        "maxRelDelta": 0.04474409588135734,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-loki-133469584",
+        "shipTypeId": 29990,
+        "pass": true,
+        "maxRelDelta": 0.022493815134810764,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-loki-133469920",
+        "shipTypeId": 29990,
+        "pass": true,
+        "maxRelDelta": 0.07905395384768012,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-malediction-126066291",
+        "shipTypeId": 11186,
+        "pass": false,
+        "maxRelDelta": 0.3273057851239668,
+        "failingMetrics": [
+          {
+            "metric": "dpsTotal",
+            "absDelta": 6.471241830065356,
+            "relDelta": 0.3273057851239668
+          }
+        ]
+      },
+      {
+        "fitId": "zkill-megathron-133445295",
+        "shipTypeId": 641,
+        "pass": true,
+        "maxRelDelta": 0.00045454545454542874,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-mining-barge-133448254",
+        "shipTypeId": 17476,
+        "pass": false,
+        "maxRelDelta": 1.7999999999999998,
+        "failingMetrics": [
+          {
+            "metric": "resists.armor.exp",
+            "absDelta": 0.17999999999999994,
+            "relDelta": 1.7999999999999998
+          },
+          {
+            "metric": "resists.armor.kin",
+            "absDelta": 0.1875,
+            "relDelta": 0.75
+          },
+          {
+            "metric": "resists.armor.therm",
+            "absDelta": 0.22749999999999992,
+            "relDelta": 0.6499999999999998
+          },
+          {
+            "metric": "resists.armor.em",
+            "absDelta": 0.20000000000000007,
+            "relDelta": 0.3333333333333335
+          },
+          {
+            "metric": "resists.shield.kin",
+            "absDelta": 0.14668703775364655,
+            "relDelta": 0.24653283656075053
+          },
+          {
+            "metric": "ehp",
+            "absDelta": 4033.6868626217547,
+            "relDelta": 0.2454280504974429
+          },
+          {
+            "metric": "resists.shield.exp",
+            "absDelta": 0.15811599844003232,
+            "relDelta": 0.2386656580226903
+          },
+          {
+            "metric": "resists.shield.therm",
+            "absDelta": 0.0938649579264429,
+            "relDelta": 0.2040542563618324
+          }
+        ]
+      },
+      {
+        "fitId": "zkill-nighthawk-133442175",
+        "shipTypeId": 22470,
+        "pass": true,
+        "maxRelDelta": 0.000004269994018231179,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-osprey-navy-issue-133444477",
+        "shipTypeId": 29340,
+        "pass": false,
+        "maxRelDelta": 0.8415271733576386,
+        "failingMetrics": [
+          {
+            "metric": "resists.hull.kin",
+            "absDelta": 0.2777039672080207,
+            "relDelta": 0.8415271733576386
+          }
+        ]
+      },
+      {
+        "fitId": "zkill-paladin-133444564",
+        "shipTypeId": 28659,
+        "pass": true,
+        "maxRelDelta": 0.051874602924037144,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-proteus-133444509",
+        "shipTypeId": 29988,
+        "pass": true,
+        "maxRelDelta": 0.000009225824106930301,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-proteus-133462016",
+        "shipTypeId": 29988,
+        "pass": true,
+        "maxRelDelta": 0.000015683444305741648,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-proteus-133462621",
+        "shipTypeId": 29988,
+        "pass": true,
+        "maxRelDelta": 0.000015683444305741648,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-proteus-133464801",
+        "shipTypeId": 29988,
+        "pass": true,
+        "maxRelDelta": 0.009071308563731907,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-proteus-133464865",
+        "shipTypeId": 29988,
+        "pass": true,
+        "maxRelDelta": 0.059016393442623154,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-proteus-133464925",
+        "shipTypeId": 29988,
+        "pass": true,
+        "maxRelDelta": 0.06854192795828501,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-proteus-133467339",
+        "shipTypeId": 29988,
+        "pass": true,
+        "maxRelDelta": 0.0000018746534150577026,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-proteus-133467601",
+        "shipTypeId": 29988,
+        "pass": true,
+        "maxRelDelta": 0.00001457436987934381,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-proteus-133467896",
+        "shipTypeId": 29988,
+        "pass": true,
+        "maxRelDelta": 0.00000994810820548541,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-proteus-133468027",
+        "shipTypeId": 29988,
+        "pass": true,
+        "maxRelDelta": 0.009511653758293107,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-raven-133446381",
+        "shipTypeId": 638,
+        "pass": false,
+        "maxRelDelta": 0.31095927828092684,
+        "failingMetrics": [
+          {
+            "metric": "resists.hull.exp",
+            "absDelta": 0.18595364841199424,
+            "relDelta": 0.31095927828092684
+          }
+        ]
+      },
+      {
+        "fitId": "zkill-rokh-133445409",
+        "shipTypeId": 24688,
+        "pass": true,
+        "maxRelDelta": 0.0001249999999998863,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-scimitar-133441504",
+        "shipTypeId": 11978,
+        "pass": true,
+        "maxRelDelta": 0.0000036619811907809195,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-stealth-bomber-133446781",
+        "shipTypeId": 12034,
+        "pass": true,
+        "maxRelDelta": 0.00008402522042777454,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-supercarrier-132527614",
+        "shipTypeId": 3514,
+        "pass": true,
+        "maxRelDelta": 0.038640211414617896,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133456936",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.000020362285469591382,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133457072",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.000020362285469591382,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133457077",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.000020362285469591382,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133457080",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.00001496609768164009,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133462611",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.00004083067118159751,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133463251",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.000030251549871939687,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133464041",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.000030251549871939687,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133465586",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.0463118484064185,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133466141",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.000008097604256141533,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133467911",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.00006357322106579396,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133468844",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.000020362285469591382,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133469384",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.0463118484064185,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133470707",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.008018704628478505,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133471171",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.00001681698626050649,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-svipul-133471172",
+        "shipTypeId": 34562,
+        "pass": true,
+        "maxRelDelta": 0.0373507831548781,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tempest-133439148",
+        "shipTypeId": 639,
+        "pass": true,
+        "maxRelDelta": 0.000004050379950793411,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tengu-133445382",
+        "shipTypeId": 29984,
+        "pass": true,
+        "maxRelDelta": 0.03454433965586738,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tengu-133463746",
+        "shipTypeId": 29984,
+        "pass": true,
+        "maxRelDelta": 0.0513972602739726,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tengu-133464005",
+        "shipTypeId": 29984,
+        "pass": true,
+        "maxRelDelta": 0.030167520043795408,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tengu-133464386",
+        "shipTypeId": 29984,
+        "pass": true,
+        "maxRelDelta": 0.024249007344276787,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tengu-133464501",
+        "shipTypeId": 29984,
+        "pass": true,
+        "maxRelDelta": 0.011819873683448664,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tengu-133464642",
+        "shipTypeId": 29984,
+        "pass": true,
+        "maxRelDelta": 0.024559549506771614,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tengu-133467333",
+        "shipTypeId": 29984,
+        "pass": true,
+        "maxRelDelta": 0.030236990773510445,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tengu-133468631",
+        "shipTypeId": 29984,
+        "pass": true,
+        "maxRelDelta": 0.023390085637675844,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tengu-133469643",
+        "shipTypeId": 29984,
+        "pass": true,
+        "maxRelDelta": 0.05397349927150267,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-tengu-133470154",
+        "shipTypeId": 29984,
+        "pass": true,
+        "maxRelDelta": 0.0294308863048795,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-titan-132932303",
+        "shipTypeId": 671,
+        "pass": true,
+        "maxRelDelta": 0.010003091785182248,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-vargur-133444556",
+        "shipTypeId": 28665,
+        "pass": true,
+        "maxRelDelta": 0.029119876867953556,
+        "failingMetrics": []
+      },
+      {
+        "fitId": "zkill-vulture-133442589",
+        "shipTypeId": 22446,
+        "pass": true,
+        "maxRelDelta": 0.013886483475037799,
+        "failingMetrics": []
+      }
+    ],
+    "phases": [
+      {
+        "phase": "t3-cruiser",
+        "requiredFits": 10,
+        "targetMet": true,
+        "complete": true,
+        "eligible": true,
+        "status": "complete",
+        "hulls": [
+          {
+            "shipTypeId": 29990,
+            "shipName": "Loki",
+            "comparedFits": 10,
+            "passingFits": 10,
+            "failingFits": 0,
+            "requiredFits": 10,
+            "deficit": 0,
+            "complete": true
+          },
+          {
+            "shipTypeId": 29986,
+            "shipName": "Legion",
+            "comparedFits": 10,
+            "passingFits": 10,
+            "failingFits": 0,
+            "requiredFits": 10,
+            "deficit": 0,
+            "complete": true
+          },
+          {
+            "shipTypeId": 29988,
+            "shipName": "Proteus",
+            "comparedFits": 10,
+            "passingFits": 10,
+            "failingFits": 0,
+            "requiredFits": 10,
+            "deficit": 0,
+            "complete": true
+          },
+          {
+            "shipTypeId": 29984,
+            "shipName": "Tengu",
+            "comparedFits": 10,
+            "passingFits": 10,
+            "failingFits": 0,
+            "requiredFits": 10,
+            "deficit": 0,
+            "complete": true
+          }
+        ]
+      },
+      {
+        "phase": "t3-destroyer",
+        "requiredFits": 10,
+        "targetMet": true,
+        "complete": true,
+        "eligible": true,
+        "status": "complete",
+        "hulls": [
+          {
+            "shipTypeId": 35683,
+            "shipName": "Hecate",
+            "comparedFits": 15,
+            "passingFits": 15,
+            "failingFits": 0,
+            "requiredFits": 10,
+            "deficit": 0,
+            "complete": true
+          },
+          {
+            "shipTypeId": 34828,
+            "shipName": "Jackdaw",
+            "comparedFits": 15,
+            "passingFits": 15,
+            "failingFits": 0,
+            "requiredFits": 10,
+            "deficit": 0,
+            "complete": true
+          },
+          {
+            "shipTypeId": 34317,
+            "shipName": "Confessor",
+            "comparedFits": 15,
+            "passingFits": 15,
+            "failingFits": 0,
+            "requiredFits": 10,
+            "deficit": 0,
+            "complete": true
+          },
+          {
+            "shipTypeId": 34562,
+            "shipName": "Svipul",
+            "comparedFits": 15,
+            "passingFits": 15,
+            "failingFits": 0,
+            "requiredFits": 10,
+            "deficit": 0,
+            "complete": true
+          }
+        ]
+      }
+    ],
+    "activePhase": null,
+    "complete": true
+  },
+  "prioritizationBacklog": {
+    "generatedAt": "2026-02-18T15:08:33.577Z",
+    "thresholdPolicy": {
+      "mode": "followup-10pct",
+      "relMax": 0.1
+    },
+    "scoringModel": "followup-priority-v1",
+    "items": [
+      {
+        "id": "cluster-resist-profile",
+        "likelyMechanicFamily": "resist-profile",
+        "fitIds": [
+          "zkill-hurricane-133446205",
+          "zkill-mining-barge-133448254",
+          "zkill-osprey-navy-issue-133444477",
+          "zkill-raven-133446381"
+        ],
+        "shipTypeIds": [
+          638,
+          17476,
+          24702,
+          29340
+        ],
+        "metrics": [
+          "resists.armor.em",
+          "resists.armor.exp",
+          "resists.armor.kin",
+          "resists.armor.therm",
+          "resists.hull.em",
+          "resists.hull.exp",
+          "resists.hull.kin",
+          "resists.shield.exp",
+          "resists.shield.kin",
+          "resists.shield.therm"
+        ],
+        "score": 57.6,
+        "scoreBreakdown": {
+          "errorSeverity": 1.8,
+          "hullGatePressure": 2,
+          "mechanicReuse": 4,
+          "fitPrevalence": 4
+        },
+        "status": "todo"
+      },
+      {
+        "id": "cluster-damage-output",
+        "likelyMechanicFamily": "damage-output",
+        "fitIds": [
+          "crow-mwd-1",
+          "zkill-electronic-attack-ship-133448772",
+          "zkill-malediction-126066291"
+        ],
+        "shipTypeIds": [
+          11174,
+          11176,
+          11186
+        ],
+        "metrics": [
+          "dpsTotal"
+        ],
+        "score": 5.891508,
+        "scoreBreakdown": {
+          "errorSeverity": 0.327306,
+          "hullGatePressure": 2,
+          "mechanicReuse": 3,
+          "fitPrevalence": 3
+        },
+        "status": "todo"
+      },
+      {
+        "id": "cluster-effective-hit-points",
+        "likelyMechanicFamily": "effective-hit-points",
+        "fitIds": [
+          "zkill-mining-barge-133448254"
+        ],
+        "shipTypeIds": [
+          17476
+        ],
+        "metrics": [
+          "ehp"
+        ],
+        "score": 0.490856,
+        "scoreBreakdown": {
+          "errorSeverity": 0.245428,
+          "hullGatePressure": 2,
+          "mechanicReuse": 1,
+          "fitPrevalence": 1
+        },
+        "status": "todo"
+      }
+    ]
+  }
+}

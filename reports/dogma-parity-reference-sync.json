@@ -1,352 +1,355 @@
 {
-  "generatedAt": "2026-02-17T19:19:41.075Z",
-  "goldenCount": 26,
-  "existingBefore": 85,
-  "existingAfter": 85,
-  "mode": "direct-cli",
-  "timeoutMs": 90000,
-  "hardKillMs": 180000,
+  "generatedAt": "2026-02-18T14:27:09.470Z",
+  "goldenCount": 85,
+  "existingBefore": 120,
+  "existingAfter": 120,
+  "pyfaRunner": "local-python",
+  "pythonBin": "auto",
+  "timeoutMs": 60000,
+  "hardKillMs": 150000,
   "tracePath": null,
   "added": [],
-  "skipped": [],
-  "failed": [
+  "skipped": [
     {
-      "fitId": "dev-fit-6a0eb65c",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 12,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "79f06af461b0ea3ca0d99baf09b1e582463efe0e8dc3161d78e9d16b0f6b1d92"
+      "fitId": "crow-mwd-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-173c175e",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "89c2ce5f94bfd62de03392ca2f17332b0cb2f61d85c3a436574889dcb4ec2f9d"
+      "fitId": "eris-void-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-5e09cf96",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 8,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "bed772ff68b54dccbeeb3ebd79447d8d28d03c57d5e0f5051ae0b721d8bda3ab"
+      "fitId": "gila-drone-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-bd234416",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 8,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "582ed82651ce5f30b8bb94806205bc7a39efa4bc2ba9d3c800ea67db99bdfca3"
+      "fitId": "gnosis-mixed-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-74e7335f",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "fba490d617e24eabe06edd15178a6451aa969c94bf36cdbcf36d8c9af1c99f7c"
+      "fitId": "heretic-rocket-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-87e81423",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "bbab6a48c166e6fdeb565a2ddfc3432892825190d9833e0930abfa5358173f42"
+      "fitId": "impel-armor-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-6b48b2a0",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "ae267976031f7fab8c81b3e0d83eca4d9fef01419663c4b461f4959fccfc6e68"
+      "fitId": "manual-capsule-minimal-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-2dfc8558",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "bf1e027242f12c46e007dcbe918a3bf229fd67b33328f1f8b6e604b39c79609f"
+      "fitId": "manual-expedition-command-ship-minimal-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-e84b64ad",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 8,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "3d941356650ae93dc25512694be96446829baa87287b2906a0a79acbbaa2ed3b"
+      "fitId": "manual-jump-freighter-minimal-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-f4c9ef5c",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "453ea647a41042615517b192b64e6561f9fc054f07dfb768017cc21f066aaf9a"
+      "fitId": "manual-prototype-exploration-ship-minimal-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-70cc6ab2",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 8,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "16eb733013717a6bfd707f2857b8a0a0a4811281335b561c842873b70c1cff10"
+      "fitId": "manual-shuttle-minimal-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-9351c63f",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "3e8fa5decab1644c46665e78843be4f33e7a6749e65e222349a4439dc0e47738"
+      "fitId": "myrmidon-drone-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-5182533a",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "7cb27356aaf89152e890504352c735b8a512583db8a0b0b5609903d1b17b7b20"
+      "fitId": "nergal-svcfitstat-1",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-b04b037b",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "b48b53d116738e51b0513bbe2681ca5366ce4cdd9f0d2324f27db318a8d86f65"
+      "fitId": "rand-zkill-133349010",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-4c802eb6",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "472553e3df0ba8c7625af546423a4e6359c673001090103c9a3d5778c9d2fe00"
+      "fitId": "rand-zkill-133423603",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-bb121c62",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "3b16f7c302d63c31b3f38303a049644b1c1f771b839be025828fd00551f36ca1"
+      "fitId": "rand-zkill-133429565",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-9be26381",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 6,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "df45686f5ca202684d6696a9b4d9a51786d6d6c3edca326368ca94838f8a06b0"
+      "fitId": "rand-zkill-133431164",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-c5c1f874",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "f711f4a60bd536441119a8f54a465b6a2672e339d2353cf3fbd0f5f6e97604e7"
+      "fitId": "rand-zkill-133433470",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-ec8c0ee0",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "57e72ed1d4e6dd2aa60df71abb40d3b2c74258797e318d26a054f69d76a9a14c"
+      "fitId": "rand-zkill-133442037",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-9edb71c4",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "760ac966cbd12c07ba6c713400a99d948283db885214864712ef9562f93ce519"
+      "fitId": "rand-zkill-133442553",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-4b038c6e",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 8,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "6796825975cfa12f2efa09c5320ccd571505f9372a71cfdd87c7919d76c95b3c"
+      "fitId": "rand-zkill-133444226",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-8c3b4dcc",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "a53879db8c3c95011264ca842aa45cd440f553d1617d7443f6fdfe15cc38f7a8"
+      "fitId": "rand-zkill-133444442",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-0a6f519d",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "4f007a5288f107f296914c3eb4e112cc093cfeacc7d81ebc75a18250b8ef2e5b"
+      "fitId": "rand-zkill-133445409",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-1d3e92c9",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "48f0a3a7029e349d031663b1352f3d804690dd14120c9e71d4081ac5aa406de7"
+      "fitId": "rand-zkill-133445909",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-80bda05e",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "a3bf39fb72bed8ae69e01780525ff36546865794de1a918886cf69d63981278c"
+      "fitId": "rand-zkill-133446123",
+      "reason": "already_present"
     },
     {
-      "fitId": "dev-fit-7b82c16b",
-      "reason": "pyfa_failed",
-      "error": "command failed with exit code 125",
-      "mode": "direct-cli",
-      "timeoutMs": 90000,
-      "hardKillMs": 180000,
-      "stage": "runtime_error",
-      "elapsedMs": 7,
-      "stdoutTail": "",
-      "stderrTail": "docker: Cannot connect to the Docker daemon at unix:///Users/lulu/.orbstack/run/docker.sock. Is the docker daemon running?\n\nRun 'docker run --help' for more information\n",
-      "normalizedEftHash": "68314c6d49a390d1237269d4d0eb558a31ad746e50dc1a4f6348ffc319f9a76e"
+      "fitId": "rand-zkill-133447017",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "rand-zkill-133447046",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "raven-cruise-1",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "sabre-shield-extender-1",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "wolf-mwd-1",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-apocalypse-133445346",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-astarte-133424956",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-attack-battlecruiser-133447773",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-basilisk-133440259",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-black-ops-133447642",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-blockade-runner-133448704",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-capital-industrial-ship-133419370",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-carrier-133436113",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-claymore-133432657",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-command-destroyer-133448856",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-corvette-133446733",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-covert-ops-133448514",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-crow-126043648",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-curse-133444492",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-destroyer-133448049",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-drake-133444423",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-dreadnought-133448144",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-electronic-attack-ship-133448772",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-exhumer-133448858",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-expedition-frigate-133446782",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-flag-cruiser-133418808",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-force-auxiliary-133448105",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-force-recon-ship-133447466",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-freighter-133351247",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-gila-126059140",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-golem-133445887",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-harbinger-133445759",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-hauler-133446261",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-heavy-assault-cruiser-56615140",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-heavy-interdiction-cruiser-133448632",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-hecate-126092096",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-hurricane-133446205",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-industrial-command-ship-133448827",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-kronos-133442214",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-lancer-dreadnought-133431340",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-legion-133446555",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-logistics-frigate-133448652",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-loki-133446334",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-malediction-126066291",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-megathron-133445295",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-nighthawk-133442175",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-osprey-navy-issue-133444477",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-paladin-133444564",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-proteus-133444509",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-raven-133446381",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-rokh-133445409",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-scimitar-133441504",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-stealth-bomber-133446781",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-supercarrier-132527614",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-tempest-133439148",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-tengu-133445382",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-titan-132932303",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-vargur-133444556",
+      "reason": "already_present"
+    },
+    {
+      "fitId": "zkill-vulture-133442589",
+      "reason": "already_present"
     }
-  ]
+  ],
+  "failed": []
 }
