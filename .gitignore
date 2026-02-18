@@ -47,3 +47,6 @@ svcfitstat/
 scripts/__pycache__/
 scripts/tests/__pycache__/
 specs/
+.ai/
+.ralph/
+.pytest_cache/
