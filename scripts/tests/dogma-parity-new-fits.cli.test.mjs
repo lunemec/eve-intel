@@ -73,6 +73,7 @@ describe("runDogmaParityNewFitsCli", () => {
   it("returns non-zero when scoped mismatches exist", async () => {
     const stdout = createLineCollector();
     const stderr = createLineCollector();
+    const artifactCalls = [];
 
     const exitCode = await runDogmaParityNewFitsCli(["--fit-id", "fit-a"], {
       parseArgsFn: () => createParsedArgs(),
@@ -83,6 +84,9 @@ describe("runDogmaParityNewFitsCli", () => {
       syncReferencesFn: async () => createSyncResult(),
       compareScopeFn: async () => createCompareResult({ mismatchCount: 1, mismatches: [{ fitId: "fit-b" }] }),
       writeReferenceResultsFn: async () => {},
+      writeArtifactsFn: async (payload) => {
+        artifactCalls.push(payload);
+      },
       computeActualForFitFn: async () => ({}),
       stdout: stdout.collect,
       stderr: stderr.collect
@@ -90,6 +94,13 @@ describe("runDogmaParityNewFitsCli", () => {
 
     expect(exitCode).toBe(1);
     expect(stderr.lines).toEqual([]);
+    expect(artifactCalls).toHaveLength(1);
+    expect(artifactCalls[0]).toEqual(
+      expect.objectContaining({
+        scope: createScope(),
+        exitCode: 1
+      })
+    );
     expect(stdout.lines).toEqual([
       "[dogma:parity:new-fits] runId=run-123 scoped=2 compared=2 mismatches=1 pyfaFailures=0"
     ]);
@@ -98,6 +109,7 @@ describe("runDogmaParityNewFitsCli", () => {
   it("returns zero when scoped fits compare cleanly", async () => {
     const stdout = createLineCollector();
     const stderr = createLineCollector();
+    const artifactCalls = [];
 
     const exitCode = await runDogmaParityNewFitsCli(["--fit-id", "fit-a"], {
       parseArgsFn: () => createParsedArgs(),
@@ -108,6 +120,9 @@ describe("runDogmaParityNewFitsCli", () => {
       syncReferencesFn: async () => createSyncResult(),
       compareScopeFn: async () => createCompareResult({ mismatchCount: 0 }),
       writeReferenceResultsFn: async () => {},
+      writeArtifactsFn: async (payload) => {
+        artifactCalls.push(payload);
+      },
       computeActualForFitFn: async () => ({}),
       stdout: stdout.collect,
       stderr: stderr.collect
@@ -115,6 +130,13 @@ describe("runDogmaParityNewFitsCli", () => {
 
     expect(exitCode).toBe(0);
     expect(stderr.lines).toEqual([]);
+    expect(artifactCalls).toHaveLength(1);
+    expect(artifactCalls[0]).toEqual(
+      expect.objectContaining({
+        scope: createScope(),
+        exitCode: 0
+      })
+    );
     expect(stdout.lines).toEqual([
       "[dogma:parity:new-fits] runId=run-123 scoped=2 compared=2 mismatches=0 pyfaFailures=0"
     ]);
@@ -153,6 +175,7 @@ describe("runDogmaParityNewFitsCli", () => {
       },
       compareScopeFn: async () => createCompareResult(),
       writeReferenceResultsFn: async () => {},
+      writeArtifactsFn: async () => {},
       computeActualForFitFn: async () => ({}),
       stdout: stdout.collect,
       stderr: stderr.collect

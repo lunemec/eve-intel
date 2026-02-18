@@ -2,6 +2,10 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { shutdownPyfaLocalRuntimes } from "../../../tools/parity/pyfa-adapter/index.mjs";
+import {
+  DEFAULT_DOGMA_PARITY_NEW_FITS_REPORT_PATH,
+  writeDogmaParityNewFitArtifacts
+} from "./artifacts.mjs";
 import { compareDogmaParityForScope } from "./compare.mjs";
 import { resolveDogmaNewFitScope } from "./scope.mjs";
 import { syncDogmaParityReferencesForScope } from "./sync.mjs";
@@ -33,6 +37,8 @@ export function parseDogmaParityNewFitsArgs(argv = []) {
     corpusPath: DEFAULT_CORPUS_PATH,
     referencesPath: DEFAULT_REFERENCES_PATH,
     manifestPath: DEFAULT_MANIFEST_PATH,
+    reportPath: DEFAULT_DOGMA_PARITY_NEW_FITS_REPORT_PATH,
+    diagnosticsPath: undefined,
     pythonBin: undefined,
     timeoutMs: undefined,
     hardKillMs: undefined,
@@ -83,6 +89,14 @@ export function parseDogmaParityNewFitsArgs(argv = []) {
         parsed.manifestPath = readNextValue(argv, token, index + 1);
         index += 1;
         break;
+      case "--report-path":
+        parsed.reportPath = readNextValue(argv, token, index + 1);
+        index += 1;
+        break;
+      case "--diagnostics-path":
+        parsed.diagnosticsPath = readNextValue(argv, token, index + 1);
+        index += 1;
+        break;
       case "--python-bin":
         parsed.pythonBin = readNextValue(argv, token, index + 1);
         index += 1;
@@ -128,6 +142,8 @@ export function formatDogmaParityNewFitsUsage() {
     "  --corpus-path <path>     Override fit corpus path",
     "  --references-path <path> Override reference results path",
     "  --manifest-path <path>   Override dogma manifest path",
+    "  --report-path <path>     Override report artifact path",
+    "  --diagnostics-path <path> Optional diagnostics JSONL artifact path",
     "  --python-bin <path>      Python binary for pyfa local runner",
     "  --timeout-ms <ms>        pyfa timeout in milliseconds",
     "  --hard-kill-ms <ms>      pyfa hard-kill timeout in milliseconds",
@@ -148,6 +164,7 @@ export async function runDogmaParityNewFitsCli(argv, dependencies = {}) {
   const compareScopeFn = dependencies.compareScopeFn ?? compareDogmaParityForScope;
   const writeReferenceResultsFn =
     dependencies.writeReferenceResultsFn ?? writeDogmaParityReferenceResults;
+  const writeArtifactsFn = dependencies.writeArtifactsFn ?? writeDogmaParityNewFitArtifacts;
   const computeActualForFitFn =
     dependencies.computeActualForFitFn ?? createMissingComputeActualForFitHandler();
   const shutdownPyfaFn = dependencies.shutdownPyfaFn ?? shutdownPyfaLocalRuntimes;
@@ -215,6 +232,15 @@ export async function runDogmaParityNewFitsCli(argv, dependencies = {}) {
 
     const exitCode = resolveDogmaNewFitsExitCode({
       mismatchCount: compareResult.mismatchCount
+    });
+
+    await writeArtifactsFn({
+      scope,
+      syncResult,
+      compareResult,
+      exitCode,
+      reportPath: parsed.reportPath,
+      diagnosticsPath: parsed.diagnosticsPath
     });
 
     stdout(
