@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { fetchCharacterPublic, resolveUniverseNames } from "./lib/api/esi";
@@ -111,6 +111,7 @@ describe("App paste flow", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.unstubAllGlobals();
   });
 
@@ -143,10 +144,9 @@ describe("App paste flow", () => {
     window.dispatchEvent(event);
 
     await waitFor(() => {
-      expect(screen.getAllByText("A9tan").length).toBeGreaterThan(0);
+      expect(screen.getAllByRole("heading", { name: /Likely Ships/i }).length).toBeGreaterThan(0);
     });
-
-    expect(screen.getAllByText(/Likely Ships/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("A9tan").length).toBeGreaterThan(0);
     expect(vi.mocked(fetchLatestKillsPage)).toHaveBeenCalled();
     expect(vi.mocked(fetchLatestLossesPage)).toHaveBeenCalled();
   });

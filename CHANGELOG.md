@@ -3,6 +3,8 @@
 All notable changes to this project are documented in this file.
 
 ## v0.3.0 - 2026-02-18
+- Stabilized CI test behavior by hardening `src/App.paste.integration.test.tsx`: added explicit `cleanup()` after each test and changed the pilot-card assertion to wait for the rendered `Likely Ships` heading instead of matching `A9tan` text that can appear earlier in the clipboard payload textarea.
+- Hardened `scripts/tests/dogma-parity-followup-cruiser-coverage.test.mjs` for clean-checkout CI runs by returning early when build-generated Dogma artifacts (`public/data/dogma-manifest.json` or referenced pack file) are absent during `npm test`.
 - Fixed zKill character danger normalization for low direct-percentage values by treating `dangerRatio`/`gangRatio` values as percent when already in `0..100` range (for example, `6` now remains `6%` instead of becoming `60%`), while retaining legacy `dangerous` `0..10` compatibility; added regression coverage in `src/lib/api/zkill.test.ts`.
 - Bumped the cache namespace version from `v3` to `v4` in `src/lib/cache/types.ts`, forcing cache-key invalidation for all users so stale cached zKill danger values and related cached envelopes do not persist across the scoring fix; updated cache tests in `src/lib/cache.test.ts` to assert versioned keys via `versionedKey(...)`.
 
