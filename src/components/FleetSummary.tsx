@@ -168,7 +168,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
                     {engagementStyle}
                   </span>
                 ) : null}
-                {topShip ? renderShipPills(topShip, pilot.cynoRisk, "icon") : null}
+                {topShip ? renderShipPills(topShip, pilot.cynoRisk, "icon-link") : null}
               </span>
             </li>
           );

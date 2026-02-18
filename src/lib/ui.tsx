@@ -85,13 +85,13 @@ export function formatUpdaterStatus(state: DesktopUpdaterState | null): string {
 export function renderShipPills(
   ship: ShipPrediction,
   cynoRisk?: CynoRisk,
-  mode: "pill" | "icon" = "pill"
+  mode: "pill" | "icon" | "icon-link" = "pill"
 ) {
   const flags = getShipRiskFlags(ship, cynoRisk);
   const elements = [];
 
   if (flags.bait) {
-    elements.push(
+    const bait = (
       <span
         key={`${ship.shipName}-pill-bait`}
         className="risk-badge risk-bait"
@@ -100,12 +100,12 @@ export function renderShipPills(
         Bait
       </span>
     );
+    elements.push(wrapEvidenceLink(ship, "Bait", bait, mode));
   }
 
   if (flags.hardCyno) {
     const title = cynoTitle(ship);
-    elements.push(
-      mode === "icon" ? (
+    const cyno = mode === "icon" || mode === "icon-link" ? (
         <img
           key={`${ship.shipName}-pill-cyno`}
           src={`https://images.evetech.net/types/${CYNO_ICON_TYPE_ID}/icon?size=64`}
@@ -117,15 +117,14 @@ export function renderShipPills(
         />
       ) : (
         <span key={`${ship.shipName}-pill-cyno`} className="risk-badge risk-cyno" title={title}>Cyno</span>
-      )
-    );
+      );
+    elements.push(wrapEvidenceLink(ship, "Cyno", cyno, mode));
   }
 
   for (const role of ship.rolePills ?? []) {
     const iconTypeId = ROLE_ICON_TYPE_IDS[role];
     const title = roleTitle(role);
-    elements.push(
-      mode === "icon" ? (
+    const roleElement = mode === "icon" || mode === "icon-link" ? (
         iconTypeId ? (
           <img
             key={`${ship.shipName}-pill-${role}`}
@@ -150,9 +149,35 @@ export function renderShipPills(
         <span key={`${ship.shipName}-pill-${role}`} className={`risk-badge ${roleBadgeClass(role)}`} title={title}>
           {role}
         </span>
-      )
-    );
+      );
+    elements.push(wrapEvidenceLink(ship, role, roleElement, mode));
   }
 
   return elements;
+}
+
+function wrapEvidenceLink(
+  ship: ShipPrediction,
+  pillName: string,
+  element: JSX.Element,
+  mode: "pill" | "icon" | "icon-link"
+): JSX.Element {
+  if (mode !== "icon-link") {
+    return element;
+  }
+  const url = ship.pillEvidence?.[pillName as keyof NonNullable<ShipPrediction["pillEvidence"]>]?.url;
+  if (!url) {
+    return element;
+  }
+  return (
+    <a
+      key={`${ship.shipName}-pill-link-${pillName}`}
+      href={url}
+      target="_blank"
+      rel="noreferrer"
+      className="alert-icon-link"
+    >
+      {element}
+    </a>
+  );
 }

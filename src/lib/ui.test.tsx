@@ -100,7 +100,9 @@ describe("ui helpers", () => {
     expect(screen.getAllByText("Web").length).toBeGreaterThan(0);
   });
 
-  it("renders icon-mode pills with image assets", () => {
+  it("renders icon-mode pills with image assets and links evidence-backed icons", () => {
+    const cynoEvidenceUrl = "https://zkillboard.com/kill/41/";
+    const webEvidenceUrl = "https://zkillboard.com/kill/42/";
     render(
       <>
         {renderShipPills(
@@ -114,13 +116,21 @@ describe("ui helpers", () => {
                 causingModule: "Cynosural Field Generator I",
                 fitId: "700:Heavy tackle fit",
                 killmailId: 41,
-                url: "https://zkillboard.com/kill/41/",
+                url: cynoEvidenceUrl,
                 timestamp: "2026-02-13T11:00:00.000Z"
+              },
+              Web: {
+                pillName: "Web",
+                causingModule: "Stasis Webifier II",
+                fitId: "700:Heavy tackle fit",
+                killmailId: 42,
+                url: webEvidenceUrl,
+                timestamp: "2026-02-14T11:00:00.000Z"
               }
             }
           }),
           undefined,
-          "icon"
+          "icon-link"
         )}
       </>
     );
@@ -129,6 +139,9 @@ describe("ui helpers", () => {
     const cyno = screen.getByLabelText("Cyno");
     expect(cyno).toBeTruthy();
     expect(cyno.getAttribute("title")?.length).toBeGreaterThan(10);
-    expect(screen.getByLabelText("Web")).toBeTruthy();
+    const web = screen.getByLabelText("Web");
+    expect(web).toBeTruthy();
+    expect(cyno.closest("a")?.getAttribute("href")).toBe(cynoEvidenceUrl);
+    expect(web.closest("a")?.getAttribute("href")).toBe(webEvidenceUrl);
   });
 });

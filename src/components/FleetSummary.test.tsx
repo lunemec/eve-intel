@@ -171,4 +171,46 @@ describe("FleetSummary", () => {
     expect(fleetPill?.getAttribute("title")?.length).toBeGreaterThan(10);
     expect(soloPill?.getAttribute("title")?.length).toBeGreaterThan(10);
   });
+
+  it("links evidence-backed alert icons to zKill in fleet summary", () => {
+    const evidenceUrl = "https://zkillboard.com/kill/9001/";
+    render(
+      <FleetSummary
+        pilotCards={[
+          pilot({
+            characterId: 123,
+            characterName: "Pilot",
+            predictedShips: [
+              {
+                shipTypeId: 456,
+                shipName: "Onyx",
+                probability: 82,
+                source: "inferred",
+                reason: [],
+                rolePills: ["Web"],
+                pillEvidence: {
+                  Web: {
+                    pillName: "Web",
+                    causingModule: "Stasis Webifier II",
+                    fitId: "9001:Heavy tackle",
+                    killmailId: 9001,
+                    url: evidenceUrl,
+                    timestamp: "2026-02-18T21:00:00.000Z"
+                  }
+                }
+              }
+            ]
+          })
+        ]}
+        copyableFleetCount={1}
+        setNetworkNotice={vi.fn()}
+        logDebug={vi.fn()}
+      />
+    );
+
+    const webIcon = screen.getByLabelText("Web");
+    const webLink = webIcon.closest("a");
+    expect(webLink).toBeTruthy();
+    expect(webLink?.getAttribute("href")).toBe(evidenceUrl);
+  });
 });
