@@ -917,6 +917,58 @@ describe("dogma calc", () => {
     expect(metrics.alpha).toBeCloseTo(7.2, 1);
   });
 
+  it("models disintegrator DPS at maximum spool multiplier", () => {
+    const pack: DogmaPack = {
+      ...basePack,
+      types: [
+        ...basePack.types,
+        {
+          typeId: 7205,
+          groupId: 53,
+          categoryId: 7,
+          name: "Light Entropic Disintegrator Test",
+          attrs: {
+            "Damage Modifier": 1,
+            "Rate of fire": 1000,
+            "Maximum Damage Multiplier Bonus": 2.5,
+            "Used with (Charge Group)": 3
+          },
+          effects: ["targetAttack", "hiPower", "online", "turretFitted"]
+        },
+        {
+          typeId: 7206,
+          groupId: 83,
+          categoryId: 8,
+          name: "Exotic Plasma S",
+          attrs: {
+            "Thermal damage": 10
+          },
+          effects: ["ammoInfluenceRange"]
+        }
+      ],
+      typeCount: basePack.types.length + 2
+    };
+    const index = buildDogmaIndex(pack);
+    const metrics = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: {
+        ...emptySlots,
+        high: [
+          {
+            typeId: 7205,
+            name: "Light Entropic Disintegrator Test",
+            chargeTypeId: 7206,
+            chargeName: "Exotic Plasma S"
+          }
+        ]
+      }
+    });
+
+    expect(metrics.alpha).toBeCloseTo(12, 1);
+    expect(metrics.dpsTotal).toBeCloseTo(41.7, 1);
+    expect(metrics.assumptions).toContain("Disintegrator DPS modeled at maximum spool multiplier.");
+  });
+
   it("applies Caldari defensive subsystem shield HP effect to fit defense profile", () => {
     const pack: DogmaPack = {
       ...basePack,
@@ -1650,15 +1702,17 @@ Small Core Defense Field Extender I`;
       drones: [{ typeId: requireAnyTypeId("Hobgoblin II"), name: "Hobgoblin II", quantity: 5 }]
     });
 
-    // Direct pyfa all-V baseline for this hull-tank setup keeps low applied DPS but high armor profile.
-    expect(metrics.dpsTotal).toBeGreaterThan(120);
-    expect(metrics.dpsTotal).toBeLessThan(220);
+    // Max-spool disintegrator modeling materially lifts applied DPS while keeping
+    // the same defensive profile envelope for this hull-tank setup.
+    expect(metrics.dpsTotal).toBeGreaterThan(200);
+    expect(metrics.dpsTotal).toBeLessThan(260);
     expect(metrics.ehp).toBeGreaterThan(7000);
     expect(metrics.ehp).toBeLessThan(13000);
     expect(metrics.resists.armor.em).toBeGreaterThan(0.6);
     expect(metrics.resists.armor.therm).toBeGreaterThan(0.75);
     expect(metrics.resists.armor.kin).toBeGreaterThan(0.65);
     expect(metrics.resists.armor.exp).toBeGreaterThan(0.7);
+    expect(metrics.assumptions).toContain("Disintegrator DPS modeled at maximum spool multiplier.");
   });
 
   it("matches pyfa envelope for Gnosis drone bay split entries (5x Hammerhead II)", () => {

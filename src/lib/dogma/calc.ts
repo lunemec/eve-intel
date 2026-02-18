@@ -996,11 +996,12 @@ function estimateDisintegratorSpoolMultiplier(
     assumptions.push("Disintegrator spool data unavailable; using base-cycle damage.");
     return 1;
   }
+  const spoolMultiplier = Math.max(1, maxBonus);
   if (hasDisintegratorMaxSpoolBonus(ship)) {
-    assumptions.push("Detected hull disintegrator spool bonus; parity mode uses base-cycle DPS.");
+    assumptions.push("Detected hull disintegrator max-spool bonus effect.");
   }
-  assumptions.push("Disintegrator DPS modeled at base cycle (no sustained spool uplift).");
-  return 1;
+  assumptions.push("Disintegrator DPS modeled at maximum spool multiplier.");
+  return spoolMultiplier;
 }
 
 function applyDefenseModifiers(
