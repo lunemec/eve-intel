@@ -54,7 +54,7 @@ export async function savePilotSnapshot(params: {
   await setCachedAsync(key, snapshot, SNAPSHOT_TTL_MS, SNAPSHOT_STALE_MS);
 }
 
-export function buildPilotSnapshotKey(params: {
+function buildPilotSnapshotKey(params: {
   pilotName: string;
   characterId: number;
   lookbackDays: number;

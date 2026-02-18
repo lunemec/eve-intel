@@ -14,11 +14,6 @@ export async function loadDogmaData(force = false): Promise<LoaderState> {
   return memoized;
 }
 
-export async function getDogmaVersion(): Promise<string> {
-  const data = await loadDogmaData();
-  return data.manifest.activeVersion;
-}
-
 async function loadInternal(): Promise<LoaderState> {
   const baseHref =
     typeof globalThis.location?.href === "string" ? globalThis.location.href : "http://localhost/";

@@ -52,19 +52,6 @@ export function resolveTypeIdByName(index: DogmaIndex, name: string): number | u
   return index.typeIdByName.get(name.trim().toLowerCase());
 }
 
-export function getAttr(type: DogmaTypeEntry | undefined, ...names: string[]): number | undefined {
-  if (!type) {
-    return undefined;
-  }
-  for (const name of names) {
-    const value = type.attrs[name];
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
-  }
-  return undefined;
-}
-
 export function getAttrById(type: DogmaTypeEntry | undefined, attributeId: number): number | undefined {
   if (!type || attributeId <= 0) {
     return undefined;
