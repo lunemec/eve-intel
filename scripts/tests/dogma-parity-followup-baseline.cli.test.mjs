@@ -1,8 +1,24 @@
-import { describe, expect, it } from "vitest";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   DogmaParityFollowupBaselineCliUsageError,
   runDogmaParityFollowupBaselineCli
 } from "../lib/dogma-parity-followup-baseline/cli.mjs";
+
+const cleanupPaths = [];
+
+afterEach(async () => {
+  while (cleanupPaths.length > 0) {
+    const targetPath = cleanupPaths.pop();
+    if (!targetPath) {
+      continue;
+    }
+    const fs = await import("node:fs/promises");
+    await fs.rm(targetPath, { recursive: true, force: true });
+  }
+});
 
 function createLineCollector() {
   const lines = [];
@@ -56,10 +72,69 @@ describe("runDogmaParityFollowupBaselineCli", () => {
     ]);
     expect(baselineCalls).toEqual([
       {
-        help: false,
-        preconditionMet: true
+        parityReportPath: path.join("reports", "dogma-parity-report.json"),
+        summaryPath: path.join(
+          "reports",
+          "dogma-parity-followup-baseline-summary.json"
+        )
       }
     ]);
+  });
+
+  it("runs default baseline pipeline and writes summary artifact", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "dogma-followup-baseline-cli-"));
+    cleanupPaths.push(tempDir);
+
+    const parityReportPath = path.join(tempDir, "dogma-parity-report.json");
+    const summaryPath = path.join(tempDir, "followup-summary.json");
+    await writeFile(
+      parityReportPath,
+      `${JSON.stringify(
+        {
+          generatedAt: "2026-02-18T14:20:00.000Z",
+          comparisons: [
+            {
+              fitId: "fit-a",
+              expected: { shipTypeId: 29990 },
+              deltas: [{ metric: "dpsTotal", absDelta: 7, relDelta: 0.07 }]
+            }
+          ]
+        },
+        null,
+        2
+      )}\n`,
+      "utf8"
+    );
+
+    const stdout = createLineCollector();
+    const stderr = createLineCollector();
+    const exitCode = await runDogmaParityFollowupBaselineCli(
+      [
+        "--precondition-met",
+        "--parity-report-path",
+        parityReportPath,
+        "--summary-path",
+        summaryPath
+      ],
+      {
+        stdout: stdout.collect,
+        stderr: stderr.collect
+      }
+    );
+
+    expect(exitCode).toBe(0);
+    expect(stderr.lines).toEqual([]);
+    expect(stdout.lines).toEqual([
+      "[dogma:parity:followup:baseline] baseline run complete."
+    ]);
+
+    const summary = JSON.parse(await readFile(summaryPath, "utf8"));
+    expect(summary.thresholdPolicy).toEqual({
+      mode: "followup-10pct",
+      relMax: 0.1
+    });
+    expect(summary.comparedFits).toBe(1);
+    expect(summary.failingFits).toBe(0);
   });
 
   it("returns usage error output for invalid arguments", async () => {
