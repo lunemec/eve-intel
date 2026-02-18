@@ -1,6 +1,7 @@
 import type { ParsedPilotInput } from "../types";
 import type { ZkillKillmail } from "./api/zkill";
 import type { FitResolvedSlots } from "./dogma/types";
+import type { PillEvidenceByName } from "./pillEvidence";
 import { collectEvidence } from "./intel/evidence";
 import { deriveFitCandidates as deriveFitCandidatesFromLosses } from "./intel/fits";
 import {
@@ -23,6 +24,7 @@ export type ShipPrediction = {
   cynoCapable?: boolean;
   cynoChance?: number;
   rolePills?: string[];
+  pillEvidence?: PillEvidenceByName;
 };
 
 export type FitCandidate = {
