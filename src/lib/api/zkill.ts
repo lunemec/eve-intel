@@ -604,6 +604,8 @@ function parseCharacterStats(payload: unknown): ZkillCharacterStats | null {
     "dangerous.value",
     "dangerous.all"
   ]);
+  const dangerRatioRaw = extractNumber(root, ["danger", "dangerRatio"]);
+  const legacyDangerRaw = extractNumber(root, ["dangerous", "dangerousRatio", "dangerous.value", "dangerous.all"]);
   const iskDestroyed = extractNumber(root, ["iskDestroyed", "isk.destroyed", "iskDestroyed.all"]);
   const iskLost = extractNumber(root, ["iskLost", "isk.lost", "iskLost.all"]);
 
@@ -621,7 +623,9 @@ function parseCharacterStats(payload: unknown): ZkillCharacterStats | null {
   }
 
   const gangRatio = normalizeDangerPercent(gangRatioRaw);
-  const danger = normalizeDangerPercent(dangerRaw);
+  const danger = normalizeDangerPercent(dangerRaw, {
+    allowTenPointScale: dangerRatioRaw === undefined && legacyDangerRaw !== undefined
+  });
   return {
     kills,
     losses,
@@ -670,14 +674,17 @@ function normalizeNumber(value: unknown): number | undefined {
   return undefined;
 }
 
-function normalizeDangerPercent(value?: number): number | undefined {
+function normalizeDangerPercent(
+  value?: number,
+  options?: { allowTenPointScale?: boolean }
+): number | undefined {
   if (value === undefined) {
     return undefined;
   }
   if (value <= 1) {
     return Number((value * 100).toFixed(1));
   }
-  if (value <= 10) {
+  if (options?.allowTenPointScale && value <= 10) {
     return Number((value * 10).toFixed(1));
   }
   return Number(value.toFixed(1));

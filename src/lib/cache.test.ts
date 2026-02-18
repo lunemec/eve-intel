@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { versionedKey } from "./cache/localStore";
 
 type FakeStorageOptions = {
   throwOnSet?: boolean;
@@ -136,7 +137,7 @@ describe("cache", () => {
 
   it("returns null safely for corrupt cache payloads", async () => {
     const cache = await import("./cache");
-    localStorage.setItem("eve-intel.v3.corrupt", "{this is not valid json");
+    localStorage.setItem(versionedKey("corrupt"), "{this is not valid json");
 
     expect(cache.getCachedState<unknown>("corrupt")).toEqual({
       value: null,
@@ -151,7 +152,7 @@ describe("cache", () => {
 
     for (let i = 0; i < 20; i += 1) {
       localStorage.setItem(
-        `eve-intel.v3.old.${i}`,
+        versionedKey(`old.${i}`),
         JSON.stringify({
           writtenAt: now + i,
           staleAt: now + 10_000,
@@ -162,10 +163,10 @@ describe("cache", () => {
     }
 
     cache.setCached("incoming", { payload: "y".repeat(220_000) }, 10_000, 5_000);
-    expect(localStorage.getItem("eve-intel.v3.incoming")).toBeTruthy();
+    expect(localStorage.getItem(versionedKey("incoming"))).toBeTruthy();
 
-    const old0 = localStorage.getItem("eve-intel.v3.old.0");
-    const old1 = localStorage.getItem("eve-intel.v3.old.1");
+    const old0 = localStorage.getItem(versionedKey("old.0"));
+    const old1 = localStorage.getItem(versionedKey("old.1"));
     expect(old0 === null || old1 === null).toBe(true);
   });
 

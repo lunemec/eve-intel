@@ -244,6 +244,32 @@ describe("character stats endpoint", () => {
     }
   });
 
+  it("keeps low dangerRatio percentages as percentages", async () => {
+    const characterId = 2122717286;
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes(`/stats/characterID/${characterId}/`)) {
+        return jsonResponse({
+          shipsDestroyed: 19,
+          shipsLost: 168,
+          dangerRatio: 6,
+          gangRatio: 90
+        });
+      }
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+    globalThis.fetch = fetchMock;
+
+    try {
+      const stats = await fetchCharacterStats(characterId);
+      expect(stats?.danger).toBe(6);
+      expect(stats?.gangRatio).toBe(90);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("propagates aborts and does not cache null from cancelled requests", async () => {
     const characterId = 991499999;
     const originalFetch = globalThis.fetch;

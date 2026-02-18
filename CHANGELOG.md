@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.3.0 - 2026-02-18
+- Fixed zKill character danger normalization for low direct-percentage values by treating `dangerRatio`/`gangRatio` values as percent when already in `0..100` range (for example, `6` now remains `6%` instead of becoming `60%`), while retaining legacy `dangerous` `0..10` compatibility; added regression coverage in `src/lib/api/zkill.test.ts`.
+- Bumped the cache namespace version from `v3` to `v4` in `src/lib/cache/types.ts`, forcing cache-key invalidation for all users so stale cached zKill danger values and related cached envelopes do not persist across the scoring fix; updated cache tests in `src/lib/cache.test.ts` to assert versioned keys via `versionedKey(...)`.
+
+Boundary source:
+- Previous boundary tag `v0.2.9` (`5c24b89`) and version marker commit `ecfb03e` (`v0.3.0`) were used because no `v0.3.0` tag exists.
+- Additional post-marker workspace changes are documented directly in this entry.
+
 ## v0.2.9 - 2026-02-18
 - Streamlined inference evidence summarization scans by adding a shared one-pass summary path in `src/lib/intel/summaries.ts` and switching `recomputeDerivedInference` in `src/lib/pipeline/executors.ts` to derive coverage and top-evidence rows from the same pass; added regression coverage in `src/lib/pipeline/executors.recompute.test.ts`.
 - Improved fit-metric resolver hot-path performance by memoizing per-fit/per-character metric-key construction in `src/lib/useFitMetrics.ts`, avoiding repeated module-sort key rebuilds on cache hits while preserving existing result semantics; added regression coverage in `src/lib/useFitMetrics.test.ts`.
