@@ -46,3 +46,4 @@ svcfitstat/
 .venv/
 scripts/__pycache__/
 scripts/tests/__pycache__/
+specs/
