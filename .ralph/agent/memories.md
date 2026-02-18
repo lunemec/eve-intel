@@ -2,6 +2,34 @@
 
 ## Patterns
 
+### mem-1771442662-3972
+> Step-6 backtest canonicalization is enforced by scripts/tests/backtest-zkill-canonicalization.test.mjs, which requires scripts/backtest-zkill.mjs to import runBacktestCandidateScoring, predictShipIdsByRecency, and DEFAULT_RECENCY_BACKTEST_CANDIDATES from src/lib/backtestCore.ts and rejects local candidate/predict helper implementations.
+<!-- tags: testing, refactor, backtest, cli | created: 2026-02-18 -->
+
+### mem-1771442153-ea24
+> Step-5 probe canonicalization is enforced by scripts/tests/zkill-rate-limit-probe-canonicalization.test.mjs, which requires scripts/zkill-rate-limit-probe.mjs to import parseProbeArgs/runProbe from src/lib/dev/zkillRateLimitProbe.ts and rejects duplicated local probe helper implementations.
+<!-- tags: testing, refactor, cli | created: 2026-02-18 -->
+
+### mem-1771441902-d3f3
+> Step-4 dead-export hygiene is enforced by scripts/tests/dogma-pipeline-dead-export-hygiene.test.mjs, which fails if src/lib/dogma/loader.ts exports getDogmaVersion, src/lib/dogma/index.ts exports getAttr, or src/lib/pipeline/snapshotCache.ts exports buildPilotSnapshotKey.
+<!-- tags: testing, refactor, dogma, pipeline | created: 2026-02-18 -->
+
+### mem-1771441657-207a
+> Step-3 duplicate-import hygiene is enforced by scripts/tests/pipeline-duplicate-import-hygiene.test.mjs, which rejects duplicate import declarations for react in src/lib/usePilotIntelPipelineEffect.ts, ./constants in src/lib/pipeline/executors.ts, ../cache in src/lib/pipeline/derivedInference.ts, and ../api/esi in src/lib/pipeline/inferenceWindow.ts.
+<!-- tags: testing, refactor, pipeline | created: 2026-02-18 -->
+
+### mem-1771441431-7384
+> Step-2 unused-symbol hygiene is enforced by scripts/tests/pipeline-unused-symbol-hygiene.test.mjs, which rejects fetchLatestKillsPaged/fetchLatestLossesPaged imports in src/App.paste.integration.test.tsx, rejects ZkillCharacterStats import in src/lib/pipeline/breadthPipeline.ts, and rejects inline async <T>() cache stub patterns in src/lib/pipeline/derivedInference.test.ts.
+<!-- tags: testing, refactor, pipeline | created: 2026-02-18 -->
+
+### mem-1771441101-2f74
+> Dogma engine export hygiene is now enforced by scripts/tests/dogma-engine-type-export-hygiene.test.mjs, which fails if src/lib/dogma/engine/types.ts re-exports EngineContext/OffenseStageInput/DefenseStageInput; EngineTrace remains the only engine/types export.
+<!-- tags: testing, refactor, dogma | created: 2026-02-18 -->
+
+### mem-1771440876-64fa
+> Repository artifact hygiene is now enforced by scripts/tests/repository-artifact-hygiene.test.mjs, which fails if git ls-files contains __pycache__/ paths or .pyc files; scripts/__pycache__/ is ignored and tracked pyc artifacts were removed.
+<!-- tags: testing, refactor, tooling | created: 2026-02-18 -->
+
 ### mem-1771427419-eb8e
 > Dogma tactical destroyer defense assumptions are now family-specific: Gallente applies armor+hull resist profile, Amarr armor only, Caldari shield only, and Minmatar armor+shield; blanket all-family hull bonus was removed to match pyfa parity.
 <!-- tags: parity, dogma, testing | created: 2026-02-18 -->
@@ -105,6 +133,94 @@
 ## Decisions
 
 ## Fixes
+
+### mem-1771443037-060d
+> runtime-task reconciliation: if a task is blocked by a missing dependency id, verify behavior with scoped tests plus npm test/build, then close stale blocked task when implementation is already satisfied
+<!-- tags: tasking, testing, error-handling | created: 2026-02-18 -->
+
+### mem-1771442794-a179
+> failure: cmd=grep -nF '96a7691..6e384db' CHANGELOG.md, exit=1, error=expected red gate; v0.2.9 boundary range still points to older upper commit, next=update boundary source range to 96a7691..6e384db and rerun validation
+<!-- tags: changelog, testing, error-handling | created: 2026-02-18 -->
+
+### mem-1771442606-883c
+> failure: cmd=npm run build, exit=1, error=TS2322 in src/lib/backtest.ts due generic helper inferring BacktestKillmailLike[] for deriveShipPredictions kills/losses, next=apply explicit ZkillKillmail[] cast at derive call site and rerun npm test then build-last
+<!-- tags: testing, error-handling, build, refactor, backtest | created: 2026-02-18 -->
+
+### mem-1771442436-1029
+> failure: cmd=npx vitest run scripts/tests/backtest-zkill-canonicalization.test.mjs, exit=1, error=expected red gate; backtest canonicalization test reports missing shared-wrapper imports/helpers, next=add src/lib/backtestCore.ts shared helpers and convert scripts/backtest-zkill.mjs to delegate
+<!-- tags: testing, error-handling, refactor, backtest | created: 2026-02-18 -->
+
+### mem-1771442351-0395
+> failure: cmd=node --experimental-strip-types --experimental-specifier-resolution=node import("./src/lib/backtest.ts"), exit=1, error=ERR_UNSUPPORTED_DIR_IMPORT for ./intel directory import, next=do not rely on Node flags for src/lib/backtest.ts runtime import; use a Node-safe shared module for CLI canonicalization
+<!-- tags: tooling, error-handling, backtest | created: 2026-02-18 -->
+
+### mem-1771442295-374b
+> failure: cmd=node -e import("./src/lib/backtest.ts"), exit=1, error=ERR_UNSUPPORTED_DIR_IMPORT for extensionless ./intel resolution, next=avoid direct script runtime imports of src/lib/backtest.ts from Node; keep canonical shared logic in script-side module that wraps existing TypeScript APIs indirectly
+<!-- tags: tooling, error-handling, backtest | created: 2026-02-18 -->
+
+### mem-1771441996-9572
+> failure: cmd=ralph tools memory add with nested quotes, exit=2, error=shell unexpected EOF from mismatched quoting, next=use simplified message text without nested quote escaping
+<!-- tags: tooling, error-handling | created: 2026-02-18 -->
+
+### mem-1771441996-9564
+> failure: cmd=rg script import probe, exit=1, error=no matches returned non-zero during exploratory search, next=use || true for optional probes
+<!-- tags: tooling, error-handling, search | created: 2026-02-18 -->
+
+### mem-1771441769-5c20
+> failure: cmd=rg -nF "getAttr," src scripts/tests, exit=1, error=no matches returned non-zero during exploratory import probe, next=append || true for optional probe searches where zero matches are valid
+<!-- tags: tooling, error-handling, search | created: 2026-02-18 -->
+
+### mem-1771441757-e27f
+> failure: cmd=rg -n "from \"\\.\/loader\"|from \"\\.\/index\"|from \"\\.\/snapshotCache\"|from \"\\.\./dogma/index\"|from \"\\./dogma/index\"|from \"\\./lib/dogma/index\"" src -g "*.ts" -g "*.tsx", exit=2, error=rg regex parse error from over-escaped path pattern, next=use fixed-string searches per module path instead of alternation with escaped separators
+<!-- tags: tooling, error-handling, search | created: 2026-02-18 -->
+
+### mem-1771441752-f4c8
+> failure: cmd=rg -n "import\\s*\\{[^}]*\\bgetAttr\\b[^}]*\\}\\s*from\\s*[\""]\./index["\"]" src/lib/dogma -g "*.ts" -g "*.tsx", exit=2, error=regex parse error (unrecognized escape sequence), next=use fixed-string or simpler token searches instead of complex escaped regex in rg
+<!-- tags: tooling, error-handling, search | created: 2026-02-18 -->
+
+### mem-1771441730-b170
+> failure: cmd=rg -n "getDogmaVersion|getAttr|buildPilotSnapshotKey" src scripts tests -g "!node_modules", exit=2, error=nonexistent tests path caused rg os error, next=scope search roots to existing dirs (src/scripts) or append || true when probing optional paths
+<!-- tags: tooling, error-handling, search | created: 2026-02-18 -->
+
+### mem-1771441657-2064
+> failure: cmd=apply_patch update src/lib/pipeline/derivedInference.ts (merge ../cache imports), exit=non-zero, error=expected hunk not found because imports were separated by another line, next=read exact file header and patch with precise context lines
+<!-- tags: tooling, error-handling, refactor | created: 2026-02-18 -->
+
+### mem-1771441547-5c27
+> failure: cmd=npx vitest run scripts/tests/pipeline-duplicate-import-hygiene.test.mjs, exit=1, error=expected red gate; duplicate import declarations remain in four scoped files (react, ./constants, ../cache, ../api/esi), next=merge duplicate imports per module path and rerun targeted gate
+<!-- tags: testing, error-handling, refactor | created: 2026-02-18 -->
+
+### mem-1771441491-b0ea
+> failure: cmd=grep -R -n "usePilotIntelPipelineEffect\|executors.ts\|derivedInference.ts\|inferenceWindow.ts" scripts/tests 2>/dev/null, exit=1, error=no matches caused non-zero exit during exploratory search, next=append || true when probing optional patterns
+<!-- tags: tooling, error-handling, search | created: 2026-02-18 -->
+
+### mem-1771441428-60b0
+> failure: cmd=npx vitest run scripts/tests/pipeline-unused-symbol-hygiene.test.mjs, exit=1, error=initial import-specifier parser only matched first import block per module and missed duplicate zkill import declarations, next=use matchAll to aggregate all import blocks before asserting forbidden specifiers
+<!-- tags: testing, error-handling, refactor | created: 2026-02-18 -->
+
+### mem-1771441421-58e2
+> failure: cmd=ralph tools task close task-1771441210-8c37 --format json, exit=2, error=task close does not accept --format flag, next=run ralph tools task close <id> without format option
+<!-- tags: tooling, error-handling, tasking | created: 2026-02-18 -->
+
+### mem-1771440994-5bbb
+> failure: cmd=npx vitest run scripts/tests/dogma-engine-type-export-hygiene.test.mjs, exit=1, error=expected red gate; new hygiene test reports forbidden exports EngineContext/OffenseStageInput/DefenseStageInput in src/lib/dogma/engine/types.ts, next=remove those unused exported types and rerun targeted gate
+<!-- tags: testing, error-handling, refactor | created: 2026-02-18 -->
+
+### mem-1771440857-492a
+> failure: cmd=git add .gitignore CHANGELOG.md ... scripts/__pycache__/pyfa_fitstats...; exit=128, error=pathspec for already-removed pyc files did not match, next=stage text/new files only because git rm already staged deletions
+<!-- tags: git, error-handling, refactor | created: 2026-02-18 -->
+
+### mem-1771440792-6b71
+> failure: cmd=apply_patch delete binary scripts/__pycache__/pyfa_fitstats.cpython-311.pyc, exit=non-zero, error=apply_patch could not read binary pyc as UTF-8, next=delete tracked binary artifacts with git rm -f and keep text edits in apply_patch
+<!-- tags: tooling, error-handling, refactor | created: 2026-02-18 -->
+
+### mem-1771440785-213d
+> failure: cmd=parallel rm -f scripts/__pycache__/... + python edit .gitignore, exit=non-zero, error=rm command rejected by policy and python unavailable in environment, next=use apply_patch for tracked-file deletions and .gitignore edits instead of rm/python
+<!-- tags: tooling, error-handling, refactor | created: 2026-02-18 -->
+
+### mem-1771440773-9413
+> failure: cmd=npx vitest run scripts/tests/repository-artifact-hygiene.test.mjs, exit=1, error=expected red gate; tracked scripts/__pycache__/pyfa_fitstats.*.pyc artifacts violate hygiene test, next=delete tracked .pyc files and add scripts/__pycache__/ ignore rule then rerun gate
+<!-- tags: testing, error-handling, refactor | created: 2026-02-18 -->
 
 ### mem-1771427140-bedb
 > failure: cmd=npx vitest run src/lib/dogma/parity/followup-destroyer-gate.test.ts, exit=1, error=expected red gate; destroyer gate test shows Jackdaw 0 passing with large shield/armor/hull resist deltas, next=align tactical destroyer defense resist profile handling by hull to match pyfa semantics
@@ -311,6 +427,10 @@
 <!-- tags: tooling, error-handling | created: 2026-02-18 -->
 
 ## Context
+
+### mem-1771442853-b33b
+> v0.2.9 changelog boundary is now advanced to 96a7691..6e384db to include Step-6 backtest canonicalization and Step-8 hardening closure.
+<!-- tags: changelog, release, refactor | created: 2026-02-18 -->
 
 ### mem-1771427629-f3e9
 > Follow-up baseline final verification confirms gateEvaluation.complete=true with T3 cruiser hulls at 10/10 passing fits each and T3 destroyer hulls at 15/10 each; no remaining follow-up hull deficits.

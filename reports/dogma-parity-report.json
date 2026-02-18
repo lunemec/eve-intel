@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-02-18T15:12:17.233Z",
+  "generatedAt": "2026-02-18T19:29:46.554Z",
   "mode": "sample",
-  "comparedFits": 178,
-  "failingFits": 4,
-  "goldenFits": 85,
+  "comparedFits": 184,
+  "failingFits": 6,
+  "goldenFits": 91,
   "missingGoldenReferences": [],
   "comparisons": [
     {
@@ -460,7 +460,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 95,
         "alpha": 408.2,
-        "ehp": 19955,
+        "ehp": 18937,
         "resists": {
           "shield": {
             "em": 0.45999999999999996,
@@ -517,10 +517,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 19955,
+          "actual": 18937,
           "expected": 18936.7101275233,
-          "absDelta": 1018.2898724767001,
-          "relDelta": 0.053773325230166605,
+          "absDelta": 0.2898724767001113,
+          "relDelta": 0.00001530743591405564,
           "pass": true
         },
         {
@@ -2508,7 +2508,7 @@
         "shipTypeId": 52250,
         "source": "app",
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
-        "dpsTotal": 60,
+        "dpsTotal": 127.5,
         "alpha": 151.2,
         "ehp": 9907,
         "resists": {
@@ -2547,15 +2547,15 @@
         },
         "resistAbs": 0.05
       },
-      "pass": true,
+      "pass": false,
       "deltas": [
         {
           "metric": "dpsTotal",
-          "actual": 60,
+          "actual": 127.5,
           "expected": 59.89583333333332,
-          "absDelta": 0.10416666666667851,
-          "relDelta": 0.0017391304347828067,
-          "pass": true
+          "absDelta": 67.60416666666669,
+          "relDelta": 1.1286956521739135,
+          "pass": false
         },
         {
           "metric": "alpha",
@@ -3320,7 +3320,7 @@
         "shipTypeId": 52250,
         "source": "app",
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
-        "dpsTotal": 100.3,
+        "dpsTotal": 213.1,
         "alpha": 252.7,
         "ehp": 9400,
         "resists": {
@@ -3359,15 +3359,15 @@
         },
         "resistAbs": 0.05
       },
-      "pass": true,
+      "pass": false,
       "deltas": [
         {
           "metric": "dpsTotal",
-          "actual": 100.3,
+          "actual": 213.1,
           "expected": 100.11160714285714,
-          "absDelta": 0.18839285714285836,
-          "relDelta": 0.0018818283166109377,
-          "pass": true
+          "absDelta": 112.98839285714286,
+          "relDelta": 1.128624303232999,
+          "pass": false
         },
         {
           "metric": "alpha",
@@ -4743,7 +4743,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 712.4,
         "alpha": 1276.5,
-        "ehp": 21944,
+        "ehp": 21011,
         "resists": {
           "shield": {
             "em": 0.5,
@@ -4800,10 +4800,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 21944,
+          "actual": 21011,
           "expected": 21010.75504828797,
-          "absDelta": 933.2449517120294,
-          "relDelta": 0.0444174875946723,
+          "absDelta": 0.2449517120294331,
+          "relDelta": 0.000011658396448222484,
           "pass": true
         },
         {
@@ -14212,7 +14212,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 39061,
+        "ehp": 38042,
         "resists": {
           "shield": {
             "em": 0.45999999999999996,
@@ -14269,10 +14269,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 39061,
+          "actual": 38042,
           "expected": 38042.410346684155,
-          "absDelta": 1018.5896533158448,
-          "relDelta": 0.026775108202486093,
+          "absDelta": 0.410346684155229,
+          "relDelta": 0.000010786558486060691,
           "pass": true
         },
         {
@@ -22291,7 +22291,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 686.4,
         "alpha": 1734.4,
-        "ehp": 17271,
+        "ehp": 16631,
         "resists": {
           "shield": {
             "em": 0,
@@ -22348,10 +22348,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 17271,
+          "actual": 16631,
           "expected": 16830.695708895513,
-          "absDelta": 440.30429110448677,
-          "relDelta": 0.026160789709469532,
+          "absDelta": 199.69570889551323,
+          "relDelta": 0.011864970548422917,
           "pass": true
         },
         {
@@ -22499,7 +22499,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 22757,
+        "ehp": 21777,
         "resists": {
           "shield": {
             "em": 0,
@@ -22556,10 +22556,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 22757,
+          "actual": 21777,
           "expected": 21976.7479,
-          "absDelta": 780.2521000000015,
-          "relDelta": 0.035503528709086275,
+          "absDelta": 199.74789999999848,
+          "relDelta": 0.009089056347595383,
           "pass": true
         },
         {
@@ -22707,7 +22707,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 23170,
+        "ehp": 22344,
         "resists": {
           "shield": {
             "em": 0.125,
@@ -22764,10 +22764,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 23170,
+          "actual": 22344,
           "expected": 23029.5969,
-          "absDelta": 140.40309999999954,
-          "relDelta": 0.006096637323252477,
+          "absDelta": 685.5969000000005,
+          "relDelta": 0.029770251862289453,
           "pass": true
         },
         {
@@ -22915,7 +22915,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 26677,
+        "ehp": 23853,
         "resists": {
           "shield": {
             "em": 0,
@@ -22972,10 +22972,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 26677,
+          "actual": 23853,
           "expected": 24452.9185,
-          "absDelta": 2224.0815000000002,
-          "relDelta": 0.09095362175275726,
+          "absDelta": 599.9184999999998,
+          "relDelta": 0.024533615486429555,
           "pass": true
         },
         {
@@ -23123,7 +23123,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 30378,
+        "ehp": 28111,
         "resists": {
           "shield": {
             "em": 0.125,
@@ -23180,10 +23180,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 30378,
+          "actual": 28111,
           "expected": 28527.6153,
-          "absDelta": 1850.3846999999987,
-          "relDelta": 0.06486292949975382,
+          "absDelta": 416.6153000000013,
+          "relDelta": 0.01460393010838173,
           "pass": true
         },
         {
@@ -23331,7 +23331,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 15538,
+        "ehp": 14942,
         "resists": {
           "shield": {
             "em": 0,
@@ -23388,10 +23388,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 15538,
+          "actual": 14942,
           "expected": 15541.5173,
-          "absDelta": 3.5172999999995227,
-          "relDelta": 0.00022631638417952427,
+          "absDelta": 599.5172999999995,
+          "relDelta": 0.03857521041397931,
           "pass": true
         },
         {
@@ -23539,7 +23539,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 15538,
+        "ehp": 14942,
         "resists": {
           "shield": {
             "em": 0,
@@ -23596,10 +23596,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 15538,
+          "actual": 14942,
           "expected": 14872.2865,
-          "absDelta": 665.7134999999998,
-          "relDelta": 0.04476201423365532,
+          "absDelta": 69.71349999999984,
+          "relDelta": 0.004687476939070521,
           "pass": true
         },
         {
@@ -23747,7 +23747,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 37664,
+        "ehp": 33939,
         "resists": {
           "shield": {
             "em": 0.125,
@@ -23804,10 +23804,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 37664,
+          "actual": 33939,
           "expected": 34261.656,
-          "absDelta": 3402.3439999999973,
-          "relDelta": 0.09930471545216603,
+          "absDelta": 322.6560000000027,
+          "relDelta": 0.009417408195330742,
           "pass": true
         },
         {
@@ -23955,7 +23955,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 17271,
+        "ehp": 16328,
         "resists": {
           "shield": {
             "em": 0,
@@ -24012,10 +24012,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 17271,
+          "actual": 16328,
           "expected": 16927.6742,
-          "absDelta": 343.3257999999987,
-          "relDelta": 0.020281923904230073,
+          "absDelta": 599.6742000000013,
+          "relDelta": 0.03542566999546821,
           "pass": true
         },
         {
@@ -24163,7 +24163,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 15538,
+        "ehp": 14942,
         "resists": {
           "shield": {
             "em": 0,
@@ -24220,10 +24220,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 15538,
+          "actual": 14942,
           "expected": 14942.4923,
-          "absDelta": 595.5077000000001,
-          "relDelta": 0.0398533047930699,
+          "absDelta": 0.4922999999998865,
+          "relDelta": 0.000032946311105001304,
           "pass": true
         },
         {
@@ -24573,7 +24573,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 518.7,
         "alpha": 1558,
-        "ehp": 39270,
+        "ehp": 37715,
         "resists": {
           "shield": {
             "em": 0.7881026481572881,
@@ -24630,10 +24630,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 39270,
+          "actual": 37715,
           "expected": 37715.36352808149,
-          "absDelta": 1554.6364719185076,
-          "relDelta": 0.041220243595451005,
+          "absDelta": 0.36352808149240445,
+          "relDelta": 0.000009638726701433876,
           "pass": true
         },
         {
@@ -24781,7 +24781,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 18429,
+        "ehp": 17496,
         "resists": {
           "shield": {
             "em": 0.6625,
@@ -24838,10 +24838,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 18429,
+          "actual": 17496,
           "expected": 17496.4453,
-          "absDelta": 932.5547000000006,
-          "relDelta": 0.05329966653283571,
+          "absDelta": 0.4452999999994063,
+          "relDelta": 0.000025450884014675042,
           "pass": true
         },
         {
@@ -24989,7 +24989,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 15694,
+        "ehp": 14761,
         "resists": {
           "shield": {
             "em": 0.5,
@@ -25046,10 +25046,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 15694,
+          "actual": 14761,
           "expected": 14760.755,
-          "absDelta": 933.2450000000008,
-          "relDelta": 0.0632247469726312,
+          "absDelta": 0.24500000000080036,
+          "relDelta": 0.000016598066968850874,
           "pass": true
         },
         {
@@ -25197,7 +25197,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 19580,
+        "ehp": 18648,
         "resists": {
           "shield": {
             "em": 0.7031,
@@ -25254,10 +25254,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 19580,
+          "actual": 18648,
           "expected": 18647.5091,
-          "absDelta": 932.4909000000007,
-          "relDelta": 0.05000619090728856,
+          "absDelta": 0.49090000000069267,
+          "relDelta": 0.00002632523182416319,
           "pass": true
         },
         {
@@ -25405,7 +25405,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 51006,
+        "ehp": 49451,
         "resists": {
           "shield": {
             "em": 0.7046874999999999,
@@ -25462,10 +25462,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 51006,
+          "actual": 49451,
           "expected": 49451.029,
-          "absDelta": 1554.9709999999977,
-          "relDelta": 0.0314446641747333,
+          "absDelta": 0.0290000000022701,
+          "relDelta": 5.864387574679204e-7,
           "pass": true
         },
         {
@@ -25613,7 +25613,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 32721,
+        "ehp": 31789,
         "resists": {
           "shield": {
             "em": 0.6625,
@@ -25670,10 +25670,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 32721,
+          "actual": 31789,
           "expected": 31788.5328,
-          "absDelta": 932.4671999999991,
-          "relDelta": 0.02933344567573119,
+          "absDelta": 0.4671999999991385,
+          "relDelta": 0.00001469712373762461,
           "pass": true
         },
         {
@@ -25821,7 +25821,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 5,
         "alpha": 7.2,
-        "ehp": 146237,
+        "ehp": 148634,
         "resists": {
           "shield": {
             "em": 0.5,
@@ -25878,10 +25878,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 146237,
+          "actual": 148634,
           "expected": 153086.7272,
-          "absDelta": 6849.727199999994,
-          "relDelta": 0.04474409588135734,
+          "absDelta": 4452.727199999994,
+          "relDelta": 0.029086304746607675,
           "pass": true
         },
         {
@@ -26029,7 +26029,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 42409,
+        "ehp": 41476,
         "resists": {
           "shield": {
             "em": 0.6625,
@@ -26086,10 +26086,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 42409,
+          "actual": 41476,
           "expected": 41476.0455,
-          "absDelta": 932.9544999999998,
-          "relDelta": 0.022493815134810764,
+          "absDelta": 0.04550000000017462,
+          "relDelta": 0.0000010970187599050306,
           "pass": true
         },
         {
@@ -26237,7 +26237,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 50200,
+        "ehp": 48645,
         "resists": {
           "shield": {
             "em": 0.5625,
@@ -26294,10 +26294,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 50200,
+          "actual": 48645,
           "expected": 46522.2335,
-          "absDelta": 3677.766499999998,
-          "relDelta": 0.07905395384768012,
+          "absDelta": 2122.766499999998,
+          "relDelta": 0.0456290753968207,
           "pass": true
         },
         {
@@ -27672,7 +27672,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 17740,
+        "ehp": 17101,
         "resists": {
           "shield": {
             "em": 0,
@@ -27729,10 +27729,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 17740,
+          "actual": 17101,
           "expected": 17740.163667629626,
-          "absDelta": 0.16366762962570647,
-          "relDelta": 0.000009225824106930301,
+          "absDelta": 639.1636676296257,
+          "relDelta": 0.03602918663010443,
           "pass": true
         },
         {
@@ -27880,7 +27880,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 18210,
+        "ehp": 17397,
         "resists": {
           "shield": {
             "em": 0.09999999999999998,
@@ -27937,10 +27937,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 18210,
+          "actual": 17397,
           "expected": 18210.2856,
-          "absDelta": 0.2855999999992491,
-          "relDelta": 0.000015683444305741648,
+          "absDelta": 813.2855999999992,
+          "relDelta": 0.04466078225593558,
           "pass": true
         },
         {
@@ -28088,7 +28088,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 18210,
+        "ehp": 17397,
         "resists": {
           "shield": {
             "em": 0.09999999999999998,
@@ -28145,10 +28145,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 18210,
+          "actual": 17397,
           "expected": 18210.2856,
-          "absDelta": 0.2855999999992491,
-          "relDelta": 0.000015683444305741648,
+          "absDelta": 813.2855999999992,
+          "relDelta": 0.04466078225593558,
           "pass": true
         },
         {
@@ -28296,7 +28296,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 140396,
+        "ehp": 139205,
         "resists": {
           "shield": {
             "em": 0.125,
@@ -28353,10 +28353,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 140396,
+          "actual": 139205,
           "expected": 139133.8737,
-          "absDelta": 1262.1263000000035,
-          "relDelta": 0.009071308563731907,
+          "absDelta": 71.12630000000354,
+          "relDelta": 0.000511207645618822,
           "pass": true
         },
         {
@@ -28504,7 +28504,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 18543,
+        "ehp": 17502,
         "resists": {
           "shield": {
             "em": 0,
@@ -28561,10 +28561,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 18543,
+          "actual": 17502,
           "expected": 18233.3182,
-          "absDelta": 309.6817999999985,
-          "relDelta": 0.016984390696368062,
+          "absDelta": 731.3182000000015,
+          "relDelta": 0.04010889252182313,
           "pass": true
         },
         {
@@ -28712,7 +28712,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 29351,
+        "ehp": 28161,
         "resists": {
           "shield": {
             "em": 0.125,
@@ -28769,10 +28769,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 29351,
+          "actual": 28161,
           "expected": 27468.2717,
-          "absDelta": 1882.7282999999989,
-          "relDelta": 0.06854192795828501,
+          "absDelta": 692.7282999999989,
+          "relDelta": 0.025219216831905693,
           "pass": true
         },
         {
@@ -28920,7 +28920,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 83802,
+        "ehp": 82612,
         "resists": {
           "shield": {
             "em": 0.125,
@@ -28977,10 +28977,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 83802,
+          "actual": 82612,
           "expected": 83802.1571,
-          "absDelta": 0.1570999999967171,
-          "relDelta": 0.0000018746534150577026,
+          "absDelta": 1190.1570999999967,
+          "relDelta": 0.014201986454594457,
           "pass": true
         },
         {
@@ -29128,7 +29128,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 48,
         "alpha": 360,
-        "ehp": 20207,
+        "ehp": 19165,
         "resists": {
           "shield": {
             "em": 0,
@@ -29185,10 +29185,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 20207,
+          "actual": 19165,
           "expected": 20206.7055,
-          "absDelta": 0.2944999999999709,
-          "relDelta": 0.00001457436987934381,
+          "absDelta": 1041.7055,
+          "relDelta": 0.05155246608607227,
           "pass": true
         },
         {
@@ -29336,7 +29336,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 25100,
+        "ehp": 23910,
         "resists": {
           "shield": {
             "em": 0.125,
@@ -29393,10 +29393,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 25100,
+          "actual": 23910,
           "expected": 25100.2497,
-          "absDelta": 0.24970000000030268,
-          "relDelta": 0.00000994810820548541,
+          "absDelta": 1190.2497000000003,
+          "relDelta": 0.04741983503056547,
           "pass": true
         },
         {
@@ -29544,7 +29544,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 25617,
+        "ehp": 24426,
         "resists": {
           "shield": {
             "em": 0.125,
@@ -29601,10 +29601,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 25617,
+          "actual": 24426,
           "expected": 25502.3128,
-          "absDelta": 114.6872000000003,
-          "relDelta": 0.004497129374085644,
+          "absDelta": 1076.3127999999997,
+          "relDelta": 0.0422045172310803,
           "pass": true
         },
         {
@@ -34099,7 +34099,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 474.2,
         "alpha": 1982.6,
-        "ehp": 17233,
+        "ehp": 17850,
         "resists": {
           "shield": {
             "em": 0.32499999999999996,
@@ -34156,10 +34156,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 17233,
+          "actual": 17850,
           "expected": 17849.602739764734,
-          "absDelta": 616.602739764734,
-          "relDelta": 0.03454433965586738,
+          "absDelta": 0.3972602352660033,
+          "relDelta": 0.000022255970682249446,
           "pass": true
         },
         {
@@ -34307,7 +34307,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 8656,
+        "ehp": 9125,
         "resists": {
           "shield": {
             "em": 0,
@@ -34364,10 +34364,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 8656,
+          "actual": 9125,
           "expected": 9125,
-          "absDelta": 469,
-          "relDelta": 0.0513972602739726,
+          "absDelta": 0,
+          "relDelta": 0,
           "pass": true
         },
         {
@@ -34515,7 +34515,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 19837,
+        "ehp": 20454,
         "resists": {
           "shield": {
             "em": 0.7075323238566287,
@@ -34572,10 +34572,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 19837,
+          "actual": 20454,
           "expected": 20454.0479,
-          "absDelta": 617.0479000000014,
-          "relDelta": 0.030167520043795408,
+          "absDelta": 0.04790000000139116,
+          "relDelta": 0.000002341834742715703,
           "pass": true
         },
         {
@@ -34723,7 +34723,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 21195,
+        "ehp": 20058,
         "resists": {
           "shield": {
             "em": 0.14,
@@ -34780,10 +34780,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 21195,
+          "actual": 20058,
           "expected": 21721.7304,
-          "absDelta": 526.7304000000004,
-          "relDelta": 0.024249007344276787,
+          "absDelta": 1663.7304000000004,
+          "relDelta": 0.07659290348249605,
           "pass": true
         },
         {
@@ -34931,7 +34931,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 51523,
+        "ehp": 52139,
         "resists": {
           "shield": {
             "em": 0.32499999999999996,
@@ -34988,10 +34988,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 51523,
+          "actual": 52139,
           "expected": 52139.2797,
-          "absDelta": 616.2796999999991,
-          "relDelta": 0.011819873683448664,
+          "absDelta": 0.2796999999991385,
+          "relDelta": 0.000005364477637751841,
           "pass": true
         },
         {
@@ -35139,7 +35139,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 50592,
+        "ehp": 51866,
         "resists": {
           "shield": {
             "em": 0.7174701975430509,
@@ -35196,10 +35196,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 50592,
+          "actual": 51866,
           "expected": 51865.8007,
-          "absDelta": 1273.8006999999998,
-          "relDelta": 0.024559549506771614,
+          "absDelta": 0.1993000000002212,
+          "relDelta": 0.000003842609143412321,
           "pass": true
         },
         {
@@ -35347,7 +35347,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 19761,
+        "ehp": 20377,
         "resists": {
           "shield": {
             "em": 0.6988993453876065,
@@ -35404,10 +35404,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 19761,
+          "actual": 20377,
           "expected": 20377.1435,
-          "absDelta": 616.1434999999983,
-          "relDelta": 0.030236990773510445,
+          "absDelta": 0.14349999999831198,
+          "relDelta": 0.000007042203928058513,
           "pass": true
         },
         {
@@ -35555,7 +35555,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 14569,
+        "ehp": 15186,
         "resists": {
           "shield": {
             "em": 0,
@@ -35612,10 +35612,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 14569,
+          "actual": 15186,
           "expected": 14917.9317,
-          "absDelta": 348.9316999999992,
-          "relDelta": 0.023390085637675844,
+          "absDelta": 268.0683000000008,
+          "relDelta": 0.01796953528081918,
           "pass": true
         },
         {
@@ -35971,7 +35971,7 @@
         "sdeVersion": "2026-02-18-618cfe3ce4b5",
         "dpsTotal": 0,
         "alpha": 0,
-        "ehp": 20344,
+        "ehp": 20961,
         "resists": {
           "shield": {
             "em": 0.7614917333345994,
@@ -36028,10 +36028,10 @@
         },
         {
           "metric": "ehp",
-          "actual": 20344,
+          "actual": 20961,
           "expected": 20960.8978,
-          "absDelta": 616.8977999999988,
-          "relDelta": 0.0294308863048795,
+          "absDelta": 0.1022000000011758,
+          "relDelta": 0.000004875745351001893,
           "pass": true
         },
         {
@@ -36741,6 +36741,1251 @@
           "metric": "resists.hull.exp",
           "actual": 0.32999999999999996,
           "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "fitId": "manual-tengu-paomo1-kinetic-ham-1",
+      "expected": {
+        "fitId": "manual-tengu-paomo1-kinetic-ham-1",
+        "shipTypeId": 29984,
+        "source": "pyfa",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 854.8594585336111,
+        "alpha": 1914.7958840176368,
+        "ehp": 16085.28285861778,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.6,
+            "kin": 0.8785758870539396,
+            "exp": 0.5
+          },
+          "armor": {
+            "em": 0.5,
+            "therm": 0.725,
+            "kin": 0.4375,
+            "exp": 0.09999999999999998
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        },
+        "metadata": {
+          "referenceMethod": "pyfa-manual",
+          "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+          "importedAt": "2026-02-18T16:29:52.492Z",
+          "importFile": "manual-tengu-paomo1.json"
+        }
+      },
+      "actual": {
+        "fitId": "manual-tengu-paomo1-kinetic-ham-1",
+        "shipTypeId": 29984,
+        "source": "app",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 858.7,
+        "alpha": 1914.8,
+        "ehp": 16085,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.6,
+            "kin": 0.8785758870539396,
+            "exp": 0.5
+          },
+          "armor": {
+            "em": 0.5,
+            "therm": 0.725,
+            "kin": 0.4375,
+            "exp": 0.09999999999999998
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        }
+      },
+      "thresholds": {
+        "dps": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "alpha": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "ehp": {
+          "rel": 0.1,
+          "abs": 500
+        },
+        "resistAbs": 0.05
+      },
+      "pass": true,
+      "deltas": [
+        {
+          "metric": "dpsTotal",
+          "actual": 858.7,
+          "expected": 854.8594585336111,
+          "absDelta": 3.8405414663889132,
+          "relDelta": 0.004492599839717293,
+          "pass": true
+        },
+        {
+          "metric": "alpha",
+          "actual": 1914.8,
+          "expected": 1914.7958840176368,
+          "absDelta": 0.004115982363146031,
+          "relDelta": 0.0000021495671666631385,
+          "pass": true
+        },
+        {
+          "metric": "ehp",
+          "actual": 16085,
+          "expected": 16085.28285861778,
+          "absDelta": 0.2828586177802208,
+          "relDelta": 0.00001758493277777069,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.em",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.therm",
+          "actual": 0.6,
+          "expected": 0.6,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.kin",
+          "actual": 0.8785758870539396,
+          "expected": 0.8785758870539396,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.exp",
+          "actual": 0.5,
+          "expected": 0.5,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.em",
+          "actual": 0.5,
+          "expected": 0.5,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.therm",
+          "actual": 0.725,
+          "expected": 0.725,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.kin",
+          "actual": 0.4375,
+          "expected": 0.4375,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.exp",
+          "actual": 0.09999999999999998,
+          "expected": 0.09999999999999998,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.em",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.therm",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.kin",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.exp",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "fitId": "manual-legion-augmented-plating-coverage-1",
+      "expected": {
+        "fitId": "manual-legion-augmented-plating-coverage-1",
+        "shipTypeId": 29986,
+        "source": "pyfa",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 686.4047,
+        "alpha": 1734.4354,
+        "ehp": 20826.8481,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.19999999999999996,
+            "kin": 0.55,
+            "exp": 0.75
+          },
+          "armor": {
+            "em": 0.56,
+            "therm": 0.53525,
+            "kin": 0.5471874999999999,
+            "exp": 0.6
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        },
+        "metadata": {
+          "runner": ".venv-pyfa/bin/python",
+          "envelope": "raw",
+          "pyfaMode": "local-python",
+          "pyfaVersion": "local-pyfa-direct-import",
+          "referenceMethod": "pyfa-auto",
+          "origin": "manual",
+          "tags": "manual,t3-subsystem,coverage,legion"
+        }
+      },
+      "actual": {
+        "fitId": "manual-legion-augmented-plating-coverage-1",
+        "shipTypeId": 29986,
+        "source": "app",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 686.4,
+        "alpha": 1734.4,
+        "ehp": 20827,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.19999999999999996,
+            "kin": 0.55,
+            "exp": 0.75
+          },
+          "armor": {
+            "em": 0.56,
+            "therm": 0.53525,
+            "kin": 0.5471874999999999,
+            "exp": 0.6
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        }
+      },
+      "thresholds": {
+        "dps": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "alpha": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "ehp": {
+          "rel": 0.1,
+          "abs": 500
+        },
+        "resistAbs": 0.05
+      },
+      "pass": true,
+      "deltas": [
+        {
+          "metric": "dpsTotal",
+          "actual": 686.4,
+          "expected": 686.4047,
+          "absDelta": 0.004700000000070759,
+          "relDelta": 0.000006847272461961229,
+          "pass": true
+        },
+        {
+          "metric": "alpha",
+          "actual": 1734.4,
+          "expected": 1734.4354,
+          "absDelta": 0.035399999999981446,
+          "relDelta": 0.00002041010002446989,
+          "pass": true
+        },
+        {
+          "metric": "ehp",
+          "actual": 20827,
+          "expected": 20826.8481,
+          "absDelta": 0.15190000000075088,
+          "relDelta": 0.000007293470393186902,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.em",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.therm",
+          "actual": 0.19999999999999996,
+          "expected": 0.19999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.kin",
+          "actual": 0.55,
+          "expected": 0.55,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.exp",
+          "actual": 0.75,
+          "expected": 0.75,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.em",
+          "actual": 0.56,
+          "expected": 0.56,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.therm",
+          "actual": 0.53525,
+          "expected": 0.53525,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.kin",
+          "actual": 0.5471874999999999,
+          "expected": 0.5471874999999999,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.exp",
+          "actual": 0.6,
+          "expected": 0.6,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.em",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.therm",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.kin",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.exp",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "fitId": "manual-loki-adaptive-defense-node-coverage-1",
+      "expected": {
+        "fitId": "manual-loki-adaptive-defense-node-coverage-1",
+        "shipTypeId": 29990,
+        "source": "pyfa",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 518.7197,
+        "alpha": 1558.0174,
+        "ehp": 37280.6512,
+        "resists": {
+          "shield": {
+            "em": 0.7881026481572881,
+            "therm": 0.7457231777887458,
+            "kin": 0.7457231777887458,
+            "exp": 0.7881026481572881
+          },
+          "armor": {
+            "em": 0.83,
+            "therm": 0.5856250000000001,
+            "kin": 0.36250000000000004,
+            "exp": 0.235
+          },
+          "hull": {
+            "em": 0.598,
+            "therm": 0.598,
+            "kin": 0.598,
+            "exp": 0.598
+          }
+        },
+        "metadata": {
+          "runner": ".venv-pyfa/bin/python",
+          "envelope": "raw",
+          "pyfaMode": "local-python",
+          "pyfaVersion": "local-pyfa-direct-import",
+          "referenceMethod": "pyfa-auto",
+          "origin": "manual",
+          "tags": "manual,t3-subsystem,coverage,loki"
+        }
+      },
+      "actual": {
+        "fitId": "manual-loki-adaptive-defense-node-coverage-1",
+        "shipTypeId": 29990,
+        "source": "app",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 518.7,
+        "alpha": 1558,
+        "ehp": 35672,
+        "resists": {
+          "shield": {
+            "em": 0.7881026481572881,
+            "therm": 0.7457231777887458,
+            "kin": 0.7457231777887458,
+            "exp": 0.7881026481572881
+          },
+          "armor": {
+            "em": 0.83,
+            "therm": 0.5856250000000001,
+            "kin": 0.36250000000000004,
+            "exp": 0.235
+          },
+          "hull": {
+            "em": 0.598,
+            "therm": 0.598,
+            "kin": 0.598,
+            "exp": 0.598
+          }
+        }
+      },
+      "thresholds": {
+        "dps": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "alpha": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "ehp": {
+          "rel": 0.1,
+          "abs": 500
+        },
+        "resistAbs": 0.05
+      },
+      "pass": true,
+      "deltas": [
+        {
+          "metric": "dpsTotal",
+          "actual": 518.7,
+          "expected": 518.7197,
+          "absDelta": 0.01969999999994343,
+          "relDelta": 0.00003797812190272209,
+          "pass": true
+        },
+        {
+          "metric": "alpha",
+          "actual": 1558,
+          "expected": 1558.0174,
+          "absDelta": 0.017399999999952342,
+          "relDelta": 0.000011168039586690331,
+          "pass": true
+        },
+        {
+          "metric": "ehp",
+          "actual": 35672,
+          "expected": 37280.6512,
+          "absDelta": 1608.6512000000002,
+          "relDelta": 0.04314976128957748,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.em",
+          "actual": 0.7881026481572881,
+          "expected": 0.7881026481572881,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.therm",
+          "actual": 0.7457231777887458,
+          "expected": 0.7457231777887458,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.kin",
+          "actual": 0.7457231777887458,
+          "expected": 0.7457231777887458,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.exp",
+          "actual": 0.7881026481572881,
+          "expected": 0.7881026481572881,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.em",
+          "actual": 0.83,
+          "expected": 0.83,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.therm",
+          "actual": 0.5856250000000001,
+          "expected": 0.5856250000000001,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.kin",
+          "actual": 0.36250000000000004,
+          "expected": 0.36250000000000004,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.exp",
+          "actual": 0.235,
+          "expected": 0.235,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.em",
+          "actual": 0.598,
+          "expected": 0.598,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.therm",
+          "actual": 0.598,
+          "expected": 0.598,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.kin",
+          "actual": 0.598,
+          "expected": 0.598,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.exp",
+          "actual": 0.598,
+          "expected": 0.598,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "fitId": "manual-proteus-eeg-augmented-support-nullifier-coverage-1",
+      "expected": {
+        "fitId": "manual-proteus-eeg-augmented-support-nullifier-coverage-1",
+        "shipTypeId": 29988,
+        "source": "pyfa",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 0,
+        "alpha": 0,
+        "ehp": 23185.9892,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.4,
+            "kin": 0.7,
+            "exp": 0.5
+          },
+          "armor": {
+            "em": 0.625,
+            "therm": 0.634375,
+            "kin": 0.75625,
+            "exp": 0.6829983980560403
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        },
+        "metadata": {
+          "runner": ".venv-pyfa/bin/python",
+          "envelope": "raw",
+          "pyfaMode": "local-python",
+          "pyfaVersion": "local-pyfa-direct-import",
+          "referenceMethod": "pyfa-auto",
+          "origin": "manual",
+          "tags": "manual,t3-subsystem,coverage,proteus"
+        }
+      },
+      "actual": {
+        "fitId": "manual-proteus-eeg-augmented-support-nullifier-coverage-1",
+        "shipTypeId": 29988,
+        "source": "app",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 0,
+        "alpha": 0,
+        "ehp": 23186,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0.4,
+            "kin": 0.7,
+            "exp": 0.5
+          },
+          "armor": {
+            "em": 0.625,
+            "therm": 0.634375,
+            "kin": 0.75625,
+            "exp": 0.6829983980560403
+          },
+          "hull": {
+            "em": 0.32999999999999996,
+            "therm": 0.32999999999999996,
+            "kin": 0.32999999999999996,
+            "exp": 0.32999999999999996
+          }
+        }
+      },
+      "thresholds": {
+        "dps": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "alpha": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "ehp": {
+          "rel": 0.1,
+          "abs": 500
+        },
+        "resistAbs": 0.05
+      },
+      "pass": true,
+      "deltas": [
+        {
+          "metric": "dpsTotal",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "alpha",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "ehp",
+          "actual": 23186,
+          "expected": 23185.9892,
+          "absDelta": 0.010800000000017462,
+          "relDelta": 4.6579854354531755e-7,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.em",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.therm",
+          "actual": 0.4,
+          "expected": 0.4,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.kin",
+          "actual": 0.7,
+          "expected": 0.7,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.exp",
+          "actual": 0.5,
+          "expected": 0.5,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.em",
+          "actual": 0.625,
+          "expected": 0.625,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.therm",
+          "actual": 0.634375,
+          "expected": 0.634375,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.kin",
+          "actual": 0.75625,
+          "expected": 0.75625,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.exp",
+          "actual": 0.6829983980560403,
+          "expected": 0.6829983980560403,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.em",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.therm",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.kin",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.exp",
+          "actual": 0.32999999999999996,
+          "expected": 0.32999999999999996,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "fitId": "manual-proteus-nanobot-injector-coverage-1",
+      "expected": {
+        "fitId": "manual-proteus-nanobot-injector-coverage-1",
+        "shipTypeId": 29988,
+        "source": "pyfa",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 0,
+        "alpha": 0,
+        "ehp": 141313.8697,
+        "resists": {
+          "shield": {
+            "em": 0.125,
+            "therm": 0.475,
+            "kin": 0.7375,
+            "exp": 0.5625
+          },
+          "armor": {
+            "em": 0.7667708847385001,
+            "therm": 0.7630878241529837,
+            "kin": 0.8378301990055206,
+            "exp": 0.7679737621709817
+          },
+          "hull": {
+            "em": 0.598,
+            "therm": 0.598,
+            "kin": 0.598,
+            "exp": 0.598
+          }
+        },
+        "metadata": {
+          "runner": ".venv-pyfa/bin/python",
+          "envelope": "raw",
+          "pyfaMode": "local-python",
+          "pyfaVersion": "local-pyfa-direct-import",
+          "referenceMethod": "pyfa-auto",
+          "origin": "manual",
+          "tags": "manual,t3-subsystem,coverage,proteus"
+        }
+      },
+      "actual": {
+        "fitId": "manual-proteus-nanobot-injector-coverage-1",
+        "shipTypeId": 29988,
+        "source": "app",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 0,
+        "alpha": 0,
+        "ehp": 140261,
+        "resists": {
+          "shield": {
+            "em": 0.125,
+            "therm": 0.475,
+            "kin": 0.7375,
+            "exp": 0.5625
+          },
+          "armor": {
+            "em": 0.7692198985847793,
+            "therm": 0.7640429395530325,
+            "kin": 0.8378301990055206,
+            "exp": 0.7732117706092587
+          },
+          "hull": {
+            "em": 0.598,
+            "therm": 0.598,
+            "kin": 0.598,
+            "exp": 0.598
+          }
+        }
+      },
+      "thresholds": {
+        "dps": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "alpha": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "ehp": {
+          "rel": 0.1,
+          "abs": 500
+        },
+        "resistAbs": 0.05
+      },
+      "pass": true,
+      "deltas": [
+        {
+          "metric": "dpsTotal",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "alpha",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "ehp",
+          "actual": 140261,
+          "expected": 141313.8697,
+          "absDelta": 1052.8697000000102,
+          "relDelta": 0.007450575815630715,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.em",
+          "actual": 0.125,
+          "expected": 0.125,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.therm",
+          "actual": 0.475,
+          "expected": 0.475,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.kin",
+          "actual": 0.7375,
+          "expected": 0.7375,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.exp",
+          "actual": 0.5625,
+          "expected": 0.5625,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.em",
+          "actual": 0.7692198985847793,
+          "expected": 0.7667708847385001,
+          "absDelta": 0.0024490138462792688,
+          "relDelta": 0.003193931714184064,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.therm",
+          "actual": 0.7640429395530325,
+          "expected": 0.7630878241529837,
+          "absDelta": 0.0009551154000487783,
+          "relDelta": 0.0012516454460650612,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.kin",
+          "actual": 0.8378301990055206,
+          "expected": 0.8378301990055206,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.exp",
+          "actual": 0.7732117706092587,
+          "expected": 0.7679737621709817,
+          "absDelta": 0.005238008438277042,
+          "relDelta": 0.0068205565037401,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.em",
+          "actual": 0.598,
+          "expected": 0.598,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.therm",
+          "actual": 0.598,
+          "expected": 0.598,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.kin",
+          "actual": 0.598,
+          "expected": 0.598,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.exp",
+          "actual": 0.598,
+          "expected": 0.598,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "fitId": "manual-tengu-obfuscation-manifold-coverage-1",
+      "expected": {
+        "fitId": "manual-tengu-obfuscation-manifold-coverage-1",
+        "shipTypeId": 29984,
+        "source": "pyfa",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 0,
+        "alpha": 0,
+        "ehp": 9125,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0,
+            "kin": 0,
+            "exp": 0
+          },
+          "armor": {
+            "em": 0,
+            "therm": 0,
+            "kin": 0,
+            "exp": 0
+          },
+          "hull": {
+            "em": 0,
+            "therm": 0,
+            "kin": 0,
+            "exp": 0
+          }
+        },
+        "metadata": {
+          "runner": ".venv-pyfa/bin/python",
+          "envelope": "raw",
+          "pyfaMode": "local-python",
+          "pyfaVersion": "local-pyfa-direct-import",
+          "referenceMethod": "pyfa-auto",
+          "origin": "manual",
+          "tags": "manual,t3-subsystem,coverage,tengu"
+        }
+      },
+      "actual": {
+        "fitId": "manual-tengu-obfuscation-manifold-coverage-1",
+        "shipTypeId": 29984,
+        "source": "app",
+        "sdeVersion": "2026-02-18-618cfe3ce4b5",
+        "dpsTotal": 0,
+        "alpha": 0,
+        "ehp": 9125,
+        "resists": {
+          "shield": {
+            "em": 0,
+            "therm": 0,
+            "kin": 0,
+            "exp": 0
+          },
+          "armor": {
+            "em": 0,
+            "therm": 0,
+            "kin": 0,
+            "exp": 0
+          },
+          "hull": {
+            "em": 0,
+            "therm": 0,
+            "kin": 0,
+            "exp": 0
+          }
+        }
+      },
+      "thresholds": {
+        "dps": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "alpha": {
+          "rel": 0.08,
+          "abs": 25
+        },
+        "ehp": {
+          "rel": 0.1,
+          "abs": 500
+        },
+        "resistAbs": 0.05
+      },
+      "pass": true,
+      "deltas": [
+        {
+          "metric": "dpsTotal",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "alpha",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "ehp",
+          "actual": 9125,
+          "expected": 9125,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.em",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.therm",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.kin",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.shield.exp",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.em",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.therm",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.kin",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.armor.exp",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.em",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.therm",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.kin",
+          "actual": 0,
+          "expected": 0,
+          "absDelta": 0,
+          "relDelta": 0,
+          "pass": true
+        },
+        {
+          "metric": "resists.hull.exp",
+          "actual": 0,
+          "expected": 0,
           "absDelta": 0,
           "relDelta": 0,
           "pass": true

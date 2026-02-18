@@ -1,8 +1,8 @@
 # Loop Summary
 
 **Status:** Completed successfully
-**Iterations:** 10
-**Duration:** 1h 33m 26s
+**Iterations:** 9
+**Duration:** 40m 10s
 
 ## Tasks
 
@@ -14,4 +14,4 @@ _No events recorded._
 
 ## Final Commit
 
-e22db30: chore(changelog): finalize follow-up history boundary
+481f1e1: chore(runtime): reconcile stale blocked baseline task
