@@ -7,9 +7,11 @@ All notable changes to this project are documented in this file.
 - Added deterministic ship-type pagination candidate collection for the zKill fit-fetch CLI, including newest-to-oldest global ordering, strict `--before-killmail-id` filtering, and max-record stop behavior.
 - Added a reusable zKill fit-fetch retry utility with header-first backoff (`Retry-After`/rate-limit reset headers), exponential fallback delays, and request-timeout-aware retry caps.
 - Added zKill fit normalization for fitted items that maps slot flags (high/mid/low/rig/subsystem), includes both dropped+destroyed module quantities, and skips malformed/non-fitted rows safely.
+- Added deterministic zKill fit dedupe utilities that keep first-seen records in stream order while skipping duplicates by `killmailId` and canonicalized `fitHash`.
 - Added regression tests for zKill pagination ordering, cursor enforcement, deterministic tie handling, and no-extra-page fetch behavior at max-record cutoff.
 - Added retry/backoff regression coverage for header-precedence delays, fallback progression, max-attempt termination, and timeout-abort handling.
 - Added normalization regression coverage for mixed dropped/destroyed fitted-module aggregation and subsystem slot extraction behavior.
+- Added dedupe regression coverage for duplicate killmail IDs, equivalent canonical-fit collisions, and stable keep-first output ordering.
 - Added parser regression coverage for required flags, numeric ship type parsing, cursor parsing, and invalid max-record rejection.
 - Extended `vitest` include patterns to run script-level `.test.mjs` coverage under `scripts/`.
 - Updated zKill list caching to support conditional revalidation metadata (`ETag`/`Last-Modified`) and optional forced network refresh for page-1 checks.
