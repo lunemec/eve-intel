@@ -190,9 +190,26 @@ describe("deriveShipRolePills", () => {
     ];
     const namesByTypeId = new Map<number, string>([[301, "Interdiction Sphere Launcher I"]]);
 
+    const fitCandidates: FitCandidate[] = [
+      {
+        shipTypeId: 22456,
+        fitLabel: "example",
+        confidence: 100,
+        eftSections: {
+          high: [],
+          mid: [],
+          low: [],
+          rig: [],
+          cargo: [],
+          other: []
+        },
+        alternates: []
+      }
+    ];
+
     const rolesByShip = deriveShipRolePills({
       predictedShips,
-      fitCandidates: [],
+      fitCandidates,
       losses,
       characterId,
       namesByTypeId
@@ -357,5 +374,129 @@ describe("deriveShipRolePills", () => {
     });
 
     expect(rolesByShip.get("Basilisk")).not.toEqual(expect.arrayContaining(["Armor Logi"]));
+  });
+
+  it("suppresses module-derived long point and armor logi when fit is unknown", () => {
+    const characterId = 9013;
+    const predictedShips: ShipPrediction[] = [
+      {
+        shipTypeId: 12743,
+        shipName: "Viator",
+        probability: 63,
+        source: "inferred",
+        reason: []
+      }
+    ];
+    const losses: ZkillKillmail[] = [
+      makeLoss({
+        killmailId: 7,
+        characterId,
+        shipTypeId: 12743,
+        itemTypeIds: [3013, 3014]
+      })
+    ];
+    const namesByTypeId = new Map<number, string>([
+      [3013, "Warp Disruptor II"],
+      [3014, "Large Remote Armor Repairer II"]
+    ]);
+
+    const rolesByShip = deriveShipRolePills({
+      predictedShips,
+      fitCandidates: [],
+      losses,
+      characterId,
+      namesByTypeId
+    });
+
+    expect(rolesByShip.get("Viator")).not.toEqual(expect.arrayContaining(["Long Point"]));
+    expect(rolesByShip.get("Viator")).not.toEqual(expect.arrayContaining(["Armor Logi"]));
+  });
+
+  it("keeps hull-only long point on Orthrus even when fit is unknown", () => {
+    const predictedShips: ShipPrediction[] = [
+      {
+        shipTypeId: 33818,
+        shipName: "Orthrus",
+        probability: 62,
+        source: "inferred",
+        reason: []
+      }
+    ];
+
+    const rolesByShip = deriveShipRolePills({
+      predictedShips,
+      fitCandidates: [],
+      losses: [],
+      characterId: 9014,
+      namesByTypeId: new Map()
+    });
+
+    expect(rolesByShip.get("Orthrus")).toEqual(expect.arrayContaining(["Long Point"]));
+  });
+
+  it("keeps hull-only logistics roles when fit is unknown", () => {
+    const predictedShips: ShipPrediction[] = [
+      {
+        shipTypeId: 11985,
+        shipName: "Guardian",
+        probability: 60,
+        source: "inferred",
+        reason: []
+      },
+      {
+        shipTypeId: 11987,
+        shipName: "Basilisk",
+        probability: 59,
+        source: "inferred",
+        reason: []
+      }
+    ];
+
+    const rolesByShip = deriveShipRolePills({
+      predictedShips,
+      fitCandidates: [],
+      losses: [],
+      characterId: 9015,
+      namesByTypeId: new Map()
+    });
+
+    expect(rolesByShip.get("Guardian")).toEqual(expect.arrayContaining(["Armor Logi"]));
+    expect(rolesByShip.get("Basilisk")).toEqual(expect.arrayContaining(["Shield Logi"]));
+  });
+
+  it("does not pull loss-module role evidence when ship type is unresolved", () => {
+    const characterId = 9016;
+    const predictedShips: ShipPrediction[] = [
+      {
+        shipTypeId: undefined,
+        shipName: "Viator",
+        probability: 100,
+        source: "explicit",
+        reason: []
+      }
+    ];
+    const losses: ZkillKillmail[] = [
+      makeLoss({
+        killmailId: 8,
+        characterId,
+        shipTypeId: 11985,
+        itemTypeIds: [3015, 3016]
+      })
+    ];
+    const namesByTypeId = new Map<number, string>([
+      [3015, "Warp Disruptor II"],
+      [3016, "Large Remote Armor Repairer II"]
+    ]);
+
+    const rolesByShip = deriveShipRolePills({
+      predictedShips,
+      fitCandidates: [],
+      losses,
+      characterId,
+      namesByTypeId
+    });
+
+    expect(rolesByShip.get("Viator")).not.toEqual(expect.arrayContaining(["Long Point"]));
+    expect(rolesByShip.get("Viator")).not.toEqual(expect.arrayContaining(["Armor Logi"]));
   });
 });

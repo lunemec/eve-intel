@@ -9,6 +9,8 @@ All notable changes to this project are documented in this file.
 - Expanded cache/pipeline coverage with regression tests for forced network fetch and explicit-mismatch-triggered refresh behavior.
 - Added debug observability for all page-1 zKill refresh checks (request/response validator metadata, status, and 304 signal), and a debug-panel copy control for quick clipboard export of current logs.
 - Fixed background refresh flicker by keeping existing pilot card content visible during background reruns until terminal `ready`/`error` updates arrive.
+- Fixed role pill inference on `[Unknown Fit]` ships to suppress module-derived pills until a fit is known, while keeping hull-derived roles and preventing unresolved-ship evidence leakage.
+- Expanded hull-based `Long Point` role coverage to include all tackle-range bonused hulls (including `Orthrus`) with new role regression tests.
 
 Boundary source:
 - Version marker commit `55f7c4c` (`Cache`) used as release boundary.

@@ -22,14 +22,36 @@ export type RolePillEvidence = {
 const HIC_HULLS = new Set(["Devoter", "Onyx", "Broadsword", "Phobos"]);
 const DICTOR_HULLS = new Set(["Sabre", "Flycatcher", "Heretic", "Eris"]);
 const BOOSH_HULLS = new Set(["Stork", "Bifrost", "Pontifex", "Magus"]);
+// Derived from dogma effect names matching tackle range bonuses (scramb/disrupt + range).
 const LONG_POINT_BONUS_HULLS = new Set([
+  "Adrestia",
   "Arazu",
-  "Lachesis",
-  "Keres",
   "Ares",
+  "Barghest",
+  "Broadsword",
   "Crow",
+  "Cybele",
+  "Devoter",
+  "Enforcer",
+  "Fiend",
+  "Garmur",
+  "Imp",
+  "Keres",
+  "Lachesis",
+  "Laelaps",
   "Malediction",
-  "Stiletto"
+  "Marshal",
+  "Maulus Navy Issue",
+  "Moros Navy Issue",
+  "Onyx",
+  "Orthrus",
+  "Phobos",
+  "Python",
+  "Raiju",
+  "Shapash",
+  "Stiletto",
+  "Utu",
+  "Whiptail"
 ]);
 const SHIELD_LOGI_HULLS = new Set([
   "Basilisk",
@@ -184,9 +206,10 @@ function collectShipModuleEvidence(
 } {
   const allModules: Array<{ moduleName: string; moduleNameLower: string; source: "fit" | "loss"; killmailId?: number }> = [];
   const fitModules: Array<{ moduleName: string; moduleNameLower: string; source: "fit" | "loss"; killmailId?: number }> = [];
-  const fit = ship.shipTypeId
-    ? params.fitCandidates.find((entry) => entry.shipTypeId === ship.shipTypeId)
-    : undefined;
+  const fit = resolveShipFitCandidate(ship, params.fitCandidates);
+  if (!ship.shipTypeId || !fit) {
+    return { allModules, fitModules };
+  }
   if (fit?.eftSections) {
     const fitList = [
       ...fit.eftSections.high,
@@ -206,7 +229,7 @@ function collectShipModuleEvidence(
     if (loss.victim.character_id !== params.characterId) {
       continue;
     }
-    if (ship.shipTypeId && loss.victim.ship_type_id !== ship.shipTypeId) {
+    if (loss.victim.ship_type_id !== ship.shipTypeId) {
       continue;
     }
     for (const item of loss.victim.items ?? []) {
@@ -226,6 +249,13 @@ function collectShipModuleEvidence(
   }
 
   return { allModules, fitModules };
+}
+
+function resolveShipFitCandidate(ship: ShipPrediction, fitCandidates: FitCandidate[]): FitCandidate | undefined {
+  if (!ship.shipTypeId) {
+    return undefined;
+  }
+  return fitCandidates.find((entry) => entry.shipTypeId === ship.shipTypeId);
 }
 
 function moduleEvidenceToRoleEvidence(
