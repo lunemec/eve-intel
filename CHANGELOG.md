@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
 - Added initial `zKill` fit-fetch CLI contract scaffolding with strict argument validation (`--ship-type-ids`, `--output`) and default `--max-records=200`.
+- Added deterministic ship-type pagination candidate collection for the zKill fit-fetch CLI, including newest-to-oldest global ordering, strict `--before-killmail-id` filtering, and max-record stop behavior.
+- Added regression tests for zKill pagination ordering, cursor enforcement, deterministic tie handling, and no-extra-page fetch behavior at max-record cutoff.
 - Added parser regression coverage for required flags, numeric ship type parsing, cursor parsing, and invalid max-record rejection.
 - Extended `vitest` include patterns to run script-level `.test.mjs` coverage under `scripts/`.
 - Updated zKill list caching to support conditional revalidation metadata (`ETag`/`Last-Modified`) and optional forced network refresh for page-1 checks.
