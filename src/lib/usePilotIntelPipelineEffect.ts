@@ -12,7 +12,7 @@ import type { DebugLoggerRef } from "./pipeline/types";
 import { patchPilotCardRows } from "./pipeline/cards";
 import { fetchLatestKillsPage, fetchLatestLossesPage, type ZkillKillmail } from "./api/zkill";
 
-const BACKGROUND_REVALIDATE_INTERVAL_MS = 45_000;
+const BACKGROUND_REVALIDATE_INTERVAL_MS = 30_000;
 
 type EffectDeps = {
   createLoadingCard: typeof createLoadingCard;
@@ -36,6 +36,7 @@ type ActivePilotRun = {
   pilotKey: string;
   entry: ParsedPilotInput;
   abortController: AbortController;
+  mode: "interactive" | "background";
   cancel: () => void;
 };
 
@@ -50,12 +51,17 @@ export function usePilotIntelPipelineEffect(
   },
   deps: EffectDeps = DEFAULT_DEPS
 ): void {
-  const rosterSignature = params.entries.map((entry) => toPilotKey(entry.pilotName)).join("|");
+  const rosterSignature = params.entries
+    .map((entry) => `${toPilotKey(entry.pilotName)}:${normalizeShipName(entry.explicitShip)}`)
+    .join("|");
   const activeByPilotKeyRef = useRef<Map<string, ActivePilotRun>>(new Map());
   const lastParamsRef = useRef<{ lookbackDays: number; dogmaIndex: DogmaIndex | null } | null>(null);
   const lastRosterKeysRef = useRef<Set<string>>(new Set());
+  const lastEntrySignatureByPilotKeyRef = useRef<Map<string, string>>(new Map());
   const characterIdByPilotKeyRef = useRef<Map<string, number>>(new Map());
   const latestHeadByPilotKeyRef = useRef<Map<string, { kills: string; losses: string }>>(new Map());
+  const predictedShipsByPilotKeyRef = useRef<Map<string, PilotCard["predictedShips"]>>(new Map());
+  const forceRefreshByPilotKeyRef = useRef<Set<string>>(new Set());
   const refreshInFlightByPilotKeyRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -66,8 +72,11 @@ export function usePilotIntelPipelineEffect(
       activeByPilotKeyRef.current.clear();
       lastParamsRef.current = null;
       lastRosterKeysRef.current = new Set();
+      lastEntrySignatureByPilotKeyRef.current.clear();
       characterIdByPilotKeyRef.current.clear();
       latestHeadByPilotKeyRef.current.clear();
+      predictedShipsByPilotKeyRef.current.clear();
+      forceRefreshByPilotKeyRef.current.clear();
       refreshInFlightByPilotKeyRef.current.clear();
     };
   }, []);
@@ -76,11 +85,15 @@ export function usePilotIntelPipelineEffect(
     const { logDebug, logError } = deps.createPipelineLoggers(params.logDebugRef);
     const updatePilotCard = (pilotName: string, patch: Partial<PilotCard>) => {
       const pilotKey = toPilotKey(pilotName);
-      if (!activeByPilotKeyRef.current.has(pilotKey)) {
+      const active = activeByPilotKeyRef.current.get(pilotKey);
+      if (!active) {
         return;
       }
       if (Number.isFinite(patch.characterId)) {
         characterIdByPilotKeyRef.current.set(pilotKey, Number(patch.characterId));
+      }
+      if (!shouldApplyVisualPatch(active.mode, patch)) {
+        return;
       }
       if (patch.inferenceKills || patch.inferenceLosses) {
         const current = latestHeadByPilotKeyRef.current.get(pilotKey) ?? { kills: "", losses: "" };
@@ -88,6 +101,9 @@ export function usePilotIntelPipelineEffect(
           kills: patch.inferenceKills ? killmailHeadSignature(patch.inferenceKills) : current.kills,
           losses: patch.inferenceLosses ? killmailHeadSignature(patch.inferenceLosses) : current.losses
         });
+      }
+      if (patch.predictedShips) {
+        predictedShipsByPilotKeyRef.current.set(pilotKey, patch.predictedShips);
       }
       params.setPilotCards((current) => patchPilotCardRows(current, pilotName, patch));
     };
@@ -97,8 +113,11 @@ export function usePilotIntelPipelineEffect(
         active.cancel();
       }
       activeByPilotKeyRef.current.clear();
+      lastEntrySignatureByPilotKeyRef.current.clear();
       characterIdByPilotKeyRef.current.clear();
       latestHeadByPilotKeyRef.current.clear();
+      predictedShipsByPilotKeyRef.current.clear();
+      forceRefreshByPilotKeyRef.current.clear();
       refreshInFlightByPilotKeyRef.current.clear();
       lastParamsRef.current = {
         lookbackDays: params.settings.lookbackDays,
@@ -118,9 +137,11 @@ export function usePilotIntelPipelineEffect(
       lastParamsRef.current.dogmaIndex !== params.dogmaIndex;
 
     const desiredKeys = new Set(params.entries.map((entry) => toPilotKey(entry.pilotName)));
+    const entrySignatures = new Map(params.entries.map((entry) => [toPilotKey(entry.pilotName), buildEntrySignature(entry)]));
     const previousRoster = lastRosterKeysRef.current;
     const addedKeys = new Set<string>();
     const removedKeys = new Set<string>();
+    const changedKeys = new Set<string>();
     for (const key of desiredKeys) {
       if (!previousRoster.has(key)) {
         addedKeys.add(key);
@@ -131,6 +152,12 @@ export function usePilotIntelPipelineEffect(
         removedKeys.add(key);
       }
     }
+    for (const [key, signature] of entrySignatures.entries()) {
+      const previous = lastEntrySignatureByPilotKeyRef.current.get(key);
+      if (previous !== undefined && previous !== signature) {
+        changedKeys.add(key);
+      }
+    }
 
     if (paramsChanged) {
       for (const active of activeByPilotKeyRef.current.values()) {
@@ -139,15 +166,18 @@ export function usePilotIntelPipelineEffect(
       activeByPilotKeyRef.current.clear();
       params.setPilotCards(params.entries.map((entry) => deps.createLoadingCard(entry)));
       for (const entry of params.entries) {
-        startPilotRun(entry);
+        startPilotRun(entry, "interactive");
       }
     } else {
       for (const [pilotKey, active] of activeByPilotKeyRef.current.entries()) {
         if (removedKeys.has(pilotKey)) {
           active.cancel();
           activeByPilotKeyRef.current.delete(pilotKey);
+          lastEntrySignatureByPilotKeyRef.current.delete(pilotKey);
           characterIdByPilotKeyRef.current.delete(pilotKey);
           latestHeadByPilotKeyRef.current.delete(pilotKey);
+          predictedShipsByPilotKeyRef.current.delete(pilotKey);
+          forceRefreshByPilotKeyRef.current.delete(pilotKey);
           refreshInFlightByPilotKeyRef.current.delete(pilotKey);
         }
       }
@@ -167,7 +197,15 @@ export function usePilotIntelPipelineEffect(
       for (const entry of params.entries) {
         const pilotKey = toPilotKey(entry.pilotName);
         if (addedKeys.has(pilotKey) && !activeByPilotKeyRef.current.has(pilotKey)) {
-          startPilotRun(entry);
+          startPilotRun(entry, "interactive");
+        }
+        if (changedKeys.has(pilotKey)) {
+          // Entry signature changes (for example adding/changing explicit ship)
+          // must recompute immediately even when zKill page-1 head is unchanged.
+          startPilotRun(entry, "interactive");
+          if (shouldForceRefreshForExplicitMismatch(entry, predictedShipsByPilotKeyRef.current.get(pilotKey))) {
+            forceRefreshByPilotKeyRef.current.add(pilotKey);
+          }
         }
       }
     }
@@ -177,16 +215,17 @@ export function usePilotIntelPipelineEffect(
       dogmaIndex: params.dogmaIndex
     };
     lastRosterKeysRef.current = desiredKeys;
+    lastEntrySignatureByPilotKeyRef.current = entrySignatures;
 
     let disposed = false;
-    if (paramsChanged) {
+    if (paramsChanged || changedKeys.size > 0) {
       void runBackgroundRefreshSweep();
     }
     const timer = setInterval(() => {
       void runBackgroundRefreshSweep();
     }, BACKGROUND_REVALIDATE_INTERVAL_MS);
 
-    function startPilotRun(entry: ParsedPilotInput): void {
+    function startPilotRun(entry: ParsedPilotInput, mode: "interactive" | "background"): void {
       const pilotKey = toPilotKey(entry.pilotName);
       if (activeByPilotKeyRef.current.has(pilotKey)) {
         return;
@@ -214,6 +253,7 @@ export function usePilotIntelPipelineEffect(
         pilotKey,
         entry,
         abortController,
+        mode,
         cancel
       };
       activeByPilotKeyRef.current.set(pilotKey, activeRun);
@@ -254,12 +294,53 @@ export function usePilotIntelPipelineEffect(
         if (!Number.isFinite(characterId)) {
           continue;
         }
+        const forceNetwork = forceRefreshByPilotKeyRef.current.has(pilotKey);
         refreshInFlightByPilotKeyRef.current.add(pilotKey);
         try {
+          const onCacheEvent = (side: "kills" | "losses") => (event: {
+            forceNetwork: boolean;
+            status: number;
+            notModified: boolean;
+            requestEtag?: string;
+            requestLastModified?: string;
+            responseEtag?: string;
+            responseLastModified?: string;
+          }) => {
+            const payload = {
+              pilot: entry.pilotName,
+              side,
+              ...event
+            };
+            logDebug("zKill page-1 refresh check", payload);
+            if (event.forceNetwork) {
+              logDebug("zKill page-1 forced refresh response", payload);
+            }
+          };
           const [killsPage, lossesPage] = await Promise.all([
-            deps.fetchLatestKillsPage(characterId as number, 1),
-            deps.fetchLatestLossesPage(characterId as number, 1)
+            deps.fetchLatestKillsPage(
+              characterId as number,
+              1,
+              undefined,
+              undefined,
+              {
+                forceNetwork,
+                onCacheEvent: onCacheEvent("kills")
+              }
+            ),
+            deps.fetchLatestLossesPage(
+              characterId as number,
+              1,
+              undefined,
+              undefined,
+              {
+                forceNetwork,
+                onCacheEvent: onCacheEvent("losses")
+              }
+            )
           ]);
+          if (disposed) {
+            return;
+          }
           const nextHead = {
             kills: killmailHeadSignature(killsPage),
             losses: killmailHeadSignature(lossesPage)
@@ -272,10 +353,11 @@ export function usePilotIntelPipelineEffect(
           if (!previous) {
             continue;
           }
-          startPilotRun(entry);
+          startPilotRun(entry, "background");
         } catch {
           // Keep stale card data when background refresh fails.
         } finally {
+          forceRefreshByPilotKeyRef.current.delete(pilotKey);
           refreshInFlightByPilotKeyRef.current.delete(pilotKey);
         }
       }
@@ -288,10 +370,43 @@ export function usePilotIntelPipelineEffect(
   }, [rosterSignature, params.settings.lookbackDays, params.dogmaIndex]);
 }
 
+function shouldApplyVisualPatch(mode: "interactive" | "background", patch: Partial<PilotCard>): boolean {
+  if (mode !== "background") {
+    return true;
+  }
+  if (patch.status === "error" || patch.fetchPhase === "error") {
+    return true;
+  }
+  return patch.fetchPhase === "ready";
+}
+
 function toPilotKey(pilotName: string): string {
   return pilotName.trim().toLowerCase();
 }
 
 function killmailHeadSignature(rows: ZkillKillmail[]): string {
   return rows.slice(0, 200).map((row) => row.killmail_id).join(",");
+}
+
+function buildEntrySignature(entry: ParsedPilotInput): string {
+  return `${toPilotKey(entry.pilotName)}|${normalizeShipName(entry.explicitShip)}`;
+}
+
+function normalizeShipName(ship: string | undefined): string {
+  return ship?.trim().toLowerCase() ?? "";
+}
+
+function shouldForceRefreshForExplicitMismatch(
+  entry: ParsedPilotInput,
+  predictedShips: PilotCard["predictedShips"] | undefined
+): boolean {
+  const explicit = normalizeShipName(entry.explicitShip);
+  if (!explicit || !predictedShips || predictedShips.length === 0) {
+    return false;
+  }
+  const topInferred = predictedShips.find((ship) => ship.source === "inferred");
+  if (!topInferred) {
+    return false;
+  }
+  return normalizeShipName(topInferred.shipName) !== explicit;
 }

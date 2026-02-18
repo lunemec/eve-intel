@@ -3,7 +3,7 @@ import { fetchJsonWithMeta, fetchJsonWithMetaConditional, resolveHttpCachePolicy
 
 const ZKILL_BASE = "https://zkillboard.com/api";
 const ZKILL_CACHE_TTL_MS = 1000 * 60 * 10;
-const ZKILL_PAGE_ONE_REVALIDATE_MS = 1000 * 45;
+const ZKILL_PAGE_ONE_REVALIDATE_MS = 1000 * 30;
 export const ZKILL_MAX_LOOKBACK_DAYS = 7;
 const ESI_BASE = "https://esi.evetech.net/latest";
 const ESI_DATASOURCE = "tranquility";
@@ -11,6 +11,16 @@ const KILLMAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 const MAX_HYDRATE = 50;
 const HYDRATE_CONCURRENCY = 5;
 const zkillRefreshInFlight = new Map<string, Promise<ZkillKillmail[]>>();
+
+export type ZkillCacheEvent = {
+  forceNetwork: boolean;
+  status: number;
+  notModified: boolean;
+  requestEtag?: string;
+  requestLastModified?: string;
+  responseEtag?: string;
+  responseLastModified?: string;
+};
 
 export type ZkillAttacker = {
   character_id?: number;
@@ -114,7 +124,8 @@ export async function fetchLatestKillsPage(
   characterId: number,
   page: number,
   signal?: AbortSignal,
-  onRetry?: (info: RetryInfo) => void
+  onRetry?: (info: RetryInfo) => void,
+  options?: { forceNetwork?: boolean; onCacheEvent?: (event: ZkillCacheEvent) => void }
 ): Promise<ZkillKillmail[]> {
   const normalizedPage = Math.max(1, Math.floor(page));
   const cacheKey = `eve-intel.cache.zkill.kills.latest.${characterId}.page.${normalizedPage}`;
@@ -123,7 +134,7 @@ export async function fetchLatestKillsPage(
     cacheKey,
     signal,
     onRetry,
-    { aggressiveRevalidate: normalizedPage === 1 }
+    { aggressiveRevalidate: normalizedPage === 1, forceNetwork: options?.forceNetwork, onCacheEvent: options?.onCacheEvent }
   );
 }
 
@@ -131,7 +142,8 @@ export async function fetchLatestLossesPage(
   characterId: number,
   page: number,
   signal?: AbortSignal,
-  onRetry?: (info: RetryInfo) => void
+  onRetry?: (info: RetryInfo) => void,
+  options?: { forceNetwork?: boolean; onCacheEvent?: (event: ZkillCacheEvent) => void }
 ): Promise<ZkillKillmail[]> {
   const normalizedPage = Math.max(1, Math.floor(page));
   const cacheKey = `eve-intel.cache.zkill.losses.latest.${characterId}.page.${normalizedPage}`;
@@ -140,7 +152,7 @@ export async function fetchLatestLossesPage(
     cacheKey,
     signal,
     onRetry,
-    { aggressiveRevalidate: normalizedPage === 1 }
+    { aggressiveRevalidate: normalizedPage === 1, forceNetwork: options?.forceNetwork, onCacheEvent: options?.onCacheEvent }
   );
 }
 
@@ -183,10 +195,20 @@ async function fetchZkillList(
   cacheKey: string,
   signal?: AbortSignal,
   onRetry?: (info: RetryInfo) => void,
-  options?: { aggressiveRevalidate?: boolean }
+  options?: {
+    aggressiveRevalidate?: boolean;
+    forceNetwork?: boolean;
+    onCacheEvent?: (event: ZkillCacheEvent) => void;
+  }
 ): Promise<ZkillKillmail[]> {
   const cached = await getCachedStateAsync<ZkillKillmail[] | ZkillListCacheEnvelope>(cacheKey);
   const normalizedEnvelope = normalizeListCacheEnvelope(cached.value);
+  if (options?.forceNetwork) {
+    return refreshZkillListDeduped(url, cacheKey, onRetry, signal, normalizedEnvelope ?? undefined, {
+      forceNetwork: true,
+      onCacheEvent: options.onCacheEvent
+    });
+  }
   if (normalizedEnvelope) {
     const cachedRows = normalizedEnvelope.rows;
     if (!Array.isArray(cachedRows)) {
@@ -265,7 +287,11 @@ function refreshZkillListDeduped(
   cacheKey: string,
   onRetry?: (info: RetryInfo) => void,
   signal?: AbortSignal,
-  cachedEnvelope?: ZkillListCacheEnvelope
+  cachedEnvelope?: ZkillListCacheEnvelope,
+  options?: {
+    forceNetwork?: boolean;
+    onCacheEvent?: (event: ZkillCacheEvent) => void;
+  }
 ): Promise<ZkillKillmail[]> {
   const inFlightKey = `${cacheKey}|${signal ? "fg" : "bg"}`;
   const existing = zkillRefreshInFlight.get(inFlightKey);
@@ -273,7 +299,7 @@ function refreshZkillListDeduped(
     return existing;
   }
 
-  const request = refreshZkillList(url, cacheKey, onRetry, signal, cachedEnvelope)
+  const request = refreshZkillList(url, cacheKey, onRetry, signal, cachedEnvelope, options)
     .finally(() => {
       zkillRefreshInFlight.delete(inFlightKey);
     });
@@ -286,8 +312,19 @@ async function refreshZkillList(
   cacheKey: string,
   onRetry?: (info: RetryInfo) => void,
   signal?: AbortSignal,
-  cachedEnvelope?: ZkillListCacheEnvelope
+  cachedEnvelope?: ZkillListCacheEnvelope,
+  options?: {
+    forceNetwork?: boolean;
+    onCacheEvent?: (event: ZkillCacheEvent) => void;
+  }
 ): Promise<ZkillKillmail[]> {
+  const conditionalHeaders = cachedEnvelope
+    ? {
+        etag: cachedEnvelope.etag,
+        lastModified: cachedEnvelope.lastModified
+      }
+    : undefined;
+
   const response = await fetchJsonWithMetaConditional<unknown>(
     url,
     {
@@ -298,17 +335,21 @@ async function refreshZkillList(
     12000,
     signal,
     onRetry,
-    cachedEnvelope
-      ? {
-          etag: cachedEnvelope.etag,
-          lastModified: cachedEnvelope.lastModified
-        }
-      : undefined
+    conditionalHeaders
   );
+  options?.onCacheEvent?.({
+    forceNetwork: Boolean(options?.forceNetwork),
+    status: response.status,
+    notModified: response.notModified,
+    requestEtag: conditionalHeaders?.etag,
+    requestLastModified: conditionalHeaders?.lastModified,
+    responseEtag: response.headers.get("etag") ?? undefined,
+    responseLastModified: response.headers.get("last-modified") ?? undefined
+  });
 
   if (response.notModified) {
     if (!cachedEnvelope) {
-      return refreshZkillList(url, cacheKey, onRetry, signal);
+      return [];
     }
     const cachePolicy = resolveHttpCachePolicy(response.headers, {
       fallbackTtlMs: ZKILL_CACHE_TTL_MS,

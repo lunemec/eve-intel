@@ -21,6 +21,7 @@ import { useClearPilotCards } from "./lib/useClearPilotCards";
 import { useManualEntryHandlers } from "./lib/useManualEntryHandlers";
 import { useAppPreferences } from "./lib/useAppPreferences";
 import { usePasteInputIntegration } from "./lib/usePasteInputIntegration";
+import { extractErrorMessage } from "./lib/appUtils";
 
 const APP_VERSION = import.meta.env.PACKAGE_VERSION;
 
@@ -66,6 +67,15 @@ export default function App() {
     lastPasteRaw,
     manualEntry
   });
+  const debugLogText = debugLines.length > 0 ? debugLines.join("\n") : "(no events yet)";
+  const onCopyDebugLog = async () => {
+    try {
+      await navigator.clipboard.writeText(debugLogText);
+      setNetworkNotice("Debug log copied.");
+    } catch (error) {
+      setNetworkNotice(`Debug log copy failed: ${extractErrorMessage(error)}`);
+    }
+  };
 
   return (
     <main className={`app${isDesktopApp ? " desktop-shell" : ""}`}>
@@ -134,8 +144,29 @@ export default function App() {
       />
       {debugEnabled ? (
         <section className="raw" ref={debugSectionRef}>
-          <h3>Debug Log</h3>
-          <pre>{debugLines.length > 0 ? debugLines.join("\n") : "(no events yet)"}</pre>
+          <div className="debug-log-header">
+            <h3>Debug Log</h3>
+            <button
+              type="button"
+              className="debug-log-copy-button"
+              aria-label="Copy debug log"
+              title="Copy debug log"
+              onClick={() => {
+                void onCopyDebugLog();
+              }}
+            >
+              <svg
+                className="debug-log-copy-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <rect x="9" y="9" width="10" height="10" rx="2" />
+                <rect x="5" y="5" width="10" height="10" rx="2" />
+              </svg>
+            </button>
+          </div>
+          <pre>{debugLogText}</pre>
         </section>
       ) : null}
       <footer className="app-version">v{APP_VERSION}</footer>

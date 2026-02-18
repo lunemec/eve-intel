@@ -89,6 +89,16 @@ vi.mock("./lib/api/zkill", () => ({
 describe("App paste flow", () => {
   beforeEach(() => {
     vi.stubGlobal("localStorage", createMemoryStorage());
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      value: vi.fn(),
+      configurable: true
+    });
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: vi.fn(async () => undefined)
+      },
+      configurable: true
+    });
     for (const key of [
       "eve-intel.settings.v1",
       "eve-intel.debug-enabled.v1"
@@ -106,6 +116,23 @@ describe("App paste flow", () => {
     vi.unstubAllGlobals();
   });
 
+  it("shows debug log copy button when debug logging is enabled and copies content", async () => {
+    render(<App />);
+
+    expect(screen.queryByRole("button", { name: "Copy debug log" })).toBeNull();
+
+    const debugToggle = screen.getByRole("checkbox");
+    (debugToggle as HTMLInputElement).click();
+
+    const copyButton = await screen.findByRole("button", { name: "Copy debug log" });
+    expect(copyButton).toBeTruthy();
+    copyButton.click();
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("parses clipboard payload immediately and renders pilot card", async () => {
     render(<App />);
 
@@ -121,7 +148,7 @@ describe("App paste flow", () => {
       expect(screen.getAllByText("A9tan").length).toBeGreaterThan(0);
     });
 
-    expect(screen.getByText(/Likely Ships/i)).toBeTruthy();
+    expect(screen.getAllByText(/Likely Ships/i).length).toBeGreaterThan(0);
     expect(vi.mocked(fetchLatestKillsPage)).toHaveBeenCalled();
     expect(vi.mocked(fetchLatestLossesPage)).toHaveBeenCalled();
   });

@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.2.9 - 2026-02-18
+- Updated zKill list caching to support conditional revalidation metadata (`ETag`/`Last-Modified`) and optional forced network refresh for page-1 checks.
+- Added background pilot refresh improvements: 30s revalidation cadence, explicit-ship mismatch detection against inferred top ship, and redraw only when page-1 kill/loss heads change.
+- Fixed explicit-ship paste updates to rerun pipeline immediately even when zKill page-1 is unchanged (`304`), so explicit ships (for example `Freya Rage (Viator)`) reliably become `100%` predictions.
+- Expanded cache/pipeline coverage with regression tests for forced network fetch and explicit-mismatch-triggered refresh behavior.
+- Added debug observability for all page-1 zKill refresh checks (request/response validator metadata, status, and 304 signal), and a debug-panel copy control for quick clipboard export of current logs.
+- Fixed background refresh flicker by keeping existing pilot card content visible during background reruns until terminal `ready`/`error` updates arrive.
+
+Boundary source:
+- Version marker commit `55f7c4c` (`Cache`) used as release boundary.
+- Summarized from history in range `96a7691..55f7c4c`.
+
 ## v0.2.8 - 2026-02-18
 - Added a major combat-capability parity workflow: fit corpus data, reference sync scripts, pyfa adapter tooling, and parity reporting artifacts.
 - Expanded Dogma and pipeline architecture with staged processing modules, caching/snapshot behavior, and broader test coverage across API, UI, and pipeline layers.

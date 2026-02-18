@@ -121,4 +121,60 @@ describe("zkill cache policy", () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  it("bypasses cache and hits network when forceNetwork is enabled", async () => {
+    vi.mocked(getCachedStateAsync).mockResolvedValueOnce({
+      value: {
+        rows: [
+          {
+            killmail_id: 5,
+            killmail_time: "2026-02-18T00:00:00Z",
+            victim: { ship_type_id: 123 },
+            attackers: [{ character_id: 1, ship_type_id: 123 }]
+          }
+        ],
+        etag: "\"etag-5\"",
+        lastModified: "Wed, 18 Feb 2026 00:00:00 GMT",
+        validatedAt: Date.now()
+      },
+      stale: false
+    });
+
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify([
+          {
+            killmail_id: 6,
+            killmail_time: "2026-02-18T00:01:00Z",
+            victim: { ship_type_id: 123 },
+            attackers: [{ character_id: 1, ship_type_id: 123 }]
+          }
+        ]),
+        {
+          status: 200,
+          headers: { "content-type": "application/json", "cache-control": "public, max-age=120" }
+        }
+      )
+    );
+    globalThis.fetch = fetchMock as typeof fetch;
+    const onCacheEvent = vi.fn();
+
+    try {
+      const rows = await fetchLatestKillsPage(12345, 1, undefined, undefined, { forceNetwork: true, onCacheEvent });
+      expect(rows[0]?.killmail_id).toBe(6);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(onCacheEvent).toHaveBeenCalledWith(expect.objectContaining({
+        forceNetwork: true,
+        requestEtag: "\"etag-5\"",
+        requestLastModified: "Wed, 18 Feb 2026 00:00:00 GMT",
+        status: 200,
+        responseEtag: undefined,
+        responseLastModified: undefined,
+        notModified: false
+      }));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
 });
