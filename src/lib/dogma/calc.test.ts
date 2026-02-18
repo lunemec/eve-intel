@@ -99,6 +99,103 @@ const emptySlots: FitResolvedSlots = {
   other: []
 };
 
+function solveReactiveArmorEquilibrium({
+  baseArmorResonance,
+  moduleArmorResonance,
+  shiftAmount,
+  damagePattern
+}: {
+  baseArmorResonance: { em: number; therm: number; kin: number; exp: number };
+  moduleArmorResonance: { em: number; therm: number; kin: number; exp: number };
+  shiftAmount: number;
+  damagePattern: { em: number; therm: number; kin: number; exp: number };
+}): { em: number; therm: number; kin: number; exp: number } {
+  const baseDamageTaken = [
+    damagePattern.em * baseArmorResonance.em,
+    damagePattern.therm * baseArmorResonance.therm,
+    damagePattern.kin * baseArmorResonance.kin,
+    damagePattern.exp * baseArmorResonance.exp
+  ];
+  const cycleList: number[][] = [];
+  let loopStart = -20;
+  let reactiveResonance = [
+    moduleArmorResonance.em,
+    moduleArmorResonance.therm,
+    moduleArmorResonance.kin,
+    moduleArmorResonance.exp
+  ];
+  for (let cycle = 0; cycle < 50; cycle += 1) {
+    const tuples: Array<[number, number, number]> = [
+      [0, baseDamageTaken[0] * reactiveResonance[0], reactiveResonance[0]] as [number, number, number],
+      [3, baseDamageTaken[3] * reactiveResonance[3], reactiveResonance[3]] as [number, number, number],
+      [2, baseDamageTaken[2] * reactiveResonance[2], reactiveResonance[2]] as [number, number, number],
+      [1, baseDamageTaken[1] * reactiveResonance[1], reactiveResonance[1]] as [number, number, number]
+    ].sort((left, right) => left[1] - right[1]);
+
+    let change0 = 0;
+    let change1 = 0;
+    let change2 = 0;
+    let change3 = 0;
+    if (tuples[2][1] === 0) {
+      change0 = 1 - tuples[0][2];
+      change1 = 1 - tuples[1][2];
+      change2 = 1 - tuples[2][2];
+      change3 = -(change0 + change1 + change2);
+    } else if (tuples[1][1] === 0) {
+      change0 = 1 - tuples[0][2];
+      change1 = 1 - tuples[1][2];
+      change2 = -(change0 + change1) / 2;
+      change3 = change2;
+    } else {
+      change0 = Math.min(shiftAmount, 1 - tuples[0][2]);
+      change1 = Math.min(shiftAmount, 1 - tuples[1][2]);
+      change2 = -(change0 + change1) / 2;
+      change3 = change2;
+    }
+
+    const next = [...reactiveResonance];
+    next[tuples[0][0]] = tuples[0][2] + change0;
+    next[tuples[1][0]] = tuples[1][2] + change1;
+    next[tuples[2][0]] = tuples[2][2] + change2;
+    next[tuples[3][0]] = tuples[3][2] + change3;
+
+    for (let i = 0; i < cycleList.length; i += 1) {
+      const prior = cycleList[i];
+      if (
+        Math.abs(next[0] - prior[0]) <= 1e-6 &&
+        Math.abs(next[1] - prior[1]) <= 1e-6 &&
+        Math.abs(next[2] - prior[2]) <= 1e-6 &&
+        Math.abs(next[3] - prior[3]) <= 1e-6
+      ) {
+        loopStart = i;
+        break;
+      }
+    }
+    if (loopStart >= 0) {
+      reactiveResonance = next;
+      break;
+    }
+    cycleList.push(next);
+    reactiveResonance = next;
+  }
+
+  const loopCycles = cycleList.slice(loopStart);
+  const averaged = loopCycles.length === 0 ? [reactiveResonance] : loopCycles;
+  const sum = [0, 0, 0, 0];
+  for (const cycle of averaged) {
+    sum[0] += cycle[0];
+    sum[1] += cycle[1];
+    sum[2] += cycle[2];
+    sum[3] += cycle[3];
+  }
+  return {
+    em: Number((sum[0] / averaged.length).toFixed(3)),
+    therm: Number((sum[1] / averaged.length).toFixed(3)),
+    kin: Number((sum[2] / averaged.length).toFixed(3)),
+    exp: Number((sum[3] / averaged.length).toFixed(3))
+  };
+}
+
 describe("dogma calc", () => {
   it("computes offensive and tank metrics for turret fit", () => {
     const index = buildDogmaIndex(basePack);
@@ -623,7 +720,7 @@ describe("dogma calc", () => {
     expect(withRole.ehp).toBeGreaterThan(withoutRole.ehp * 1.06);
   });
 
-  it("redistributes reactive armor hardener resist profile toward weak armor damage types", () => {
+  it("matches pyfa reactive armor hardener equilibrium profile for uniform incoming damage", () => {
     const pack: DogmaPack = {
       ...basePack,
       types: [
@@ -663,7 +760,8 @@ describe("dogma calc", () => {
             "Armor EM Damage Resistance": 0.85,
             "Armor Thermal Damage Resistance": 0.85,
             "Armor Kinetic Damage Resistance": 0.85,
-            "Armor Explosive Damage Resistance": 0.85
+            "Armor Explosive Damage Resistance": 0.85,
+            None: 6
           },
           effects: ["adaptiveArmorHardener", "loPower"]
         }
@@ -696,26 +794,25 @@ describe("dogma calc", () => {
       kin: 1 - membraneOnly.resists.armor.kin,
       exp: 1 - membraneOnly.resists.armor.exp
     };
-    const profile: Record<keyof typeof withReactive.resists.armor, number> = {
-      em: 0.15,
-      therm: 0.15,
-      kin: 0.15,
-      exp: 0.15
-    };
-    const weakest = [...armorKeys]
-      .sort((left, right) => {
-        const delta = resonance[right] - resonance[left];
-        return delta !== 0 ? delta : armorKeys.indexOf(left) - armorKeys.indexOf(right);
-      });
-    const spread = resonance[weakest[0]] - resonance[weakest[weakest.length - 1]];
-    if (spread >= 0.6) {
-      for (const key of weakest.slice(0, 2)) {
-        profile[key] += 0.12;
+    const equilibrium = solveReactiveArmorEquilibrium({
+      baseArmorResonance: resonance,
+      moduleArmorResonance: {
+        em: 0.85,
+        therm: 0.85,
+        kin: 0.85,
+        exp: 0.85
+      },
+      shiftAmount: 0.06,
+      damagePattern: {
+        em: 25,
+        therm: 25,
+        kin: 25,
+        exp: 25
       }
-    }
+    });
 
     for (const key of armorKeys) {
-      const expected = 1 - (1 - membraneOnly.resists.armor[key]) * (1 - profile[key]);
+      const expected = 1 - resonance[key] * equilibrium[key];
       expect(withReactive.resists.armor[key]).toBeCloseTo(expected, 6);
     }
   });

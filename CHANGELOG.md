@@ -3,6 +3,7 @@
 All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
+- Aligned Reactive Armor Hardener parity with pyfa equilibrium behavior (cycle-based redistribution + deterministic average profile), and closed residual Legion/Proteus T3 cruiser gate deficits to `10/10` passing fits each under follow-up `10%` surfaced-metric rules.
 - Added T3 cruiser mechanic-cluster parity fixes for polarized resistance-killer effects, civilian turret skill scaling, Caldari defensive subsystem shield-HP bonuses, and Reactive Armor Hardener profile handling, with new cruiser regression tests for strict 10% surfaced-metric checks.
 - Expanded T3 cruiser parity coverage with 35 curated zKill-based Loki/Legion/Proteus/Tengu fits, synced pyfa reference rows for each new fit, and added a regression coverage test enforcing `>=10` corpus+reference fits per cruiser hull.
 - Added deterministic follow-up prioritization backlog generation for mismatch mechanic clusters (`damage-output`, `effective-hit-points`, `resist-profile`), including stable ordering and per-cluster score breakdowns (`errorSeverity`, `hullGatePressure`, `mechanicReuse`, `fitPrevalence`).

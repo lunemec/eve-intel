@@ -46,6 +46,7 @@ const DRONE_INTERFACING_DAMAGE_MULTIPLIER = 2;
 const MEDIUM_DRONE_OPERATION_DAMAGE_MULTIPLIER = 1.25;
 const CATEGORY_MODULE = 7;
 const CATEGORY_DRONE = 18;
+const REACTIVE_ARMOR_SHIFT_ATTRIBUTE_ID = 1849;
 
 export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCombatMetricsInput): CombatMetrics {
   const assumptions: string[] = [];
@@ -1059,7 +1060,10 @@ function applyDefenseModifiers(
       ? 2.5
       : 1.5
     : 1;
-  let hasReactiveArmorHardener = false;
+  const reactiveArmorHardeners: Array<{
+    armorResonanceMultiplier: { em: number; therm: number; kin: number; exp: number };
+    shiftAmount: number;
+  }> = [];
   let hasPolarizedResistanceKiller = false;
   let myrmidonDamageControlCount = 0;
 
@@ -1090,7 +1094,15 @@ function applyDefenseModifiers(
       }
     }
     if (hasAnyEffect(index, type, "adaptiveArmorHardener")) {
-      hasReactiveArmorHardener = true;
+      reactiveArmorHardeners.push({
+        armorResonanceMultiplier: {
+          em: getAttrResolved(index, type, "Armor EM Damage Resistance", "armorEmDamageResonance") ?? 0.85,
+          therm: getAttrResolved(index, type, "Armor Thermal Damage Resistance", "armorThermalDamageResonance") ?? 0.85,
+          kin: getAttrResolved(index, type, "Armor Kinetic Damage Resistance", "armorKineticDamageResonance") ?? 0.85,
+          exp: getAttrResolved(index, type, "Armor Explosive Damage Resistance", "armorExplosiveDamageResonance") ?? 0.85
+        },
+        shiftAmount: resolveReactiveArmorShiftAmount(index, type)
+      });
       continue;
     }
     const isAssaultDamageControl = hasAnyEffect(index, type, "moduleBonusAssaultDamageControl");
@@ -1275,13 +1287,25 @@ function applyDefenseModifiers(
       resonance[layer][dtype] *= applyPenaltySeries(resistBuckets[layer][dtype]);
     }
   }
-  if (hasReactiveArmorHardener) {
-    const reactiveProfile = buildReactiveArmorProfile(resonance.armor);
-    resonance.armor.em *= 1 - reactiveProfile.em;
-    resonance.armor.therm *= 1 - reactiveProfile.therm;
-    resonance.armor.kin *= 1 - reactiveProfile.kin;
-    resonance.armor.exp *= 1 - reactiveProfile.exp;
-    assumptions.push("Applied baseline Reactive Armor Hardener profile with weak-type bias.");
+  if (reactiveArmorHardeners.length > 0) {
+    for (const hardener of reactiveArmorHardeners) {
+      const equilibrium = solveReactiveArmorEquilibrium({
+        baseArmorResonance: { ...resonance.armor },
+        moduleArmorResonance: hardener.armorResonanceMultiplier,
+        shiftAmount: hardener.shiftAmount,
+        damagePattern: {
+          em: 25,
+          therm: 25,
+          kin: 25,
+          exp: 25
+        }
+      });
+      resonance.armor.em *= equilibrium.em;
+      resonance.armor.therm *= equilibrium.therm;
+      resonance.armor.kin *= equilibrium.kin;
+      resonance.armor.exp *= equilibrium.exp;
+    }
+    assumptions.push("Applied Reactive Armor Hardener equilibrium profile (pyfa parity, uniform damage pattern).");
     if (ship?.typeId === 24700) {
       resonance.armor.em = 0.31875;
       resonance.armor.therm = 0.3765601328353627;
@@ -1305,7 +1329,7 @@ function applyDefenseModifiers(
     resonance.hull.exp = 1;
     assumptions.push("Applied polarized resistance-killer profile (all-layer resists set to zero).");
   }
-  if (ship?.typeId === 24700 && hasReactiveArmorHardener) {
+  if (ship?.typeId === 24700 && reactiveArmorHardeners.length > 0) {
     hp.shield *= 0.88;
     hp.armor *= 0.88;
     hp.hull *= 0.88;
@@ -1413,30 +1437,114 @@ function isArmorPlateBonusModifier(effectTags: string): boolean {
   return effectTags.includes("armorhpbonusadd");
 }
 
-function buildReactiveArmorProfile(armorResonance: {
-  em: number;
-  therm: number;
-  kin: number;
-  exp: number;
-}): DamageProfile {
-  const profile: DamageProfile = { em: 0.15, therm: 0.15, kin: 0.15, exp: 0.15 };
-  const keys: Array<keyof DamageProfile> = ["em", "therm", "kin", "exp"];
-  const sortedByWeakness = [...keys]
-    .sort((left, right) => {
-      const delta = armorResonance[right] - armorResonance[left];
-      return delta !== 0 ? delta : keys.indexOf(left) - keys.indexOf(right);
-    });
+function resolveReactiveArmorShiftAmount(index: DogmaIndex, type: DogmaTypeEntry): number {
+  const byName = getAttrResolved(index, type, "Resistance Shift Amount", "resistanceShiftAmount");
+  if (byName !== undefined && byName > 0) {
+    return byName / 100;
+  }
+  const byId = getAttrById(type, REACTIVE_ARMOR_SHIFT_ATTRIBUTE_ID);
+  if (byId !== undefined && byId > 0) {
+    return byId / 100;
+  }
+  return 0.06;
+}
 
-  const resonanceSpread = armorResonance[sortedByWeakness[0]] - armorResonance[sortedByWeakness[sortedByWeakness.length - 1]];
-  if (resonanceSpread < 0.6) {
-    return profile;
+function solveReactiveArmorEquilibrium({
+  baseArmorResonance,
+  moduleArmorResonance,
+  shiftAmount,
+  damagePattern
+}: {
+  baseArmorResonance: { em: number; therm: number; kin: number; exp: number };
+  moduleArmorResonance: { em: number; therm: number; kin: number; exp: number };
+  shiftAmount: number;
+  damagePattern: { em: number; therm: number; kin: number; exp: number };
+}): { em: number; therm: number; kin: number; exp: number } {
+  const baseDamageTaken = [
+    damagePattern.em * baseArmorResonance.em,
+    damagePattern.therm * baseArmorResonance.therm,
+    damagePattern.kin * baseArmorResonance.kin,
+    damagePattern.exp * baseArmorResonance.exp
+  ];
+  const cycleList: number[][] = [];
+  let loopStart = -20;
+  let reactiveResonance = [
+    moduleArmorResonance.em,
+    moduleArmorResonance.therm,
+    moduleArmorResonance.kin,
+    moduleArmorResonance.exp
+  ];
+
+  for (let cycle = 0; cycle < 50; cycle += 1) {
+    const tuples: Array<[number, number, number]> = [
+      [0, baseDamageTaken[0] * reactiveResonance[0], reactiveResonance[0]] as [number, number, number],
+      [3, baseDamageTaken[3] * reactiveResonance[3], reactiveResonance[3]] as [number, number, number],
+      [2, baseDamageTaken[2] * reactiveResonance[2], reactiveResonance[2]] as [number, number, number],
+      [1, baseDamageTaken[1] * reactiveResonance[1], reactiveResonance[1]] as [number, number, number]
+    ].sort((left, right) => left[1] - right[1]);
+
+    let change0 = 0;
+    let change1 = 0;
+    let change2 = 0;
+    let change3 = 0;
+    if (tuples[2][1] === 0) {
+      change0 = 1 - tuples[0][2];
+      change1 = 1 - tuples[1][2];
+      change2 = 1 - tuples[2][2];
+      change3 = -(change0 + change1 + change2);
+    } else if (tuples[1][1] === 0) {
+      change0 = 1 - tuples[0][2];
+      change1 = 1 - tuples[1][2];
+      change2 = -(change0 + change1) / 2;
+      change3 = change2;
+    } else {
+      change0 = Math.min(shiftAmount, 1 - tuples[0][2]);
+      change1 = Math.min(shiftAmount, 1 - tuples[1][2]);
+      change2 = -(change0 + change1) / 2;
+      change3 = change2;
+    }
+
+    const next = [...reactiveResonance];
+    next[tuples[0][0]] = tuples[0][2] + change0;
+    next[tuples[1][0]] = tuples[1][2] + change1;
+    next[tuples[2][0]] = tuples[2][2] + change2;
+    next[tuples[3][0]] = tuples[3][2] + change3;
+
+    for (let i = 0; i < cycleList.length; i += 1) {
+      const prior = cycleList[i];
+      if (
+        Math.abs(next[0] - prior[0]) <= 1e-6 &&
+        Math.abs(next[1] - prior[1]) <= 1e-6 &&
+        Math.abs(next[2] - prior[2]) <= 1e-6 &&
+        Math.abs(next[3] - prior[3]) <= 1e-6
+      ) {
+        loopStart = i;
+        break;
+      }
+    }
+    if (loopStart >= 0) {
+      reactiveResonance = next;
+      break;
+    }
+    cycleList.push(next);
+    reactiveResonance = next;
   }
 
-  for (const key of sortedByWeakness.slice(0, 2)) {
-    profile[key] = Math.min(0.6, profile[key] + 0.12);
+  const loopCycles = cycleList.slice(loopStart);
+  const averaged = loopCycles.length === 0 ? [reactiveResonance] : loopCycles;
+  const sum = [0, 0, 0, 0];
+  for (const cycle of averaged) {
+    sum[0] += cycle[0];
+    sum[1] += cycle[1];
+    sum[2] += cycle[2];
+    sum[3] += cycle[3];
   }
-
-  return profile;
+  return {
+    em: Number((sum[0] / averaged.length).toFixed(3)),
+    therm: Number((sum[1] / averaged.length).toFixed(3)),
+    kin: Number((sum[2] / averaged.length).toFixed(3)),
+    exp: Number((sum[3] / averaged.length).toFixed(3))
+  };
 }
 
 function applyShieldCapacityBonus(

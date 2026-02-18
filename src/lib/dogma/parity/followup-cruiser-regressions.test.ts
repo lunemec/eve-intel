@@ -9,8 +9,13 @@ import { parseEftToResolvedFit } from "./eft";
 
 const FOLLOWUP_REL_MAX = 0.1;
 const FOLLOWUP_CRUISER_REGRESSION_FIT_IDS = [
+  "zkill-legion-133446555",
+  "zkill-legion-133466849",
   "zkill-legion-133466796",
   "zkill-loki-133468890",
+  "zkill-proteus-133464801",
+  "zkill-proteus-133464925",
+  "zkill-proteus-133468027",
   "zkill-proteus-133467601",
   "zkill-tengu-133463746",
   "zkill-tengu-133469643"
