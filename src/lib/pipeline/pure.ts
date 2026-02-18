@@ -76,18 +76,30 @@ export function mergePilotStats(params: {
   const kills = source.kills ?? params.derived.kills;
   const losses = source.losses ?? params.derived.losses;
   const solo = source.solo ?? params.derived.solo;
+  const avgGangSize = source.avgGangSize ?? params.derived.avgGangSize;
   const iskDestroyed = source.iskDestroyed ?? params.derived.iskDestroyed;
   const iskLost = source.iskLost ?? params.derived.iskLost;
+  const zkillDanger = source.danger;
+  const soloRatio = kills > 0 ? Number(((solo / kills) * 100).toFixed(1)) : 0;
+  const gangRatio = Number.isFinite(source.gangRatio)
+    ? Number(Math.max(0, Math.min(100, source.gangRatio ?? 0)).toFixed(1))
+    : Number((100 - soloRatio).toFixed(1));
+  const danger =
+    typeof zkillDanger === "number" && Number.isFinite(zkillDanger)
+      ? Number(zkillDanger.toFixed(1))
+      : (kills + losses > 0 ? Number(((kills / (kills + losses)) * 100).toFixed(1)) : params.derived.danger);
 
   return {
     kills,
     losses,
     solo,
-    soloRatio: kills > 0 ? Number(((solo / kills) * 100).toFixed(1)) : 0,
+    soloRatio,
+    avgGangSize,
+    gangRatio,
     iskDestroyed,
     iskLost,
     kdRatio: losses > 0 ? Number((kills / losses).toFixed(2)) : kills > 0 ? kills : 0,
     iskRatio: iskLost > 0 ? Number((iskDestroyed / iskLost).toFixed(2)) : iskDestroyed > 0 ? iskDestroyed : 0,
-    danger: kills + losses > 0 ? Number(((kills / (kills + losses)) * 100).toFixed(1)) : params.derived.danger
+    danger
   };
 }

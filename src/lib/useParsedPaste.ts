@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { ParseResult } from "../types";
 import { parseClipboardText } from "./parser";
 
@@ -16,6 +16,7 @@ export function useParsedPaste(params: {
   const [lastPasteRaw, setLastPasteRaw] = useState<string>("");
   const [manualEntry, setManualEntry] = useState<string>("");
   const [parseResult, setParseResult] = useState<ParseResult>({ entries: [], rejected: [] });
+  const parseSignature = useMemo(() => buildParseSignature(parseResult), [parseResult]);
 
   const applyPaste = useCallback((text: string) => {
     const trimmed = text.trim();
@@ -26,13 +27,16 @@ export function useParsedPaste(params: {
     const parsed = parseClipboardText(trimmed);
     setLastPasteRaw(trimmed);
     setManualEntry(trimmed);
-    setParseResult(parsed);
+    const nextSignature = buildParseSignature(parsed);
+    if (nextSignature !== parseSignature) {
+      setParseResult(parsed);
+    }
     setLastPasteAt(new Date().toLocaleTimeString());
     params.logDebug(
       `Paste parsed: entries=${parsed.entries.length}, rejected=${parsed.rejected.length}`,
       parsed.rejected.length > 0 ? { rejected: parsed.rejected } : undefined
     );
-  }, [params.logDebug]);
+  }, [params.logDebug, parseSignature]);
 
   return {
     lastPasteAt,
@@ -42,4 +46,14 @@ export function useParsedPaste(params: {
     parseResult,
     applyPaste
   };
+}
+
+function buildParseSignature(parsed: ParseResult): string {
+  return parsed.entries
+    .map((entry) => {
+      const pilot = entry.pilotName.trim().toLowerCase();
+      const ship = entry.explicitShip?.trim().toLowerCase() ?? "";
+      return `${pilot}|${ship}`;
+    })
+    .join("||");
 }

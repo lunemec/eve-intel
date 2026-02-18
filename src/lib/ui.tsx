@@ -15,6 +15,39 @@ const ROLE_ICON_TYPE_IDS: Record<string, number> = {
   "Armor Logi": 16455
 };
 
+function cynoTitle(ship: ShipPrediction): string {
+  return `Cyno: this hull has direct same-hull historical cyno-fit evidence for this pilot (${ship.shipName}).`;
+}
+
+function baitTitle(ship: ShipPrediction): string {
+  return `Bait: this pilot/ship profile shows bait indicators (jump-association and tackle/tank signals) on ${ship.shipName}.`;
+}
+
+function roleTitle(role: string): string {
+  switch (role) {
+    case "Long Point":
+      return "Long Point: likely warp disruptor fit to hold targets at range.";
+    case "Web":
+      return "Web: likely stasis webifier fit for speed control.";
+    case "HIC":
+      return "HIC: heavy interdictor role likely present on this hull.";
+    case "Bubble":
+      return "Bubble: likely interdiction bubble capability for area warp denial.";
+    case "Boosh":
+      return "Boosh: likely micro jump field generator reposition utility.";
+    case "Neut":
+      return "Neut: likely energy neutralizer pressure on target capacitor.";
+    case "Cloaky":
+      return "Cloaky: likely cloaking module fit.";
+    case "Shield Logi":
+      return "Shield Logi: likely shield logistics support role.";
+    case "Armor Logi":
+      return "Armor Logi: likely armor logistics support role.";
+    default:
+      return `${role}: inferred role from fit/module evidence.`;
+  }
+}
+
 export function renderResistCell(value: number, damageClass: string) {
   const pct = toPctNumber(value);
   return (
@@ -59,46 +92,38 @@ export function renderShipPills(
 
   if (flags.bait) {
     elements.push(
-      <span key={`${ship.shipName}-pill-bait`} className="risk-badge risk-bait">Bait</span>
+      <span
+        key={`${ship.shipName}-pill-bait`}
+        className="risk-badge risk-bait"
+        title={baitTitle(ship)}
+      >
+        Bait
+      </span>
     );
   }
 
   if (flags.hardCyno) {
+    const title = cynoTitle(ship);
     elements.push(
       mode === "icon" ? (
         <img
           key={`${ship.shipName}-pill-cyno`}
           src={`https://images.evetech.net/types/${CYNO_ICON_TYPE_ID}/icon?size=64`}
           className="alert-icon-img alert-cyno"
-          title="Potential Cyno"
-          aria-label="Potential Cyno"
-          alt="Potential Cyno"
+          title={title}
+          aria-label="Cyno"
+          alt="Cyno"
           loading="lazy"
         />
       ) : (
-        <span key={`${ship.shipName}-pill-cyno`} className="risk-badge risk-cyno">Potential Cyno</span>
-      )
-    );
-  } else if (flags.softCyno) {
-    elements.push(
-      mode === "icon" ? (
-        <img
-          key={`${ship.shipName}-pill-cyno-soft`}
-          src={`https://images.evetech.net/types/${CYNO_ICON_TYPE_ID}/icon?size=64`}
-          className="alert-icon-img alert-cyno-soft"
-          title="Potential Cyno"
-          aria-label="Potential Cyno"
-          alt="Potential Cyno"
-          loading="lazy"
-        />
-      ) : (
-        <span key={`${ship.shipName}-pill-cyno-soft`} className="risk-badge risk-cyno-soft">Potential Cyno</span>
+        <span key={`${ship.shipName}-pill-cyno`} className="risk-badge risk-cyno" title={title}>Cyno</span>
       )
     );
   }
 
   for (const role of ship.rolePills ?? []) {
     const iconTypeId = ROLE_ICON_TYPE_IDS[role];
+    const title = roleTitle(role);
     elements.push(
       mode === "icon" ? (
         iconTypeId ? (
@@ -106,7 +131,7 @@ export function renderShipPills(
             key={`${ship.shipName}-pill-${role}`}
             src={`https://images.evetech.net/types/${iconTypeId}/icon?size=64`}
             className={`alert-icon-img ${roleIconClass(role)}`}
-            title={role}
+            title={title}
             aria-label={role}
             alt={role}
             loading="lazy"
@@ -115,14 +140,14 @@ export function renderShipPills(
           <span
             key={`${ship.shipName}-pill-${role}`}
             className={`alert-icon ${roleIconClass(role)}`}
-            title={role}
+            title={title}
             aria-label={role}
           >
             {roleShort(role)}
           </span>
         )
       ) : (
-        <span key={`${ship.shipName}-pill-${role}`} className={`risk-badge ${roleBadgeClass(role)}`}>
+        <span key={`${ship.shipName}-pill-${role}`} className={`risk-badge ${roleBadgeClass(role)}`} title={title}>
           {role}
         </span>
       )

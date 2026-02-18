@@ -9,14 +9,21 @@ import {
   ZKILL_MAX_LOOKBACK_DAYS
 } from "./zkill";
 
+function jsonResponse(payload: unknown, status = 200, headers?: HeadersInit): Response {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: {
+      "content-type": "application/json",
+      ...(headers ?? {})
+    }
+  });
+}
+
 describe("zkill API client", () => {
   it("returns empty array when API returns non-array payload", async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn(async () => {
-      return {
-        ok: true,
-        json: async () => ({ message: "temporarily unavailable" })
-      } as Response;
+      return jsonResponse({ message: "temporarily unavailable" });
     });
 
     try {
@@ -31,22 +38,16 @@ describe("zkill API client", () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes("zkillboard.com/api")) {
-        return {
-          ok: true,
-          json: async () => [{ killmail_id: 777, zkb: { hash: "abc123", totalValue: 1000000 } }]
-        } as Response;
+        return jsonResponse([{ killmail_id: 777, zkb: { hash: "abc123", totalValue: 1000000 } }]);
       }
 
       if (url.includes("/killmails/777/abc123/")) {
-        return {
-          ok: true,
-          json: async () => ({
-            killmail_id: 777,
-            killmail_time: "2025-10-30T00:00:00Z",
-            victim: { character_id: 1, ship_type_id: 2 },
-            attackers: [{ character_id: 3, ship_type_id: 4 }]
-          })
-        } as Response;
+        return jsonResponse({
+          killmail_id: 777,
+          killmail_time: "2025-10-30T00:00:00Z",
+          victim: { character_id: 1, ship_type_id: 2 },
+          attackers: [{ character_id: 3, ship_type_id: 4 }]
+        });
       }
 
       throw new Error(`Unexpected URL: ${url}`);
@@ -69,30 +70,24 @@ describe("zkill API client", () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes("zkillboard.com/api")) {
-        return {
-          ok: true,
-          json: async () => [
-            {
-              killmail_id: 778,
-              killmail_time: "2025-10-31T00:00:00Z",
-              victim: {},
-              attackers: [],
-              zkb: { hash: "def456", totalValue: 2000000 }
-            }
-          ]
-        } as Response;
+        return jsonResponse([
+          {
+            killmail_id: 778,
+            killmail_time: "2025-10-31T00:00:00Z",
+            victim: {},
+            attackers: [],
+            zkb: { hash: "def456", totalValue: 2000000 }
+          }
+        ]);
       }
 
       if (url.includes("/killmails/778/def456/")) {
-        return {
-          ok: true,
-          json: async () => ({
-            killmail_id: 778,
-            killmail_time: "2025-10-31T00:00:00Z",
-            victim: { character_id: 1, ship_type_id: 2 },
-            attackers: [{ character_id: 3, ship_type_id: 4 }]
-          })
-        } as Response;
+        return jsonResponse({
+          killmail_id: 778,
+          killmail_time: "2025-10-31T00:00:00Z",
+          victim: { character_id: 1, ship_type_id: 2 },
+          attackers: [{ character_id: 3, ship_type_id: 4 }]
+        });
       }
 
       throw new Error(`Unexpected URL: ${url}`);
@@ -115,10 +110,7 @@ describe("lookback clamping", () => {
   it("clamps pastSeconds requests to zKill max lookback", async () => {
     const originalFetch = globalThis.fetch;
     const fetchMock = vi.fn(async () => {
-      return {
-        ok: true,
-        json: async () => []
-      } as Response;
+      return jsonResponse([]);
     });
     globalThis.fetch = fetchMock;
 
@@ -138,10 +130,7 @@ describe("latest endpoint", () => {
   it("uses non-pastSeconds endpoint for latest history fallback", async () => {
     const originalFetch = globalThis.fetch;
     const fetchMock = vi.fn(async () => {
-      return {
-        ok: true,
-        json: async () => []
-      } as Response;
+      return jsonResponse([]);
     });
     globalThis.fetch = fetchMock;
 
@@ -161,35 +150,27 @@ describe("latest endpoint", () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes("/page/1/")) {
-        return {
-          ok: true,
-          json: async () =>
-            Array.from({ length: 200 }, (_, index) => ({
-              killmail_id: 1000 + index,
-              killmail_time: "2026-02-10T00:00:00Z",
-              victim: {},
-              attackers: []
-            }))
-        } as Response;
+        return jsonResponse(
+          Array.from({ length: 200 }, (_, index) => ({
+            killmail_id: 1000 + index,
+            killmail_time: "2026-02-10T00:00:00Z",
+            victim: {},
+            attackers: []
+          }))
+        );
       }
       if (url.includes("/page/2/")) {
-        return {
-          ok: true,
-          json: async () => [
-            {
-              killmail_id: 2001,
-              killmail_time: "2026-02-09T00:00:00Z",
-              victim: {},
-              attackers: []
-            }
-          ]
-        } as Response;
+        return jsonResponse([
+          {
+            killmail_id: 2001,
+            killmail_time: "2026-02-09T00:00:00Z",
+            victim: {},
+            attackers: []
+          }
+        ]);
       }
       if (url.includes("/page/3/")) {
-        return {
-          ok: true,
-          json: async () => []
-        } as Response;
+        return jsonResponse([]);
       }
       throw new Error(`Unexpected URL: ${url}`);
     });
@@ -210,10 +191,7 @@ describe("latest endpoint", () => {
   it("fetches explicit latest page endpoints for kills/losses", async () => {
     const originalFetch = globalThis.fetch;
     const fetchMock = vi.fn(async () => {
-      return {
-        ok: true,
-        json: async () => []
-      } as Response;
+      return jsonResponse([]);
     });
     globalThis.fetch = fetchMock;
 
@@ -236,17 +214,16 @@ describe("character stats endpoint", () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url.includes(`/stats/characterID/${characterId}/`)) {
-        return {
-          ok: true,
-          json: async () => ({
-            shipsDestroyed: 4593,
-            shipsLost: 12,
-            soloKills: 272,
-            dangerRatio: 100,
-            iskDestroyed: 465740000000,
-            iskLost: 2850000000
-          })
-        } as Response;
+        return jsonResponse({
+          shipsDestroyed: 4593,
+          shipsLost: 12,
+          soloKills: 272,
+          avgGang: 3.6,
+          gangRatio: 98,
+          dangerRatio: 100,
+          iskDestroyed: 465740000000,
+          iskLost: 2850000000
+        });
       }
       throw new Error(`Unexpected URL: ${url}`);
     });
@@ -257,6 +234,8 @@ describe("character stats endpoint", () => {
       expect(stats?.kills).toBe(4593);
       expect(stats?.losses).toBe(12);
       expect(stats?.solo).toBe(272);
+      expect(stats?.avgGangSize).toBe(3.6);
+      expect(stats?.gangRatio).toBe(98);
       expect(stats?.danger).toBe(100);
       expect(stats?.iskDestroyed).toBe(465740000000);
       expect(stats?.iskLost).toBe(2850000000);
@@ -269,13 +248,10 @@ describe("character stats endpoint", () => {
     const characterId = 991499999;
     const originalFetch = globalThis.fetch;
     const fetchMock = vi.fn(async () => {
-      return {
-        ok: true,
-        json: async () => ({
-          shipsDestroyed: 7,
-          shipsLost: 2
-        })
-      } as Response;
+      return jsonResponse({
+        shipsDestroyed: 7,
+        shipsLost: 2
+      });
     });
     globalThis.fetch = fetchMock;
 
@@ -291,6 +267,32 @@ describe("character stats endpoint", () => {
       expect(stats?.kills).toBe(7);
       expect(stats?.losses).toBe(2);
       expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("parses dangerous metric variants and normalizes 0-10 score to percent", async () => {
+    const characterId = 991488888;
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes(`/stats/characterID/${characterId}/`)) {
+        return jsonResponse({
+          shipsDestroyed: 7,
+          shipsLost: 3,
+          dangerous: 7.5
+        });
+      }
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+    globalThis.fetch = fetchMock;
+
+    try {
+      const stats = await fetchCharacterStats(characterId);
+      expect(stats?.kills).toBe(7);
+      expect(stats?.losses).toBe(3);
+      expect(stats?.danger).toBe(75);
     } finally {
       globalThis.fetch = originalFetch;
     }

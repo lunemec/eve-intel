@@ -15,6 +15,13 @@ import { createErrorCard } from "./stateTransitions";
 import { resolveNamesSafely } from "./naming";
 import { collectStageNameResolutionIds } from "./stages";
 import { ensureExplicitShipTypeId, recomputeDerivedInference, type DerivedInference } from "./executors";
+import {
+  buildPilotSnapshotSourceSignature,
+  isPilotSnapshotUsable,
+  loadPilotSnapshot,
+  savePilotSnapshot,
+  type SnapshotLoadResult
+} from "./snapshotCache";
 import type {
   CancelCheck,
   DebugLogger,
@@ -23,7 +30,14 @@ import type {
   PilotCardUpdater,
   RetryBuilder
 } from "./types";
-import { PILOT_PROCESS_CONCURRENCY, ZKILL_PAGE_MAX_ROUNDS, ZKILL_PAGE_ROUND_CONCURRENCY } from "./constants";
+import {
+  PILOT_PROCESS_CONCURRENCY,
+  THREAT_PRIORITY_DANGER_THRESHOLD,
+  THREAT_PRIORITY_HIGH_PAGE_WEIGHT,
+  THREAT_PRIORITY_NORMAL_PAGE_WEIGHT,
+  ZKILL_PAGE_MAX_ROUNDS,
+  ZKILL_PAGE_ROUND_CONCURRENCY
+} from "./constants";
 
 export type ResolvedPilotTask = {
   entry: ParsedPilotInput;
@@ -35,10 +49,15 @@ type PilotBreadthState = {
   characterId: number;
   character: CharacterPublic;
   stageOneRow: PilotCard;
+  danger: number;
+  threatTier: "high" | "normal";
+  nextKillsPage: number;
+  nextLossesPage: number;
   historyKills: Map<number, ZkillKillmail>;
   historyLosses: Map<number, ZkillKillmail>;
   exhaustedKills: boolean;
   exhaustedLosses: boolean;
+  lastMaterialSignature: string;
 };
 
 type BreadthDeps = {
@@ -57,6 +76,10 @@ type BreadthDeps = {
   buildStageTwoRow: typeof buildStageTwoRow;
   recomputeDerivedInference: typeof recomputeDerivedInference;
   ensureExplicitShipTypeId: typeof ensureExplicitShipTypeId;
+  loadPilotSnapshot?: typeof loadPilotSnapshot;
+  savePilotSnapshot?: typeof savePilotSnapshot;
+  buildPilotSnapshotSourceSignature?: typeof buildPilotSnapshotSourceSignature;
+  isPilotSnapshotUsable?: typeof isPilotSnapshotUsable;
   isAbortError: typeof isAbortError;
 };
 
@@ -76,6 +99,10 @@ const DEFAULT_DEPS: BreadthDeps = {
   buildStageTwoRow,
   recomputeDerivedInference,
   ensureExplicitShipTypeId,
+  loadPilotSnapshot,
+  savePilotSnapshot,
+  buildPilotSnapshotSourceSignature,
+  isPilotSnapshotUsable,
   isAbortError
 };
 
@@ -98,6 +125,8 @@ export async function runBreadthPilotPipeline(
   const pilots = await hydrateBaseCards(
     {
       tasks: params.tasks,
+      lookbackDays: params.lookbackDays,
+      topShips: params.topShips,
       signal: params.signal,
       onRetry: params.onRetry,
       isCancelled: params.isCancelled,
@@ -130,6 +159,8 @@ export async function runBreadthPilotPipeline(
 export async function hydrateBaseCards(
   params: {
     tasks: ResolvedPilotTask[];
+    lookbackDays: number;
+    topShips: number;
     signal: PipelineSignal;
     onRetry: RetryBuilder;
     isCancelled: CancelCheck;
@@ -180,15 +211,76 @@ export async function hydrateBaseCards(
         ...stageOneRow,
         fetchPhase: "base"
       });
+
+      let snapshotResult: SnapshotLoadResult | null = null;
+      if (deps.loadPilotSnapshot && deps.buildPilotSnapshotSourceSignature && deps.isPilotSnapshotUsable) {
+        snapshotResult = await deps.loadPilotSnapshot({
+          pilotName: task.entry.pilotName,
+          characterId: task.characterId,
+          lookbackDays: params.lookbackDays
+        });
+      }
+
+      let warmInferenceKills: ZkillKillmail[] = [];
+      let warmInferenceLosses: ZkillKillmail[] = [];
+      let stageOneForPipeline: PilotCard = { ...stageOneRow, fetchPhase: "base" };
+      if (
+        snapshotResult?.snapshot &&
+        deps.buildPilotSnapshotSourceSignature &&
+        deps.isPilotSnapshotUsable &&
+        deps.isPilotSnapshotUsable(snapshotResult.snapshot, {
+          pilotName: task.entry.pilotName,
+          characterId: task.characterId,
+          lookbackDays: params.lookbackDays,
+          sourceSignature: deps.buildPilotSnapshotSourceSignature({
+            row: {
+              parsedEntry: task.entry,
+              inferenceKills: snapshotResult.snapshot.inferenceKills,
+              inferenceLosses: snapshotResult.snapshot.inferenceLosses
+            },
+            lookbackDays: params.lookbackDays,
+            topShips: params.topShips
+          })
+        })
+      ) {
+        warmInferenceKills = snapshotResult.snapshot.inferenceKills;
+        warmInferenceLosses = snapshotResult.snapshot.inferenceLosses;
+        stageOneForPipeline = {
+          ...stageOneForPipeline,
+          ...snapshotResult.snapshot.baseRow,
+          inferenceKills: warmInferenceKills,
+          inferenceLosses: warmInferenceLosses,
+          predictedShips: snapshotResult.snapshot.predictedShips,
+          fitCandidates: snapshotResult.snapshot.fitCandidates,
+          cynoRisk: snapshotResult.snapshot.cynoRisk,
+          fetchPhase: "ready"
+        };
+        params.updatePilotCard(task.entry.pilotName, {
+          ...stageOneForPipeline
+        });
+      }
+
       states.push({
         entry: task.entry,
         characterId: task.characterId,
         character,
-        stageOneRow: { ...stageOneRow, fetchPhase: "base" },
-        historyKills: new Map<number, ZkillKillmail>(),
-        historyLosses: new Map<number, ZkillKillmail>(),
+        stageOneRow: stageOneForPipeline,
+        danger: stats.danger,
+        threatTier: classifyThreat(stats.danger),
+        nextKillsPage: 1,
+        nextLossesPage: 1,
+        historyKills: new Map<number, ZkillKillmail>(warmInferenceKills.map((row) => [row.killmail_id, row])),
+        historyLosses: new Map<number, ZkillKillmail>(warmInferenceLosses.map((row) => [row.killmail_id, row])),
         exhaustedKills: false,
-        exhaustedLosses: false
+        exhaustedLosses: false,
+        lastMaterialSignature: buildPilotMaterialSignature({
+          fetchPhase: stageOneForPipeline.fetchPhase ?? "base",
+          statsDanger: stageOneForPipeline.stats?.danger,
+          inferenceKills: warmInferenceKills,
+          inferenceLosses: warmInferenceLosses,
+          predictedShips: stageOneForPipeline.predictedShips,
+          fitCandidates: stageOneForPipeline.fitCandidates
+        })
       });
     } catch (error) {
       if (deps.isAbortError(error)) {
@@ -221,51 +313,38 @@ export async function runPagedHistoryRounds(
   },
   deps: BreadthDeps = DEFAULT_DEPS
 ): Promise<void> {
+  for (const pilot of params.pilots) {
+    initializePilotSchedulerState(pilot);
+  }
   let roundsProcessed = 0;
 
-  for (let page = 1; page <= params.maxPages; page += 1) {
+  while (true) {
     if (params.isCancelled()) {
       return;
     }
-    const active = params.pilots.filter((pilot) => !pilot.exhaustedKills || !pilot.exhaustedLosses);
+    const active = params.pilots.filter((pilot) => hasRemainingPages(pilot, params.maxPages));
     if (active.length === 0) {
       break;
     }
 
     let roundNewRows = 0;
-    await runWithConcurrency(active, Math.max(1, ZKILL_PAGE_ROUND_CONCURRENCY), async (pilot) => {
+    const baseBatch = buildRoundBatch(active);
+    roundNewRows += await runRoundBatch(baseBatch, params, deps);
+
+    const extraWeight = Math.max(0, THREAT_PRIORITY_HIGH_PAGE_WEIGHT - THREAT_PRIORITY_NORMAL_PAGE_WEIGHT);
+    for (let index = 0; index < extraWeight; index += 1) {
       if (params.isCancelled()) {
         return;
       }
-      const [killRows, lossRows] = await Promise.all([
-        deps.fetchLatestKillsPage(pilot.characterId, page, params.signal, params.onRetry(`zKill kills page ${page}`)),
-        deps.fetchLatestLossesPage(pilot.characterId, page, params.signal, params.onRetry(`zKill losses page ${page}`))
-      ]);
-
-      const beforeKills = pilot.historyKills.size;
-      const beforeLosses = pilot.historyLosses.size;
-      for (const row of killRows) {
-        pilot.historyKills.set(row.killmail_id, row);
+      const highThreatBatch = buildRoundBatch(active, "high");
+      if (highThreatBatch.length === 0) {
+        break;
       }
-      for (const row of lossRows) {
-        pilot.historyLosses.set(row.killmail_id, row);
-      }
-      const addedKills = pilot.historyKills.size - beforeKills;
-      const addedLosses = pilot.historyLosses.size - beforeLosses;
-      roundNewRows += addedKills + addedLosses;
-
-      pilot.exhaustedKills = killRows.length === 0 || addedKills === 0;
-      pilot.exhaustedLosses = lossRows.length === 0 || addedLosses === 0;
-
-      params.updatePilotCard(pilot.entry.pilotName, {
-        fetchPhase: "history",
-        inferenceKills: toSortedRows(pilot.historyKills, deps),
-        inferenceLosses: toSortedRows(pilot.historyLosses, deps)
-      });
-    });
+      roundNewRows += await runRoundBatch(highThreatBatch, params, deps);
+    }
 
     roundsProcessed += 1;
-    if (page === 1) {
+    if (roundsProcessed === 1) {
       await recomputeForPilots(params, deps, false);
     }
 
@@ -350,13 +429,60 @@ async function recomputeForPilots(
       onRetry: params.onRetry,
       logDebug: params.logDebug
     });
-    params.updatePilotCard(pilot.entry.pilotName, {
+    const patch: Partial<PilotCard> = {
       ...stageTwoRow,
       predictedShips: derived.predictedShips,
       fitCandidates: derived.fitCandidates,
       cynoRisk: derived.cynoRisk,
       fetchPhase: finalPass ? "ready" : "history"
+    };
+
+    const nextSignature = buildPilotMaterialSignature({
+      fetchPhase: patch.fetchPhase ?? "history",
+      statsDanger: patch.stats?.danger,
+      inferenceKills: patch.inferenceKills ?? [],
+      inferenceLosses: patch.inferenceLosses ?? [],
+      predictedShips: patch.predictedShips ?? [],
+      fitCandidates: patch.fitCandidates ?? []
     });
+    if (pilot.lastMaterialSignature !== nextSignature) {
+      params.updatePilotCard(pilot.entry.pilotName, patch);
+      pilot.lastMaterialSignature = nextSignature;
+    }
+
+    if (deps.savePilotSnapshot && deps.buildPilotSnapshotSourceSignature) {
+      await deps.savePilotSnapshot({
+        pilotName: pilot.entry.pilotName,
+        characterId: pilot.characterId,
+        lookbackDays: params.lookbackDays,
+        baseRow: {
+          status: stageTwoRow.status,
+          fetchPhase: finalPass ? "ready" : "history",
+          characterId: stageTwoRow.characterId,
+          characterName: stageTwoRow.characterName,
+          corporationId: stageTwoRow.corporationId,
+          corporationName: stageTwoRow.corporationName,
+          allianceId: stageTwoRow.allianceId,
+          allianceName: stageTwoRow.allianceName,
+          securityStatus: stageTwoRow.securityStatus,
+          stats: stageTwoRow.stats
+        },
+        inferenceKills,
+        inferenceLosses,
+        predictedShips: derived.predictedShips,
+        fitCandidates: derived.fitCandidates,
+        cynoRisk: derived.cynoRisk,
+        sourceSignature: deps.buildPilotSnapshotSourceSignature({
+          row: {
+            parsedEntry: pilot.entry,
+            inferenceKills,
+            inferenceLosses
+          },
+          lookbackDays: params.lookbackDays,
+          topShips: params.topShips
+        })
+      });
+    }
   });
 }
 
@@ -365,6 +491,139 @@ function toSortedRows(
   deps: Pick<BreadthDeps, "mergeKillmailLists">
 ): ZkillKillmail[] {
   return deps.mergeKillmailLists([], [...items.values()]);
+}
+
+function classifyThreat(danger?: number): "high" | "normal" {
+  const normalizedDanger = Number(danger);
+  if (!Number.isFinite(normalizedDanger)) {
+    return "normal";
+  }
+  return normalizedDanger > THREAT_PRIORITY_DANGER_THRESHOLD ? "high" : "normal";
+}
+
+function initializePilotSchedulerState(pilot: PilotBreadthState): void {
+  if (!Number.isFinite(pilot.danger)) {
+    pilot.danger = pilot.stageOneRow.stats?.danger ?? Number.NaN;
+  }
+  pilot.threatTier = classifyThreat(pilot.danger);
+  if (!Number.isFinite(pilot.nextKillsPage) || pilot.nextKillsPage < 1) {
+    pilot.nextKillsPage = 1;
+  }
+  if (!Number.isFinite(pilot.nextLossesPage) || pilot.nextLossesPage < 1) {
+    pilot.nextLossesPage = 1;
+  }
+}
+
+function hasRemainingPages(pilot: PilotBreadthState, maxPages: number): boolean {
+  initializePilotSchedulerState(pilot);
+  const hasKills = !pilot.exhaustedKills && pilot.nextKillsPage <= maxPages;
+  const hasLosses = !pilot.exhaustedLosses && pilot.nextLossesPage <= maxPages;
+  return hasKills || hasLosses;
+}
+
+function buildRoundBatch(
+  pilots: PilotBreadthState[],
+  tier: "all" | "high" = "all"
+): PilotBreadthState[] {
+  return pilots.filter((pilot) => {
+    const pilotTier = pilot.threatTier ?? classifyThreat(pilot.danger ?? pilot.stageOneRow.stats?.danger);
+    if (tier === "high" && pilotTier !== "high") {
+      return false;
+    }
+    return true;
+  });
+}
+
+async function runRoundBatch(
+  pilots: PilotBreadthState[],
+  params: {
+    maxPages: number;
+    signal: PipelineSignal;
+    onRetry: RetryBuilder;
+    isCancelled: CancelCheck;
+    updatePilotCard: PilotCardUpdater;
+  },
+  deps: Pick<BreadthDeps, "fetchLatestKillsPage" | "fetchLatestLossesPage" | "mergeKillmailLists">
+): Promise<number> {
+  let roundNewRows = 0;
+  await runWithConcurrency(pilots, Math.max(1, ZKILL_PAGE_ROUND_CONCURRENCY), async (pilot) => {
+    if (params.isCancelled() || !hasRemainingPages(pilot, params.maxPages)) {
+      return;
+    }
+    const added = await runPilotPageFetch(pilot, params, deps);
+    roundNewRows += added;
+  });
+  return roundNewRows;
+}
+
+async function runPilotPageFetch(
+  pilot: PilotBreadthState,
+  params: {
+    maxPages: number;
+    signal: PipelineSignal;
+    onRetry: RetryBuilder;
+    updatePilotCard: PilotCardUpdater;
+  },
+  deps: Pick<BreadthDeps, "fetchLatestKillsPage" | "fetchLatestLossesPage" | "mergeKillmailLists">
+): Promise<number> {
+  const killPage = pilot.nextKillsPage;
+  const lossPage = pilot.nextLossesPage;
+  const shouldFetchKills = !pilot.exhaustedKills && killPage <= params.maxPages;
+  const shouldFetchLosses = !pilot.exhaustedLosses && lossPage <= params.maxPages;
+  if (!shouldFetchKills && !shouldFetchLosses) {
+    return 0;
+  }
+
+  const [killRows, lossRows] = await Promise.all([
+    shouldFetchKills
+      ? deps.fetchLatestKillsPage(
+          pilot.characterId,
+          killPage,
+          params.signal,
+          params.onRetry(`zKill kills page ${killPage}`)
+        )
+      : Promise.resolve([] as ZkillKillmail[]),
+    shouldFetchLosses
+      ? deps.fetchLatestLossesPage(
+          pilot.characterId,
+          lossPage,
+          params.signal,
+          params.onRetry(`zKill losses page ${lossPage}`)
+        )
+      : Promise.resolve([] as ZkillKillmail[])
+  ]);
+
+  if (shouldFetchKills) {
+    pilot.nextKillsPage += 1;
+  }
+  if (shouldFetchLosses) {
+    pilot.nextLossesPage += 1;
+  }
+
+  const beforeKills = pilot.historyKills.size;
+  const beforeLosses = pilot.historyLosses.size;
+  for (const row of killRows) {
+    pilot.historyKills.set(row.killmail_id, row);
+  }
+  for (const row of lossRows) {
+    pilot.historyLosses.set(row.killmail_id, row);
+  }
+  const addedKills = pilot.historyKills.size - beforeKills;
+  const addedLosses = pilot.historyLosses.size - beforeLosses;
+
+  if (shouldFetchKills) {
+    pilot.exhaustedKills = killRows.length === 0 || addedKills === 0;
+  }
+  if (shouldFetchLosses) {
+    pilot.exhaustedLosses = lossRows.length === 0 || addedLosses === 0;
+  }
+
+  params.updatePilotCard(pilot.entry.pilotName, {
+    fetchPhase: "history",
+    inferenceKills: toSortedRows(pilot.historyKills, deps),
+    inferenceLosses: toSortedRows(pilot.historyLosses, deps)
+  });
+  return addedKills + addedLosses;
 }
 
 async function resolveCorpAllianceNames(
@@ -405,4 +664,34 @@ async function runWithConcurrency<T>(
   });
 
   await Promise.allSettled(workers);
+}
+
+function buildPilotMaterialSignature(params: {
+  fetchPhase: string;
+  statsDanger: number | undefined;
+  inferenceKills: ZkillKillmail[];
+  inferenceLosses: ZkillKillmail[];
+  predictedShips: PilotCard["predictedShips"];
+  fitCandidates: PilotCard["fitCandidates"];
+}): string {
+  const killHead = params.inferenceKills.slice(0, 6).map((row) => row.killmail_id).join(",");
+  const lossHead = params.inferenceLosses.slice(0, 6).map((row) => row.killmail_id).join(",");
+  const predictedSig = params.predictedShips
+    .slice(0, 5)
+    .map((row) => `${row.shipTypeId ?? 0}:${row.probability}`)
+    .join(",");
+  const fitSig = params.fitCandidates
+    .slice(0, 5)
+    .map((row) => `${row.shipTypeId}:${row.confidence}`)
+    .join(",");
+  return [
+    params.fetchPhase,
+    Number.isFinite(params.statsDanger) ? Number(params.statsDanger).toFixed(1) : "na",
+    params.inferenceKills.length,
+    params.inferenceLosses.length,
+    killHead,
+    lossHead,
+    predictedSig,
+    fitSig
+  ].join("|");
 }

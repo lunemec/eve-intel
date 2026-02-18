@@ -177,4 +177,44 @@ describe("ESI universe names", () => {
     expect(first.get(8)).toBe("Name 8");
     expect(second.get(8)).toBe("Name 8");
   });
+
+  it("uses HTTP max-age policy when caching character id lookups", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(JSON.stringify({ characters: [{ id: 123, name: "Pilot A" }] }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "public, max-age=3600"
+        }
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const first = await resolveCharacterIds(["Pilot A"]);
+    const second = await resolveCharacterIds(["Pilot A"]);
+
+    expect(first.get("pilot a")).toBe(123);
+    expect(second.get("pilot a")).toBe(123);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not persist character id cache when response is no-store", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(JSON.stringify({ characters: [{ id: 123, name: "Pilot A" }] }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "public, no-store"
+        }
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const first = await resolveCharacterIds(["Pilot A"]);
+    const second = await resolveCharacterIds(["Pilot A"]);
+
+    expect(first.get("pilot a")).toBe(123);
+    expect(second.get("pilot a")).toBe(123);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
 });

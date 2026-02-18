@@ -764,6 +764,19 @@ body {
   padding: 4px 8px;
 }
 
+.player-threat-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-threat-pill {
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+}
+
 .threat-score {
   font-size: 1.1rem;
   font-weight: 700;
@@ -824,6 +837,10 @@ body {
   color: var(--text);
   font-size: 0.98rem;
   font-weight: 600;
+}
+
+.stat-value .risk-badge {
+  margin-left: 8px;
 }
 
 .player-card-footer {
@@ -1297,6 +1314,18 @@ body {
   background: #20372f;
 }
 
+.risk-style-fleet {
+  color: #bdb8e7;
+  border-color: #59517d;
+  background: #2f2a44;
+}
+
+.risk-style-solo {
+  color: #9fdfc8;
+  border-color: #3a6d5a;
+  background: #20372f;
+}
+
 .alert-icon {
   width: 22px;
   height: 22px;
@@ -1460,5 +1489,13 @@ body {
 
   .ship-eft {
     max-width: 100%;
+  }
+
+  .player-card-header {
+    align-items: flex-start;
+  }
+
+  .player-threat-stack {
+    align-self: flex-end;
   }
 }

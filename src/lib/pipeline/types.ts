@@ -1,5 +1,6 @@
 import type { PilotCard } from "../usePilotIntelPipeline";
 import type { ParsedPilotInput } from "../../types";
+import type { ZkillKillmail } from "../api/zkill";
 
 export type RetryInfo = {
   status: number;
@@ -28,3 +29,30 @@ export type ProcessPilotFn = (
   characterId: number,
   onRetry: RetryBuilder
 ) => Promise<void>;
+
+export type PilotProcessedSnapshot = {
+  version: number;
+  pilotKey: string;
+  characterId: number;
+  lookbackDays: number;
+  baseRow: Pick<
+    PilotCard,
+    "status" |
+    "fetchPhase" |
+    "characterId" |
+    "characterName" |
+    "corporationId" |
+    "corporationName" |
+    "allianceId" |
+    "allianceName" |
+    "securityStatus" |
+    "stats"
+  >;
+  inferenceKills: ZkillKillmail[];
+  inferenceLosses: ZkillKillmail[];
+  predictedShips: PilotCard["predictedShips"];
+  fitCandidates: PilotCard["fitCandidates"];
+  cynoRisk: PilotCard["cynoRisk"];
+  sourceSignature: string;
+  savedAt: number;
+};

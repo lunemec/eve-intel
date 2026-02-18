@@ -74,6 +74,9 @@ describe("pipeline pure helpers", () => {
         kills: 4,
         losses: 1,
         solo: 2,
+        avgGangSize: 3.6,
+        gangRatio: 98,
+        danger: 99,
         iskDestroyed: 900,
         iskLost: 300
       }
@@ -82,9 +85,38 @@ describe("pipeline pure helpers", () => {
     expect(merged.kills).toBe(4);
     expect(merged.losses).toBe(1);
     expect(merged.solo).toBe(2);
+    expect(merged.avgGangSize).toBe(3.6);
+    expect(merged.gangRatio).toBe(98);
     expect(merged.iskDestroyed).toBe(900);
     expect(merged.iskLost).toBe(300);
     expect(merged.kdRatio).toBe(4);
     expect(merged.iskRatio).toBe(3);
+    expect(merged.danger).toBe(99);
+  });
+
+  it("falls back to derived danger when zkill danger is missing", () => {
+    const merged = mergePilotStats({
+      derived: {
+        kills: 2,
+        losses: 8,
+        kdRatio: 0.25,
+        solo: 0,
+        soloRatio: 0,
+        iskDestroyed: 100,
+        iskLost: 400,
+        iskRatio: 0.25,
+        danger: 20
+      },
+      zkillStats: {
+        kills: 4,
+        losses: 1,
+        solo: 2,
+        iskDestroyed: 900,
+        iskLost: 300
+      }
+    });
+
+    expect(merged.danger).toBe(80);
+    expect(merged.gangRatio).toBe(50);
   });
 });

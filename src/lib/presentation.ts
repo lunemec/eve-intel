@@ -7,6 +7,8 @@ type ShipRiskFlags = {
   bait: boolean;
 };
 
+export type EngagementStyle = "Fleet" | "Solo";
+
 export function toPct(value: number): string {
   return `${Math.round(value * 100)}%`;
 }
@@ -128,8 +130,8 @@ function isLikelyBaitHullName(name: string): boolean {
 export function getShipRiskFlags(ship: ShipPrediction, cynoRisk?: CynoRisk): ShipRiskFlags {
   const normalized = ship.shipName.toLowerCase();
   const isPod = normalized.includes("capsule") || normalized.includes("pod");
-  const hardCyno = Boolean(ship.cynoCapable) && (ship.cynoChance ?? 0) >= 50;
-  const softCyno = Boolean(ship.cynoCapable) && !hardCyno && ship.probability > 20;
+  const hardCyno = Boolean(ship.cynoCapable) && (ship.cynoChance ?? 0) >= 100;
+  const softCyno = false;
   const bait =
     !isPod &&
     ship.probability >= 20 &&
@@ -140,7 +142,28 @@ export function getShipRiskFlags(ship: ShipPrediction, cynoRisk?: CynoRisk): Shi
 }
 
 export function shipHasPotentialCyno(ship: ShipPrediction): boolean {
-  return Boolean(ship.cynoCapable) && (ship.cynoChance ?? 0) > 30;
+  return Boolean(ship.cynoCapable) && (ship.cynoChance ?? 0) >= 100;
+}
+
+export function engagementStyleFromSoloRatio(soloRatio?: number): EngagementStyle | null {
+  if (!Number.isFinite(soloRatio)) {
+    return null;
+  }
+  if (Number(soloRatio) <= 5) {
+    return "Fleet";
+  }
+  if (Number(soloRatio) >= 15) {
+    return "Solo";
+  }
+  return null;
+}
+
+export function engagementStyleTitle(style: EngagementStyle, soloRatio?: number): string {
+  const ratio = Number.isFinite(soloRatio) ? `${Number(soloRatio).toFixed(1)}%` : "unknown";
+  if (style === "Fleet") {
+    return `Fleet: this pilot has a low solo ratio (${ratio}), so they usually fight in a group.`;
+  }
+  return `Solo: this pilot has a high solo ratio (${ratio}), so they frequently take solo fights.`;
 }
 
 export function roleBadgeClass(role: string): string {

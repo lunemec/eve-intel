@@ -1,5 +1,5 @@
 import { getCachedState, getCachedStateAsync, setCachedAsync } from "../cache";
-import { fetchJson, type RetryInfo } from "./http";
+import { fetchJsonWithMeta, resolveHttpCachePolicy, type RetryInfo } from "./http";
 
 const ESI_BASE = "https://esi.evetech.net/latest";
 const DATASOURCE = "tranquility";
@@ -192,7 +192,7 @@ async function refreshCharacterIds(
   signal?: AbortSignal
 ): Promise<EsiIdsResponse> {
   const normalizedRequested = new Set(names.map((name) => normalizeName(name)).filter(Boolean));
-  const data = await fetchJson<EsiIdsResponse>(
+  const response = await fetchJsonWithMeta<EsiIdsResponse>(
     `${ESI_BASE}/universe/ids/?datasource=${DATASOURCE}&language=en`,
     {
       method: "POST",
@@ -203,6 +203,17 @@ async function refreshCharacterIds(
     signal,
     onRetry
   );
+  const data = response.data;
+  const hitPolicy = resolveHttpCachePolicy(response.headers, {
+    fallbackTtlMs: NAME_CACHE_TTL_MS,
+    fallbackStaleMs: NAME_CACHE_TTL_MS,
+    fetchedAt: response.fetchedAt
+  });
+  const missPolicy = resolveHttpCachePolicy(response.headers, {
+    fallbackTtlMs: NAME_MISS_CACHE_TTL_MS,
+    fallbackStaleMs: NAME_MISS_CACHE_TTL_MS,
+    fetchedAt: response.fetchedAt
+  });
 
   const writes: Array<Promise<void>> = [];
   const normalizedResolved = new Set<string>();
@@ -212,14 +223,20 @@ async function refreshCharacterIds(
       continue;
     }
     normalizedResolved.add(normalized);
-    writes.push(setCachedAsync(characterNameCacheKey(normalized), character.id, NAME_CACHE_TTL_MS));
+    if (hitPolicy.cacheable) {
+      writes.push(setCachedAsync(characterNameCacheKey(normalized), character.id, hitPolicy.ttlMs, hitPolicy.staleMs));
+    }
   }
 
   for (const normalized of normalizedRequested) {
     if (normalizedResolved.has(normalized)) {
       continue;
     }
-    writes.push(setCachedAsync(characterNameMissCacheKey(normalized), CACHE_MISS_PRESENT, NAME_MISS_CACHE_TTL_MS));
+    if (missPolicy.cacheable) {
+      writes.push(
+        setCachedAsync(characterNameMissCacheKey(normalized), CACHE_MISS_PRESENT, missPolicy.ttlMs, missPolicy.staleMs)
+      );
+    }
   }
 
   if (writes.length > 0) {
@@ -234,15 +251,22 @@ async function refreshCharacterPublic(
   onRetry?: (info: RetryInfo) => void,
   signal?: AbortSignal
 ): Promise<CharacterPublic> {
-  const data = await fetchJson<CharacterPublic>(
+  const response = await fetchJsonWithMeta<CharacterPublic>(
     `${ESI_BASE}/characters/${characterId}/?datasource=${DATASOURCE}`,
     undefined,
     undefined,
     signal,
     onRetry
   );
-  await setCachedAsync(`eve-intel.cache.character.${characterId}`, data, CHARACTER_CACHE_TTL_MS);
-  return data;
+  const policy = resolveHttpCachePolicy(response.headers, {
+    fallbackTtlMs: CHARACTER_CACHE_TTL_MS,
+    fallbackStaleMs: CHARACTER_CACHE_TTL_MS,
+    fetchedAt: response.fetchedAt
+  });
+  if (policy.cacheable) {
+    await setCachedAsync(`eve-intel.cache.character.${characterId}`, response.data, policy.ttlMs, policy.staleMs);
+  }
+  return response.data;
 }
 
 async function refreshUniverseNames(
@@ -250,7 +274,7 @@ async function refreshUniverseNames(
   onRetry?: (info: RetryInfo) => void,
   signal?: AbortSignal
 ): Promise<EsiNameResponse> {
-  const data = await fetchJson<EsiNameResponse>(
+  const response = await fetchJsonWithMeta<EsiNameResponse>(
     `${ESI_BASE}/universe/names/?datasource=${DATASOURCE}`,
     {
       method: "POST",
@@ -261,10 +285,18 @@ async function refreshUniverseNames(
     signal,
     onRetry
   );
+  const data = response.data;
+  const policy = resolveHttpCachePolicy(response.headers, {
+    fallbackTtlMs: NAME_CACHE_TTL_MS,
+    fallbackStaleMs: NAME_CACHE_TTL_MS,
+    fetchedAt: response.fetchedAt
+  });
 
   const writes: Array<Promise<void>> = [];
-  for (const row of data) {
-    writes.push(setCachedAsync(`eve-intel.cache.universe-name.${row.id}`, row.name, NAME_CACHE_TTL_MS));
+  if (policy.cacheable) {
+    for (const row of data) {
+      writes.push(setCachedAsync(`eve-intel.cache.universe-name.${row.id}`, row.name, policy.ttlMs, policy.staleMs));
+    }
   }
   if (writes.length > 0) {
     await Promise.all(writes);
@@ -279,7 +311,7 @@ async function refreshInventoryTypeIdByName(
   signal?: AbortSignal
 ): Promise<number> {
   const normalized = name.trim().toLowerCase();
-  const data = await fetchJson<EsiIdsResponse>(
+  const response = await fetchJsonWithMeta<EsiIdsResponse>(
     `${ESI_BASE}/universe/ids/?datasource=${DATASOURCE}&language=en`,
     {
       method: "POST",
@@ -290,14 +322,23 @@ async function refreshInventoryTypeIdByName(
     signal,
     onRetry
   );
+  const data = response.data;
 
   const exact = (data.inventory_types ?? []).find((row) => row.name.trim().toLowerCase() === normalized);
   const typeId = exact?.id ?? data.inventory_types?.[0]?.id ?? 0;
-  await setCachedAsync(
-    `eve-intel.cache.inventory-type.${normalized}`,
-    typeId,
-    typeId > 0 ? TYPE_SEARCH_CACHE_TTL_MS : TYPE_SEARCH_MISS_TTL_MS
-  );
+  const policy = resolveHttpCachePolicy(response.headers, {
+    fallbackTtlMs: typeId > 0 ? TYPE_SEARCH_CACHE_TTL_MS : TYPE_SEARCH_MISS_TTL_MS,
+    fallbackStaleMs: typeId > 0 ? TYPE_SEARCH_CACHE_TTL_MS : TYPE_SEARCH_MISS_TTL_MS,
+    fetchedAt: response.fetchedAt
+  });
+  if (policy.cacheable) {
+    await setCachedAsync(
+      `eve-intel.cache.inventory-type.${normalized}`,
+      typeId,
+      policy.ttlMs,
+      policy.staleMs
+    );
+  }
   return typeId;
 }
 

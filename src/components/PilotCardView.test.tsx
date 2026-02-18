@@ -69,4 +69,92 @@ describe("PilotCardView", () => {
     expect(screen.getAllByText("Onyx").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Capsule").length).toBeGreaterThan(0);
   });
+
+  it("shows gang profile line with Fleet pill when solo ratio is low", () => {
+    const metrics: FitMetricResult = { status: "unavailable", key: "k", reason: "No dogma" };
+    render(
+      <PilotCardView
+        pilot={pilot({
+          status: "ready",
+          stats: {
+            kills: 100,
+            losses: 20,
+            kdRatio: 5,
+            solo: 3,
+            soloRatio: 3,
+            iskDestroyed: 1_000_000,
+            iskLost: 500_000,
+            iskRatio: 2,
+            danger: 60,
+            avgGangSize: 3.6,
+            gangRatio: 98
+          }
+        })}
+        getFitMetrics={vi.fn(() => metrics)}
+      />
+    );
+
+    expect(screen.getByText("3.6 (98%)")).toBeTruthy();
+    expect(screen.getAllByText("Fleet")).toHaveLength(1);
+  });
+
+  it("shows Solo pill when solo ratio is high", () => {
+    const metrics: FitMetricResult = { status: "unavailable", key: "k", reason: "No dogma" };
+    const { container } = render(
+      <PilotCardView
+        pilot={pilot({
+          status: "ready",
+          stats: {
+            kills: 50,
+            losses: 10,
+            kdRatio: 5,
+            solo: 10,
+            soloRatio: 20,
+            iskDestroyed: 1_000_000,
+            iskLost: 500_000,
+            iskRatio: 2,
+            danger: 60,
+            avgGangSize: 1.2,
+            gangRatio: 80
+          }
+        })}
+        getFitMetrics={vi.fn(() => metrics)}
+      />
+    );
+
+    expect(container.querySelector(".risk-style-solo")?.textContent).toBe("Solo");
+    expect(screen.getAllByText("Solo")).toHaveLength(1);
+  });
+
+  it("shows Fleet/Solo engagement pill next to alliance link area and exposes hover reason", () => {
+    const metrics: FitMetricResult = { status: "unavailable", key: "k", reason: "No dogma" };
+    const { container } = render(
+      <PilotCardView
+        pilot={pilot({
+          status: "ready",
+          allianceId: 99000001,
+          allianceName: "Alliance A",
+          stats: {
+            kills: 100,
+            losses: 20,
+            kdRatio: 5,
+            solo: 2,
+            soloRatio: 2,
+            iskDestroyed: 1_000_000,
+            iskLost: 500_000,
+            iskRatio: 2,
+            danger: 60,
+            avgGangSize: 4.2,
+            gangRatio: 98
+          }
+        })}
+        getFitMetrics={vi.fn(() => metrics)}
+      />
+    );
+
+    const threatPillRow = container.querySelector(".player-threat-pill");
+    expect(threatPillRow?.textContent).toContain("Fleet");
+    const fleetPill = container.querySelector(".player-threat-pill .risk-style-fleet");
+    expect(fleetPill?.getAttribute("title")?.length).toBeGreaterThan(10);
+  });
 });

@@ -290,6 +290,41 @@ function parseCsv(raw) {
 }
 
 function loadMissingShipRowsFromPyfa(dbPath, invTypesRows) {
+  const requiredTables = new Set(["invtypes", "invgroups", "invcategories", "dgmtypeattribs", "dgmtypeeffects"]);
+  const tableRows = querySqliteJson(
+    dbPath,
+    "select lower(name) as name from sqlite_master where type='table'",
+    { suppressError: true, returnNullOnError: true }
+  );
+  if (tableRows === null) {
+    log("unable to inspect pyfa/eve.db tables, skipping augmentation");
+    return {
+      missingShipCount: 0,
+      invTypes: [],
+      invGroups: [],
+      invCategories: [],
+      dgmTypeAttributes: [],
+      dgmTypeEffects: [],
+      dgmAttributeTypes: [],
+      dgmEffects: []
+    };
+  }
+  const tableNames = new Set(tableRows.map((row) => String(row.name ?? "").toLowerCase()).filter(Boolean));
+  const missingRequired = [...requiredTables].filter((name) => !tableNames.has(name));
+  if (missingRequired.length > 0) {
+    log(`pyfa/eve.db missing required tables (${missingRequired.join(",")}), skipping augmentation`);
+    return {
+      missingShipCount: 0,
+      invTypes: [],
+      invGroups: [],
+      invCategories: [],
+      dgmTypeAttributes: [],
+      dgmTypeEffects: [],
+      dgmAttributeTypes: [],
+      dgmEffects: []
+    };
+  }
+
   const existingTypeIds = new Set(
     invTypesRows
       .map((row) => toNumber(row.typeID))
@@ -373,7 +408,7 @@ function loadMissingShipRowsFromPyfa(dbPath, invTypesRows) {
   };
 }
 
-function querySqliteJson(dbPath, sql) {
+function querySqliteJson(dbPath, sql, options = {}) {
   try {
     const raw = execFileSync("sqlite3", ["-json", dbPath, sql], {
       encoding: "utf8",
@@ -381,9 +416,54 @@ function querySqliteJson(dbPath, sql) {
     });
     return JSON.parse(raw || "[]");
   } catch (error) {
-    log(`pyfa sqlite query failed: ${String(error?.message ?? error)}`);
+    const fallback = querySqliteJsonViaPython(dbPath, sql);
+    if (fallback.ok) {
+      return fallback.rows;
+    }
+    if (!options.suppressError) {
+      log(`pyfa sqlite query failed: ${String(error?.message ?? error)} | python fallback: ${fallback.reason}`);
+    }
+    if (options.returnNullOnError) {
+      return null;
+    }
     return [];
   }
+}
+
+function querySqliteJsonViaPython(dbPath, sql) {
+  const candidates = [process.env.PYFA_PYTHON, "python", "python3"].filter(
+    (value) => typeof value === "string" && value.trim().length > 0
+  );
+  const script = [
+    "import json, sqlite3, sys",
+    "db_path = sys.argv[1]",
+    "query = sys.argv[2]",
+    "con = sqlite3.connect(db_path)",
+    "con.row_factory = sqlite3.Row",
+    "cur = con.cursor()",
+    "cur.execute(query)",
+    "rows = [dict(row) for row in cur.fetchall()]",
+    "print(json.dumps(rows))",
+    "cur.close()",
+    "con.close()"
+  ].join(";");
+
+  for (const cmd of candidates) {
+    try {
+      const raw = execFileSync(cmd, ["-c", script, dbPath, sql], {
+        encoding: "utf8",
+        maxBuffer: 64 * 1024 * 1024
+      });
+      return { ok: true, rows: JSON.parse(raw || "[]") };
+    } catch (error) {
+      // try next interpreter
+      if (cmd === candidates[candidates.length - 1]) {
+        return { ok: false, reason: String(error?.message ?? error) };
+      }
+    }
+  }
+
+  return { ok: false, reason: "no python interpreter found for sqlite fallback" };
 }
 
 function sqlInList(values) {

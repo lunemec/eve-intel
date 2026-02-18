@@ -43,16 +43,22 @@ describe("ui helpers", () => {
     const cynoRisk: CynoRisk = { potentialCyno: false, jumpAssociation: true, reasons: [] };
     render(<>{renderShipPills(ship({ shipName: "Onyx", cynoCapable: true, cynoChance: 65, rolePills: ["Web"] }), cynoRisk, "pill")}</>);
 
-    expect(screen.getByText("Potential Cyno")).toBeTruthy();
-    expect(screen.getByText("Bait")).toBeTruthy();
-    expect(screen.getByText("Web")).toBeTruthy();
+    expect(screen.queryByText("Cyno")).toBeNull();
+    const bait = screen.getByText("Bait");
+    const web = screen.getByText("Web");
+    expect(bait).toBeTruthy();
+    expect(web).toBeTruthy();
+    expect(bait.getAttribute("title")?.length).toBeGreaterThan(10);
+    expect(web.getAttribute("title")?.length).toBeGreaterThan(10);
   });
 
   it("renders icon-mode pills with image assets", () => {
-    render(<>{renderShipPills(ship({ cynoCapable: true, cynoChance: 70, rolePills: ["Web"] }), undefined, "icon")}</>);
+    render(<>{renderShipPills(ship({ cynoCapable: true, cynoChance: 100, rolePills: ["Web"] }), undefined, "icon")}</>);
 
     expect(screen.getAllByRole("img").length).toBeGreaterThan(0);
-    expect(screen.getByLabelText("Potential Cyno")).toBeTruthy();
+    const cyno = screen.getByLabelText("Cyno");
+    expect(cyno).toBeTruthy();
+    expect(cyno.getAttribute("title")?.length).toBeGreaterThan(10);
     expect(screen.getByLabelText("Web")).toBeTruthy();
   });
 });

@@ -2,6 +2,7 @@
  * @vitest-environment jsdom
  */
 import { renderHook, waitFor } from "@testing-library/react";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { usePilotIntelPipelineEffect } from "./usePilotIntelPipelineEffect";
 import type { ParsedPilotInput, Settings } from "../types";
@@ -16,11 +17,30 @@ const ENTRY: ParsedPilotInput = {
 
 const SETTINGS: Settings = { lookbackDays: 7 };
 
+const ENTRY_B: ParsedPilotInput = {
+  pilotName: "Pilot B",
+  sourceLine: "Pilot B",
+  parseConfidence: 1,
+  shipSource: "inferred"
+};
+
 describe("usePilotIntelPipelineEffect", () => {
   it("clears cards and logs when entries are empty", async () => {
+    const logDebug = vi.fn();
+    const logError = vi.fn();
     const setPilotCards = vi.fn();
     const setNetworkNotice = vi.fn();
-    const logDebug = vi.fn();
+    const createLoadingCard = vi.fn((entry: ParsedPilotInput): PilotCard => ({
+      parsedEntry: entry,
+      status: "loading",
+      predictedShips: [],
+      fitCandidates: [],
+      kills: [],
+      losses: [],
+      inferenceKills: [],
+      inferenceLosses: []
+    }));
+    const runPilotPipeline = vi.fn(async () => undefined);
 
     renderHook(() =>
       usePilotIntelPipelineEffect(
@@ -33,11 +53,10 @@ describe("usePilotIntelPipelineEffect", () => {
           setNetworkNotice
         },
         {
-          createLoadingCard: vi.fn(),
-          createPilotCardUpdater: vi.fn(),
-          createPipelineLoggers: vi.fn(() => ({ logDebug, logError: vi.fn() })),
-          createProcessPilot: vi.fn(),
-          runPilotPipeline: vi.fn()
+          createLoadingCard,
+          createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
+          createProcessPilot: vi.fn(() => vi.fn()),
+          runPilotPipeline
         }
       )
     );
@@ -46,21 +65,14 @@ describe("usePilotIntelPipelineEffect", () => {
       expect(setPilotCards).toHaveBeenCalledWith([]);
     });
     expect(logDebug).toHaveBeenCalledWith("No parsed entries. Waiting for paste.");
+    expect(runPilotPipeline).not.toHaveBeenCalled();
     expect(setNetworkNotice).not.toHaveBeenCalled();
   });
 
-  it("boots pipeline when entries exist and aborts on cleanup", async () => {
-    const setPilotCards = vi.fn();
-    const setNetworkNotice = vi.fn();
+  it("runs incrementally and only starts newly added pilots; removed pilots are aborted", async () => {
     const logDebug = vi.fn();
     const logError = vi.fn();
-    const runPilotPipeline = vi.fn(async () => undefined);
-    let capturedSignal: AbortSignal | undefined;
-    const createProcessPilot = vi.fn((args: unknown) => {
-      capturedSignal = (args as { signal: AbortSignal }).signal;
-      return vi.fn(async () => undefined);
-    });
-    const createPilotCardUpdater = vi.fn(() => vi.fn());
+    const setNetworkNotice = vi.fn();
     const createLoadingCard = vi.fn((entry: ParsedPilotInput): PilotCard => ({
       parsedEntry: entry,
       status: "loading",
@@ -72,39 +84,76 @@ describe("usePilotIntelPipelineEffect", () => {
       inferenceLosses: []
     }));
 
-    const { unmount } = renderHook(() =>
-      usePilotIntelPipelineEffect(
-        {
-          entries: [ENTRY],
-          settings: SETTINGS,
-          dogmaIndex: null,
-          logDebugRef: { current: logDebug },
-          setPilotCards,
-          setNetworkNotice
-        },
-        {
-          createLoadingCard,
-          createPilotCardUpdater,
-          createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
-          createProcessPilot,
-          runPilotPipeline
-        }
-      )
+    const signalByPilot = new Map<string, AbortSignal>();
+    const releaseByPilot = new Map<string, () => void>();
+    const runPilotPipeline = vi.fn(({ entries, signal }: { entries: ParsedPilotInput[]; signal?: AbortSignal }) => {
+      const pilot = entries[0]?.pilotName ?? "unknown";
+      if (signal) {
+        signalByPilot.set(pilot, signal);
+      }
+      return new Promise<void>((resolve) => {
+        releaseByPilot.set(pilot, resolve);
+      });
+    });
+
+    const { result, rerender, unmount } = renderHook(
+      ({ entries }) => {
+        const [pilotCards, setPilotCards] = useState<PilotCard[]>([]);
+        usePilotIntelPipelineEffect(
+          {
+            entries,
+            settings: SETTINGS,
+            dogmaIndex: null,
+            logDebugRef: { current: logDebug },
+            setPilotCards,
+            setNetworkNotice
+          },
+          {
+            createLoadingCard,
+            createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
+            createProcessPilot: vi.fn(() => vi.fn()),
+            runPilotPipeline
+          }
+        );
+        return { pilotCards };
+      },
+      {
+        initialProps: { entries: [ENTRY] as ParsedPilotInput[] }
+      }
     );
 
     await waitFor(() => {
       expect(runPilotPipeline).toHaveBeenCalledTimes(1);
     });
     expect(setNetworkNotice).toHaveBeenCalledWith("");
-    expect(setPilotCards).toHaveBeenCalledWith([expect.objectContaining({ parsedEntry: ENTRY })]);
+    expect(result.current.pilotCards.map((row) => row.parsedEntry.pilotName)).toEqual(["Pilot A"]);
+    expect(signalByPilot.get("Pilot A")?.aborted).toBe(false);
 
-    expect(createProcessPilot).toHaveBeenCalled();
-    if (!capturedSignal) {
-      throw new Error("Expected signal to be captured");
-    }
-    expect(capturedSignal.aborted).toBe(false);
+    rerender({ entries: [{ ...ENTRY }] });
+    await waitFor(() => {
+      expect(runPilotPipeline).toHaveBeenCalledTimes(1);
+    });
+
+    rerender({ entries: [{ ...ENTRY }, ENTRY_B] });
+    await waitFor(() => {
+      expect(runPilotPipeline).toHaveBeenCalledTimes(2);
+    });
+    expect(runPilotPipeline.mock.calls[1][0].entries[0].pilotName).toBe("Pilot B");
+    expect(result.current.pilotCards.map((row) => row.parsedEntry.pilotName)).toEqual(["Pilot A", "Pilot B"]);
+
+    rerender({ entries: [ENTRY_B] });
+    await waitFor(() => {
+      expect(result.current.pilotCards.map((row) => row.parsedEntry.pilotName)).toEqual(["Pilot B"]);
+    });
+    expect(signalByPilot.get("Pilot A")?.aborted).toBe(true);
+    expect(signalByPilot.get("Pilot B")?.aborted).toBe(false);
+
+    releaseByPilot.get("Pilot B")?.();
+    await waitFor(() => {
+      expect(runPilotPipeline).toHaveBeenCalledTimes(2);
+    });
 
     unmount();
-    expect(capturedSignal.aborted).toBe(true);
+    expect(signalByPilot.get("Pilot B")?.aborted).toBe(false);
   });
 });

@@ -86,6 +86,13 @@ describe("presentation helpers", () => {
         ship({ shipName: "Onyx", cynoCapable: true, cynoChance: 60, probability: 70 }),
         cynoRisk
       )
+    ).toEqual({ hardCyno: false, softCyno: false, bait: true });
+
+    expect(
+      getShipRiskFlags(
+        ship({ shipName: "Onyx", cynoCapable: true, cynoChance: 100, probability: 70 }),
+        cynoRisk
+      )
     ).toEqual({ hardCyno: true, softCyno: false, bait: true });
 
     expect(
@@ -95,7 +102,7 @@ describe("presentation helpers", () => {
       ).bait
     ).toBe(false);
 
-    expect(shipHasPotentialCyno(ship({ cynoCapable: true, cynoChance: 31 }))).toBe(true);
-    expect(shipHasPotentialCyno(ship({ cynoCapable: true, cynoChance: 30 }))).toBe(false);
+    expect(shipHasPotentialCyno(ship({ cynoCapable: true, cynoChance: 99 }))).toBe(false);
+    expect(shipHasPotentialCyno(ship({ cynoCapable: true, cynoChance: 100 }))).toBe(true);
   });
 });

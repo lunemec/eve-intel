@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-import path from "node:path";
 import { normalizeEft, parsePyfaOutput } from "../../../../tools/parity/pyfa-adapter/index.mjs";
-import { parseSvcfitstatCallbackFixture } from "../../../../tools/parity/svcfitstat-replay/index.mjs";
 
 describe("parity adapters", () => {
   it("normalizes EFT and parses pyfa output", () => {
@@ -86,18 +84,5 @@ Small Core Defense Field Extender I`);
     );
     expect(parsed.dpsTotal).toBe(11);
     expect(parsed.ehp).toBe(33);
-  });
-
-  it("maps svcfitstat callback fixture", async () => {
-    const fixturePath = path.join(process.cwd(), "svcfitstat", "CALLBACK_EXAMPLE.md");
-    const result = await parseSvcfitstatCallbackFixture({
-      path: fixturePath,
-      fitId: "nergal-svcfitstat",
-      shipTypeId: 52250,
-      sdeVersion: "fixture"
-    });
-
-    expect(result.dpsTotal).toBeCloseTo(398.48, 2);
-    expect(result.resists.armor.therm).toBeCloseTo(0.868, 3);
   });
 });

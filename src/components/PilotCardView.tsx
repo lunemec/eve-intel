@@ -1,19 +1,61 @@
 import { memo } from "react";
 import { formatFitAsEft } from "../lib/eft";
-import { roleBadgeClass, shipHasPotentialCyno, threatClass, threatLabel, threatScore, toPct, formatRange, formatEhp, formatSpeedRange, formatRatio, formatIsk, orderRolePills } from "../lib/presentation";
+import {
+  engagementStyleFromSoloRatio,
+  engagementStyleTitle,
+  shipHasPotentialCyno,
+  threatClass,
+  threatLabel,
+  threatScore,
+  toPct,
+  formatRange,
+  formatEhp,
+  formatSpeedRange,
+  formatRatio,
+  formatIsk
+} from "../lib/presentation";
 import { renderResistCell, renderShipPills } from "../lib/ui";
 import { characterPortraitUrl, characterZkillUrl, corporationLogoUrl, corporationZkillUrl, allianceLogoUrl, allianceZkillUrl, shipIconUrl, killmailZkillUrl } from "../lib/links";
 import { pilotDetailAnchorId } from "../lib/appUtils";
 import type { PilotCard } from "../lib/usePilotIntelPipeline";
 import type { FitMetricResult } from "../lib/useFitMetrics";
+import type { PilotStats } from "../lib/intel";
 
 const DETAIL_FIT_CANDIDATES = 3;
+
+function formatGangProfile(stats: PilotStats): string {
+  const avgGang = stats.avgGangSize;
+  const gangRatio = stats.gangRatio;
+  if (!Number.isFinite(avgGang) && !Number.isFinite(gangRatio)) {
+    return "-";
+  }
+  if (Number.isFinite(avgGang) && Number.isFinite(gangRatio)) {
+    return `${Number(avgGang).toFixed(1)} (${Math.round(Number(gangRatio))}%)`;
+  }
+  if (Number.isFinite(avgGang)) {
+    return Number(avgGang).toFixed(1);
+  }
+  return `${Math.round(Number(gangRatio))}%`;
+}
 
 export const PilotCardView = memo(function PilotCardView(props: {
   pilot: PilotCard;
   getFitMetrics: (pilot: PilotCard, fit: PilotCard["fitCandidates"][number] | undefined) => FitMetricResult;
 }) {
   const { pilot } = props;
+  const engagementStyle = engagementStyleFromSoloRatio(pilot.stats?.soloRatio);
+  const engagementStyleClass = engagementStyle === "Fleet" ? "risk-style-fleet" : "risk-style-solo";
+  const renderEngagementStylePill = () => (
+    engagementStyle ? (
+      <span
+        className={`risk-badge ${engagementStyleClass}`}
+        title={engagementStyleTitle(engagementStyle, pilot.stats?.soloRatio)}
+      >
+        {engagementStyle}
+      </span>
+    )
+      : null
+  );
 
   return (
     <article className="pilot-card" id={pilotDetailAnchorId(pilot)}>
@@ -90,11 +132,14 @@ export const PilotCardView = memo(function PilotCardView(props: {
               )}
             </div>
           </div>
-          <div className={`threat-indicator ${threatClass(pilot.stats?.danger)}`}>
-            <div className="threat-score">
-              {pilot.status === "ready" ? threatScore(pilot.stats?.danger) : pilot.status.toUpperCase()}
+          <div className="player-threat-stack">
+            <div className={`threat-indicator ${threatClass(pilot.stats?.danger)}`}>
+              <div className="threat-score">
+                {pilot.status === "ready" ? threatScore(pilot.stats?.danger) : pilot.status.toUpperCase()}
+              </div>
+              <div className="threat-label">{threatLabel(pilot.stats?.danger)}</div>
             </div>
-            <div className="threat-label">{threatLabel(pilot.stats?.danger)}</div>
+            <div className="player-threat-pill">{renderEngagementStylePill()}</div>
           </div>
         </div>
         <div className="player-card-body">
@@ -111,6 +156,12 @@ export const PilotCardView = memo(function PilotCardView(props: {
               <div className="stat-row"><span className="stat-label">ISK Lost:</span><span className="stat-value">{formatIsk(pilot.stats?.iskLost)}</span></div>
               <div className="stat-row"><span className="stat-label">ISK Ratio:</span><span className="stat-value">{formatRatio(pilot.stats?.iskRatio)}</span></div>
               <div className="stat-row"><span className="stat-label">Solo Ratio:</span><span className="stat-value">{pilot.stats ? `${pilot.stats.soloRatio}%` : "-"}</span></div>
+              <div className="stat-row">
+                <span className="stat-label">Gang:</span>
+                <span className="stat-value">
+                  {pilot.stats ? formatGangProfile(pilot.stats) : "-"}
+                </span>
+              </div>
               <div className="stat-row"><span className="stat-label">Danger:</span><span className="stat-value">{pilot.stats ? `${pilot.stats.danger}%` : "-"}</span></div>
             </div>
           </div>
@@ -153,32 +204,6 @@ export const PilotCardView = memo(function PilotCardView(props: {
       </div>
       <aside className="ship-column">
         <h3>Likely Ships</h3>
-        <p className="ship-meta">
-          Parse: {(pilot.parsedEntry.parseConfidence * 100).toFixed(0)}% ({pilot.parsedEntry.shipSource})
-        </p>
-        {(() => {
-          const softPotentialCyno = pilot.predictedShips.some(
-            (ship) => Boolean(ship.cynoCapable) && ship.probability > 20
-          );
-          const aggregateRolePills = orderRolePills(
-            Array.from(new Set(pilot.predictedShips.flatMap((ship) => ship.rolePills ?? [])))
-          );
-          return (
-            <div className="risk-row">
-              {pilot.cynoRisk?.potentialCyno ? (
-                <span className="risk-badge risk-cyno">Potential Cyno</span>
-              ) : softPotentialCyno ? (
-                <span className="risk-badge risk-cyno-soft">Potential Cyno</span>
-              ) : null}
-              {pilot.cynoRisk?.jumpAssociation ? <span className="risk-badge risk-bait">Bait</span> : null}
-              {aggregateRolePills.map((role) => (
-                <span key={`${pilot.parsedEntry.pilotName}-risk-${role}`} className={`risk-badge ${roleBadgeClass(role)}`}>
-                  {role}
-                </span>
-              ))}
-            </div>
-          );
-        })()}
         <ul>
           {pilot.predictedShips.length > 0 ? (
             pilot.predictedShips.slice(0, DETAIL_FIT_CANDIDATES).map((ship) => {
@@ -222,8 +247,12 @@ export const PilotCardView = memo(function PilotCardView(props: {
                       )}
                       {ship.cynoCapable ? (
                         <>
-                          <span className="ship-cyno-pill">Cyno Capable</span>
-                          <span className="ship-cyno-chance">{ship.cynoChance ?? 0}% cyno</span>
+                          <span
+                            className="ship-cyno-pill"
+                            title={`Cyno Capable: ${ship.shipName} can fit a cynosural module, but this does not imply proven recent usage.`}
+                          >
+                            Cyno Capable
+                          </span>
                         </>
                       ) : null}
                       {renderShipPills(ship, pilot.cynoRisk)}

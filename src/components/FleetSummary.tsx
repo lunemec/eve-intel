@@ -1,7 +1,7 @@
 import { memo } from "react";
 import type { PilotCard } from "../lib/usePilotIntelPipeline";
 import { renderShipPills } from "../lib/ui";
-import { shipHasPotentialCyno, threatClass, threatScore } from "../lib/presentation";
+import { engagementStyleFromSoloRatio, engagementStyleTitle, shipHasPotentialCyno, threatClass, threatScore } from "../lib/presentation";
 import { pilotDetailAnchorId, smoothScrollToElement, extractErrorMessage } from "../lib/appUtils";
 import {
   allianceZkillUrl,
@@ -58,6 +58,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
             : undefined;
           const shipHref = topFit?.sourceLossKillmailId ? killmailZkillUrl(topFit.sourceLossKillmailId) : undefined;
           const topShipCyno = topShip ? shipHasPotentialCyno(topShip) : false;
+          const engagementStyle = engagementStyleFromSoloRatio(pilot.stats?.soloRatio);
           return (
             <li
               className={`fleet-summary-line fleet-summary-grid${topShipCyno ? " cyno-highlight" : ""}`}
@@ -159,6 +160,14 @@ export const FleetSummary = memo(function FleetSummary(props: {
                 )}
               </span>
               <span className="fleet-col fleet-col-alerts">
+                {engagementStyle ? (
+                  <span
+                    className={`risk-badge ${engagementStyle === "Fleet" ? "risk-style-fleet" : "risk-style-solo"}`}
+                    title={engagementStyleTitle(engagementStyle, pilot.stats?.soloRatio)}
+                  >
+                    {engagementStyle}
+                  </span>
+                ) : null}
                 {topShip ? renderShipPills(topShip, pilot.cynoRisk, "icon") : null}
               </span>
             </li>

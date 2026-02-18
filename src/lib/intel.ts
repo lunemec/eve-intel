@@ -52,6 +52,8 @@ export type PilotStats = {
   kdRatio: number;
   solo: number;
   soloRatio: number;
+  avgGangSize?: number;
+  gangRatio?: number;
   iskDestroyed: number;
   iskLost: number;
   iskRatio: number;
@@ -92,12 +94,14 @@ export function derivePilotStats(
   const iskDestroyed = sumIsk(kills);
   const iskLost = sumIsk(losses);
 
+  const soloRatio = ratioPercent(soloKills, killsCount);
   return {
     kills: killsCount,
     losses: lossesCount,
     kdRatio: ratio(killsCount, lossesCount),
     solo: soloKills,
-    soloRatio: ratioPercent(soloKills, killsCount),
+    soloRatio,
+    gangRatio: Number((100 - soloRatio).toFixed(1)),
     iskDestroyed,
     iskLost,
     iskRatio: ratio(iskDestroyed, iskLost),

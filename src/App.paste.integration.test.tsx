@@ -6,7 +6,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { fetchCharacterPublic, resolveUniverseNames } from "./lib/api/esi";
 import { fetchCharacterStats } from "./lib/api/zkill";
-import { fetchLatestKillsPaged, fetchLatestLossesPaged, fetchRecentKills, fetchRecentLosses } from "./lib/api/zkill";
+import {
+  fetchLatestKillsPage,
+  fetchLatestKillsPaged,
+  fetchLatestLossesPage,
+  fetchLatestLossesPaged
+} from "./lib/api/zkill";
 
 function createMemoryStorage(): Storage {
   const data = new Map<string, string>();
@@ -33,15 +38,38 @@ function createMemoryStorage(): Storage {
 }
 
 vi.mock("./lib/api/esi", () => ({
-  resolveCharacterIds: vi.fn(async () => new Map([["a9tan", 12345]])),
+  resolveCharacterIds: vi.fn(async (names: string[]) => {
+    const map = new Map<string, number>();
+    for (const name of names) {
+      const normalized = name.trim().toLowerCase();
+      if (normalized === "a9tan") {
+        map.set(normalized, 12345);
+      }
+      if (normalized === "b9tan") {
+        map.set(normalized, 67890);
+      }
+    }
+    return map;
+  }),
   resolveInventoryTypeIdByName: vi.fn(async () => undefined),
-  fetchCharacterPublic: vi.fn(async () => ({
-    character_id: 12345,
-    corporation_id: 54321,
-    alliance_id: 0,
-    name: "A9tan",
-    security_status: 2.3
-  })),
+  fetchCharacterPublic: vi.fn(async (characterId: number) => {
+    if (characterId === 67890) {
+      return {
+        character_id: 67890,
+        corporation_id: 98765,
+        alliance_id: 0,
+        name: "B9tan",
+        security_status: 2.1
+      };
+    }
+    return {
+      character_id: 12345,
+      corporation_id: 54321,
+      alliance_id: 0,
+      name: "A9tan",
+      security_status: 2.3
+    };
+  }),
   resolveUniverseNames: vi.fn(async () => new Map([[54321, "Test Corp"]]))
 }));
 
@@ -49,8 +77,10 @@ vi.mock("./lib/api/zkill", () => ({
   ZKILL_MAX_LOOKBACK_DAYS: 7,
   fetchCharacterStats: vi.fn(async () => null),
   fetchLatestKills: vi.fn(async () => []),
+  fetchLatestKillsPage: vi.fn(async (_characterId: number, page: number) => (page === 1 ? [] : [])),
   fetchLatestKillsPaged: vi.fn(async () => []),
   fetchLatestLosses: vi.fn(async () => []),
+  fetchLatestLossesPage: vi.fn(async (_characterId: number, page: number) => (page === 1 ? [] : [])),
   fetchLatestLossesPaged: vi.fn(async () => []),
   fetchRecentKills: vi.fn(async () => []),
   fetchRecentLosses: vi.fn(async () => [])
@@ -92,11 +122,11 @@ describe("App paste flow", () => {
     });
 
     expect(screen.getByText(/Likely Ships/i)).toBeTruthy();
-    expect(vi.mocked(fetchLatestKillsPaged)).toHaveBeenCalled();
-    expect(vi.mocked(fetchLatestLossesPaged)).toHaveBeenCalled();
+    expect(vi.mocked(fetchLatestKillsPage)).toHaveBeenCalled();
+    expect(vi.mocked(fetchLatestLossesPage)).toHaveBeenCalled();
   });
 
-  it("derives low threat from merged kills/losses even if zKill danger is high", async () => {
+  it("uses zKill dangerous metric for player threat and danger row", async () => {
     vi.mocked(fetchCharacterStats).mockResolvedValueOnce({
       kills: 1,
       losses: 31,
@@ -117,7 +147,9 @@ describe("App paste flow", () => {
     window.dispatchEvent(event);
 
     await waitFor(() => {
-      expect(screen.getByText("LOW")).toBeTruthy();
+      expect(screen.getByText("HIGH")).toBeTruthy();
+      expect(screen.getByText("9.9")).toBeTruthy();
+      expect(screen.getByText("99%")).toBeTruthy();
     });
   });
 
@@ -132,7 +164,7 @@ describe("App paste flow", () => {
       }
       return out;
     });
-    vi.mocked(fetchRecentKills).mockResolvedValueOnce([
+    vi.mocked(fetchLatestKillsPage).mockImplementationOnce(async (_characterId, page) => (page === 1 ? [
       {
         killmail_id: 9001,
         killmail_time: "2026-02-13T00:00:00Z",
@@ -140,8 +172,8 @@ describe("App paste flow", () => {
         attackers: [{ character_id: 12345, ship_type_id: 12731 }],
         zkb: { totalValue: 1500000000 }
       }
-    ]);
-    vi.mocked(fetchRecentLosses).mockResolvedValueOnce([
+    ] : []));
+    vi.mocked(fetchLatestLossesPage).mockImplementationOnce(async (_characterId, page) => (page === 1 ? [
       {
         killmail_id: 9002,
         killmail_time: "2026-02-12T00:00:00Z",
@@ -153,7 +185,7 @@ describe("App paste flow", () => {
         attackers: [],
         zkb: { totalValue: 900000000 }
       }
-    ]);
+    ] : []));
     vi.mocked(fetchCharacterStats).mockResolvedValueOnce(null);
     vi.mocked(fetchCharacterPublic).mockResolvedValueOnce({
       character_id: 12345,
@@ -198,15 +230,8 @@ describe("App paste flow", () => {
     window.dispatchEvent(event);
 
     await waitFor(() => {
-      expect(vi.mocked(fetchRecentKills)).toHaveBeenCalled();
+      expect(vi.mocked(fetchLatestKillsPage)).toHaveBeenCalled();
     });
-
-    expect(vi.mocked(fetchRecentKills)).toHaveBeenCalledWith(
-      12345,
-      3,
-      expect.anything(),
-      expect.any(Function)
-    );
     expect(JSON.parse(localStorage.getItem("eve-intel.settings.v1") ?? "{}")).toEqual({ lookbackDays: 3 });
   });
 
@@ -224,15 +249,8 @@ describe("App paste flow", () => {
     window.dispatchEvent(event);
 
     await waitFor(() => {
-      expect(vi.mocked(fetchRecentKills)).toHaveBeenCalled();
+      expect(vi.mocked(fetchLatestKillsPage)).toHaveBeenCalled();
     });
-
-    expect(vi.mocked(fetchRecentKills)).toHaveBeenCalledWith(
-      12345,
-      1,
-      expect.anything(),
-      expect.any(Function)
-    );
     expect(JSON.parse(localStorage.getItem("eve-intel.settings.v1") ?? "{}")).toEqual({ lookbackDays: 1 });
   });
 
@@ -253,8 +271,8 @@ describe("App paste flow", () => {
       expect(screen.getAllByText(/Character not found in ESI\./i).length).toBeGreaterThan(0);
     });
 
-    expect(vi.mocked(fetchRecentKills)).not.toHaveBeenCalled();
-    expect(vi.mocked(fetchRecentLosses)).not.toHaveBeenCalled();
+    expect(vi.mocked(fetchLatestKillsPage)).not.toHaveBeenCalled();
+    expect(vi.mocked(fetchLatestLossesPage)).not.toHaveBeenCalled();
   });
 
   it("deduplicates repeated pilot lines into one card", async () => {
@@ -271,6 +289,73 @@ describe("App paste flow", () => {
     await waitFor(() => {
       expect(container.querySelectorAll("article.pilot-card").length).toBe(1);
     });
+  });
+
+  it("does not restart pilot fetches when repasting identical semantic list", async () => {
+    render(<App />);
+
+    const first = new Event("paste") as ClipboardEvent;
+    Object.defineProperty(first, "clipboardData", {
+      value: {
+        getData: () => "A9tan"
+      }
+    });
+    window.dispatchEvent(first);
+
+    await waitFor(() => {
+      expect(vi.mocked(fetchLatestKillsPage).mock.calls.some((call) => call[0] === 12345)).toBe(true);
+      expect(vi.mocked(fetchLatestLossesPage).mock.calls.some((call) => call[0] === 12345)).toBe(true);
+    });
+    const killsBefore = vi.mocked(fetchLatestKillsPage).mock.calls.length;
+    const lossesBefore = vi.mocked(fetchLatestLossesPage).mock.calls.length;
+
+    const second = new Event("paste") as ClipboardEvent;
+    Object.defineProperty(second, "clipboardData", {
+      value: {
+        getData: () => "  a9tan  "
+      }
+    });
+    window.dispatchEvent(second);
+
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(vi.mocked(fetchLatestKillsPage).mock.calls.length).toBe(killsBefore);
+    expect(vi.mocked(fetchLatestLossesPage).mock.calls.length).toBe(lossesBefore);
+  });
+
+  it("only starts fetch path for newly added pilots on repaste", async () => {
+    render(<App />);
+
+    const first = new Event("paste") as ClipboardEvent;
+    Object.defineProperty(first, "clipboardData", {
+      value: {
+        getData: () => "A9tan"
+      }
+    });
+    window.dispatchEvent(first);
+
+    await waitFor(() => {
+      expect(vi.mocked(fetchLatestKillsPage).mock.calls.some((call) => call[0] === 12345)).toBe(true);
+      expect(vi.mocked(fetchLatestLossesPage).mock.calls.some((call) => call[0] === 12345)).toBe(true);
+    });
+    const killsAInitial = vi.mocked(fetchLatestKillsPage).mock.calls.filter((call) => call[0] === 12345).length;
+    const lossesAInitial = vi.mocked(fetchLatestLossesPage).mock.calls.filter((call) => call[0] === 12345).length;
+
+    const second = new Event("paste") as ClipboardEvent;
+    Object.defineProperty(second, "clipboardData", {
+      value: {
+        getData: () => "A9tan\nB9tan"
+      }
+    });
+    window.dispatchEvent(second);
+
+    await waitFor(() => {
+      expect(vi.mocked(fetchLatestKillsPage).mock.calls.some((call) => call[0] === 67890)).toBe(true);
+      expect(vi.mocked(fetchLatestLossesPage).mock.calls.some((call) => call[0] === 67890)).toBe(true);
+    });
+    const killsAAfter = vi.mocked(fetchLatestKillsPage).mock.calls.filter((call) => call[0] === 12345).length;
+    const lossesAAfter = vi.mocked(fetchLatestLossesPage).mock.calls.filter((call) => call[0] === 12345).length;
+    expect(killsAAfter).toBe(killsAInitial);
+    expect(lossesAAfter).toBe(lossesAInitial);
   });
 
   it("supports desktop clipboard callback ingestion", async () => {

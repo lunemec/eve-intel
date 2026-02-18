@@ -88,4 +88,46 @@ describe("useParsedPaste", () => {
     rerender({ logger: logDebug });
     expect(result.current.applyPaste).toBe(first);
   });
+
+  it("does not update parseResult when semantic pilot list is unchanged", () => {
+    const logDebug = vi.fn();
+    vi.mocked(parseClipboardText)
+      .mockReturnValueOnce({
+        entries: [
+          {
+            pilotName: "Pilot A",
+            sourceLine: "Pilot A",
+            parseConfidence: 1,
+            shipSource: "inferred"
+          }
+        ],
+        rejected: []
+      })
+      .mockReturnValueOnce({
+        entries: [
+          {
+            pilotName: " pilot a ",
+            sourceLine: "pilot a",
+            parseConfidence: 0.95,
+            shipSource: "inferred"
+          }
+        ],
+        rejected: ["ignored"]
+      });
+    const { result } = renderHook(() => useParsedPaste({ logDebug }));
+
+    act(() => {
+      result.current.applyPaste("Pilot A");
+    });
+    const firstParseResult = result.current.parseResult;
+
+    act(() => {
+      result.current.applyPaste(" pilot a ");
+    });
+
+    expect(parseClipboardText).toHaveBeenCalledTimes(2);
+    expect(result.current.parseResult).toBe(firstParseResult);
+    expect(result.current.lastPasteRaw).toBe("pilot a");
+    expect(result.current.manualEntry).toBe("pilot a");
+  });
 });

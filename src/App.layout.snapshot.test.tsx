@@ -30,8 +30,34 @@ vi.mock("./lib/api/zkill", () => ({
   ZKILL_MAX_LOOKBACK_DAYS: 7,
   fetchCharacterStats: vi.fn(async () => null),
   fetchLatestKills: vi.fn(async () => []),
+  fetchLatestKillsPage: vi.fn(async (_characterId: number, page: number) => (page === 1 ? [
+    {
+      killmail_id: 9001,
+      killmail_time: "2026-02-13T00:00:00Z",
+      victim: {},
+      attackers: [{ character_id: 1962038711, ship_type_id: 12731 }],
+      zkb: { totalValue: 1500000000 }
+    }
+  ] : [])),
   fetchLatestKillsPaged: vi.fn(async () => []),
   fetchLatestLosses: vi.fn(async () => []),
+  fetchLatestLossesPage: vi.fn(async (_characterId: number, page: number) => (page === 1 ? [
+    {
+      killmail_id: 9002,
+      killmail_time: "2026-02-12T00:00:00Z",
+      victim: {
+        character_id: 1962038711,
+        ship_type_id: 12731,
+        items: [
+          { item_type_id: 2103, flag: 27 },
+          { item_type_id: 12058, flag: 19 },
+          { item_type_id: 2281, flag: 12 }
+        ]
+      },
+      attackers: [],
+      zkb: { totalValue: 900000000 }
+    }
+  ] : [])),
   fetchLatestLossesPaged: vi.fn(async () => []),
   fetchRecentKills: vi.fn(async () => [
     {
@@ -80,6 +106,10 @@ describe("App card layout snapshots", () => {
     });
 
     const card = container.querySelector(".pilot-card");
+    expect(card?.outerHTML).not.toContain("Parse:");
+    expect(card?.outerHTML).not.toContain("class=\"risk-row\"");
+    expect(card?.outerHTML).not.toContain("Potential Cyno");
+    expect(card?.outerHTML).not.toContain("% cyno");
     expect(card?.outerHTML).toMatchSnapshot();
   });
 });

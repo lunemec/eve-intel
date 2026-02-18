@@ -16,7 +16,7 @@ import { useParsedPaste } from "./lib/useParsedPaste";
 import { useDebugSectionAutoScroll } from "./lib/useDebugSectionAutoScroll";
 import { useCacheWipeAction } from "./lib/useCacheWipeAction";
 import { useDesktopWindowControls } from "./lib/useDesktopWindowControls";
-import { deriveAppViewModel } from "./lib/appViewModel";
+import { deriveAppViewModel, sortPilotCardsByDanger } from "./lib/appViewModel";
 import { useClearPilotCards } from "./lib/useClearPilotCards";
 import { useManualEntryHandlers } from "./lib/useManualEntryHandlers";
 import { useAppPreferences } from "./lib/useAppPreferences";
@@ -48,7 +48,8 @@ export default function App() {
   });
   useDebugSectionAutoScroll({ debugEnabled, debugSectionRef });
 
-  const { copyableFleetCount, globalLoadProgress, showGlobalLoad } = deriveAppViewModel(pilotCards);
+  const sortedPilotCards = sortPilotCardsByDanger(pilotCards);
+  const { copyableFleetCount, globalLoadProgress, showGlobalLoad } = deriveAppViewModel(sortedPilotCards);
   const { onMinimize, onToggleMaximize, onClose, onRestartToUpdate } = useDesktopWindowControls();
   const clearPilotCards = useClearPilotCards({ setPilotCards });
   const { onManualEntryChange, onManualEntrySubmit } = useManualEntryHandlers({
@@ -90,7 +91,7 @@ export default function App() {
 
       {networkNotice ? <p className="notice notice-inline">{networkNotice}</p> : null}
 
-      {pilotCards.length === 0 ? (
+      {sortedPilotCards.length === 0 ? (
         <section className="empty">
           <p>
             Try pasting one pilot per line, for example{" "}
@@ -100,16 +101,16 @@ export default function App() {
         </section>
       ) : (
         <>
-          {pilotCards.length > 1 ? (
+          {sortedPilotCards.length > 1 ? (
             <FleetSummary
-              pilotCards={pilotCards}
+              pilotCards={sortedPilotCards}
               copyableFleetCount={copyableFleetCount}
               setNetworkNotice={setNetworkNotice}
               logDebug={logDebug}
             />
           ) : null}
           <section className="cards">
-            {pilotCards.map((pilot) => (
+            {sortedPilotCards.map((pilot) => (
               <PilotCardView
                 key={pilot.parsedEntry.pilotName.toLowerCase()}
                 pilot={pilot}
