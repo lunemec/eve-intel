@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { evaluateDogmaParityFollowupGates } from "./gates.mjs";
 
 export const DEFAULT_DOGMA_PARITY_REPORT_PATH = path.join(
   "reports",
@@ -112,7 +113,7 @@ export function buildDogmaParityFollowupBaselineSummary({
       deficit: Math.max(0, requiredFits - counts.passingFits)
     }));
 
-  return {
+  const summary = {
     generatedAt: normalizeGeneratedAt(parityReport?.generatedAt),
     thresholdPolicy: {
       mode: normalizeThresholdMode(thresholdPolicy?.mode),
@@ -127,6 +128,13 @@ export function buildDogmaParityFollowupBaselineSummary({
       .sort(compareMismatchRows)
       .slice(0, FOLLOWUP_TOP_MISMATCH_LIMIT)
   };
+
+  summary.gateEvaluation = evaluateDogmaParityFollowupGates({
+    summary,
+    requiredFitsPerHull: requiredFits
+  });
+
+  return summary;
 }
 
 function resolveFromRepoRoot(inputPath) {

@@ -142,6 +142,20 @@ describe("buildDogmaParityFollowupBaselineSummary", () => {
         relDelta: 0.12
       }
     ]);
+
+    expect(summary.gateEvaluation.fitPassCount).toBe(2);
+    expect(summary.gateEvaluation.fitFailCount).toBe(1);
+    expect(summary.gateEvaluation.phases[0]).toMatchObject({
+      phase: "t3-cruiser",
+      complete: false,
+      status: "in_progress"
+    });
+    expect(summary.gateEvaluation.phases[1]).toMatchObject({
+      phase: "t3-destroyer",
+      complete: false,
+      status: "blocked",
+      blockedByPhase: "t3-cruiser"
+    });
   });
 });
 
@@ -181,6 +195,10 @@ describe("runDogmaParityFollowupBaseline", () => {
     expect(result.summary.thresholdPolicy).toEqual(FOLLOWUP_10PCT_THRESHOLD_POLICY);
     expect(result.summary.comparedFits).toBe(1);
     expect(result.summary.failingFits).toBe(0);
+    expect(result.summary.gateEvaluation).toMatchObject({
+      fitPassCount: 1,
+      fitFailCount: 0
+    });
 
     const written = JSON.parse(await readFile(summaryPath, "utf8"));
     expect(written).toEqual(result.summary);

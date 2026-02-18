@@ -3,6 +3,7 @@
 All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
+- Added a follow-up fit/hull gate evaluator for `followup-10pct` parity semantics, including per-fit pass/fail classification, T3 cruiser and T3 destroyer per-hull deficits, and phase sequencing that blocks destroyer completion until cruisers are complete.
 - Added deterministic follow-up baseline summary artifact generation (`reports/dogma-parity-followup-baseline-summary.json`) with strict `followup-10pct` threshold policy metadata, per-fit max-relative-delta rollups, per-hull pass/deficit counts, and ranked mismatch output.
 - Wired follow-up baseline CLI to run the default baseline artifact pipeline with configurable `--parity-report-path` and `--summary-path` inputs, plus regression coverage for end-to-end summary emission.
 - Added follow-up baseline CLI scaffolding with an explicit precondition entry gate (`dogma:parity:followup:baseline`) that exits before baseline generation unless the prerequisite task is marked complete.
