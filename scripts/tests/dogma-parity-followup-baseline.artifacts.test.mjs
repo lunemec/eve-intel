@@ -156,6 +156,31 @@ describe("buildDogmaParityFollowupBaselineSummary", () => {
       status: "blocked",
       blockedByPhase: "t3-cruiser"
     });
+    expect(summary.prioritizationBacklog).toEqual({
+      generatedAt: "2026-02-18T14:10:00.000Z",
+      thresholdPolicy: {
+        mode: "followup-10pct",
+        relMax: 0.1
+      },
+      scoringModel: "followup-priority-v1",
+      items: [
+        {
+          id: "cluster-damage-output",
+          likelyMechanicFamily: "damage-output",
+          fitIds: ["fit-b"],
+          shipTypeIds: [29990],
+          metrics: ["dpsTotal"],
+          score: 0.228,
+          scoreBreakdown: {
+            errorSeverity: 0.12,
+            hullGatePressure: 1.9,
+            mechanicReuse: 1,
+            fitPrevalence: 1
+          },
+          status: "todo"
+        }
+      ]
+    });
   });
 });
 
@@ -198,6 +223,15 @@ describe("runDogmaParityFollowupBaseline", () => {
     expect(result.summary.gateEvaluation).toMatchObject({
       fitPassCount: 1,
       fitFailCount: 0
+    });
+    expect(result.summary.prioritizationBacklog).toEqual({
+      generatedAt: "2026-02-18T14:10:00.000Z",
+      thresholdPolicy: {
+        mode: "followup-10pct",
+        relMax: 0.1
+      },
+      scoringModel: "followup-priority-v1",
+      items: []
     });
 
     const written = JSON.parse(await readFile(summaryPath, "utf8"));

@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { evaluateDogmaParityFollowupGates } from "./gates.mjs";
+import { buildDogmaParityFollowupPrioritizationBacklog } from "./prioritization.mjs";
 
 export const DEFAULT_DOGMA_PARITY_REPORT_PATH = path.join(
   "reports",
@@ -132,6 +133,9 @@ export function buildDogmaParityFollowupBaselineSummary({
   summary.gateEvaluation = evaluateDogmaParityFollowupGates({
     summary,
     requiredFitsPerHull: requiredFits
+  });
+  summary.prioritizationBacklog = buildDogmaParityFollowupPrioritizationBacklog({
+    summary
   });
 
   return summary;
