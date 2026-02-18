@@ -1,8 +1,8 @@
 # Loop Summary
 
 **Status:** Completed successfully
-**Iterations:** 9
-**Duration:** 40m 10s
+**Iterations:** 2
+**Duration:** 13m 8s
 
 ## Tasks
 
@@ -14,4 +14,4 @@ _No events recorded._
 
 ## Final Commit
 
-481f1e1: chore(runtime): reconcile stale blocked baseline task
+9a1aa2e: perf: streamline evidence summarization scans

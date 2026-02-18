@@ -2,6 +2,14 @@
 
 ## Patterns
 
+### mem-1771445125-4da1
+> Evidence summarization now has a shared one-pass scanner in src/lib/intel/summaries.ts via summarizeEvidence, and src/lib/pipeline/executors.ts uses it so coverage + top evidence logs share a single kill/loss scan; regression guard lives in src/lib/pipeline/executors.recompute.test.ts with attacker accessor read-count assertion.
+<!-- tags: performance, pipeline, testing, intel | created: 2026-02-18 -->
+
+### mem-1771444605-3b0a
+> Fit metric resolver key construction now memoizes per fit object plus character scope via WeakMap in src/lib/useFitMetrics.ts, and src/lib/useFitMetrics.test.ts enforces one sort call for repeated same-fit lookups.
+<!-- tags: performance, testing, refactor, cache | created: 2026-02-18 -->
+
 ### mem-1771442662-3972
 > Step-6 backtest canonicalization is enforced by scripts/tests/backtest-zkill-canonicalization.test.mjs, which requires scripts/backtest-zkill.mjs to import runBacktestCandidateScoring, predictShipIdsByRecency, and DEFAULT_RECENCY_BACKTEST_CANDIDATES from src/lib/backtestCore.ts and rejects local candidate/predict helper implementations.
 <!-- tags: testing, refactor, backtest, cli | created: 2026-02-18 -->
@@ -133,6 +141,22 @@
 ## Decisions
 
 ## Fixes
+
+### mem-1771444968-e453
+> failure: cmd=rg -n vi.mock pattern for ../intel mocks with complex escapes, exit=2, error=regex parse error unrecognized escape sequence, next=use fixed-string rg probes instead of over-escaped alternation regex
+<!-- tags: tooling, error-handling, search | created: 2026-02-18 -->
+
+### mem-1771444899-8a1b
+> failure: cmd=npx vitest run src/lib/pipeline/executors.recompute.test.ts, exit=1, error=vi.mock hoisting ReferenceError Cannot access setCachedAsyncMock before initialization in executors.recompute test, next=wrap shared mock fns in vi.hoisted and rerun red gate
+<!-- tags: testing, error-handling, performance, pipeline | created: 2026-02-18 -->
+
+### mem-1771444661-800c
+> failure: cmd=cat <<EOF >> .ralph/agent/scratchpad.md with backticks in markdown, exit=127, error=backticks triggered shell command substitution while appending commit/task note, next=use quoted heredoc (<<'EOF') for scratchpad markdown containing backticks
+<!-- tags: tooling, error-handling | created: 2026-02-18 -->
+
+### mem-1771444605-3442
+> failure: cmd=npx vitest run src/lib/useFitMetrics.test.ts, exit=1, error=expected red gate; repeated same-fit lookups called Array.sort twice during key build, next=add per-fit/per-character key memoization in useFitMetrics resolver and rerun targeted test
+<!-- tags: testing, error-handling, performance, refactor | created: 2026-02-18 -->
 
 ### mem-1771443037-060d
 > runtime-task reconciliation: if a task is blocked by a missing dependency id, verify behavior with scoped tests plus npm test/build, then close stale blocked task when implementation is already satisfied
