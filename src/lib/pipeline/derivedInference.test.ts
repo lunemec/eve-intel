@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { loadDerivedInferenceWithCache } from "./derivedInference";
+import type { CacheLookup } from "../cache";
 import type { PilotCard } from "../usePilotIntelPipeline";
 import type { DerivedInference } from "./executors";
 
@@ -34,15 +35,19 @@ function makeDerived(): DerivedInference {
   };
 }
 
+function asGenericCachedStateLookup<TCached>(
+  lookup: (key: string) => Promise<CacheLookup<TCached>>
+): <T>(key: string) => Promise<CacheLookup<T>> {
+  return lookup as unknown as <T>(key: string) => Promise<CacheLookup<T>>;
+}
+
 describe("pipeline/derivedInference", () => {
   it("returns usable cache hit without recompute", async () => {
     const cached = makeDerived();
     const recompute = vi.fn(async () => makeDerived());
     const logDebug = vi.fn();
-    const getCachedStateAsync = (async <T>() =>
-      ({ value: cached as unknown as T, stale: false })) as <T>(
-      key: string
-    ) => Promise<{ value: T | null; stale: boolean }>;
+    const getCachedStateAsync = asGenericCachedStateLookup(async (_key: string) =>
+      ({ value: cached, stale: false }));
     const result = await loadDerivedInferenceWithCache(
       {
         row: makePilotCard(),
@@ -71,10 +76,8 @@ describe("pipeline/derivedInference", () => {
   it("returns stale cache hit and triggers background recompute", async () => {
     const cached = makeDerived();
     const recompute = vi.fn(async () => makeDerived());
-    const getCachedStateAsync = (async <T>() =>
-      ({ value: cached as unknown as T, stale: true })) as <T>(
-      key: string
-    ) => Promise<{ value: T | null; stale: boolean }>;
+    const getCachedStateAsync = asGenericCachedStateLookup(async (_key: string) =>
+      ({ value: cached, stale: true }));
     const result = await loadDerivedInferenceWithCache(
       {
         row: makePilotCard(),
@@ -99,10 +102,8 @@ describe("pipeline/derivedInference", () => {
     const recomputed = makeDerived();
     const recompute = vi.fn(async () => recomputed);
     const logDebug = vi.fn();
-    const getCachedStateAsync = (async <T>() =>
-      ({ value: null, stale: false })) as <T>(
-      key: string
-    ) => Promise<{ value: T | null; stale: boolean }>;
+    const getCachedStateAsync = asGenericCachedStateLookup<DerivedInference>(async (_key: string) =>
+      ({ value: null, stale: false }));
     const result = await loadDerivedInferenceWithCache(
       {
         row: makePilotCard(),

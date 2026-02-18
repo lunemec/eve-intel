@@ -8,9 +8,7 @@ import { fetchCharacterPublic, resolveUniverseNames } from "./lib/api/esi";
 import { fetchCharacterStats } from "./lib/api/zkill";
 import {
   fetchLatestKillsPage,
-  fetchLatestKillsPaged,
-  fetchLatestLossesPage,
-  fetchLatestLossesPaged
+  fetchLatestLossesPage
 } from "./lib/api/zkill";
 
 function createMemoryStorage(): Storage {

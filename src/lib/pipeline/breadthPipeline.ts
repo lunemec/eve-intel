@@ -4,7 +4,6 @@ import {
   fetchCharacterStats,
   fetchLatestKillsPage,
   fetchLatestLossesPage,
-  type ZkillCharacterStats,
   type ZkillKillmail
 } from "../api/zkill";
 import { derivePilotStats } from "../intel";
