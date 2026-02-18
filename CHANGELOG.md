@@ -3,6 +3,7 @@
 All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
+- Expanded T3 cruiser parity coverage with 35 curated zKill-based Loki/Legion/Proteus/Tengu fits, synced pyfa reference rows for each new fit, and added a regression coverage test enforcing `>=10` corpus+reference fits per cruiser hull.
 - Added deterministic follow-up prioritization backlog generation for mismatch mechanic clusters (`damage-output`, `effective-hit-points`, `resist-profile`), including stable ordering and per-cluster score breakdowns (`errorSeverity`, `hullGatePressure`, `mechanicReuse`, `fitPrevalence`).
 - Added a follow-up fit/hull gate evaluator for `followup-10pct` parity semantics, including per-fit pass/fail classification, T3 cruiser and T3 destroyer per-hull deficits, and phase sequencing that blocks destroyer completion until cruisers are complete.
 - Added deterministic follow-up baseline summary artifact generation (`reports/dogma-parity-followup-baseline-summary.json`) with strict `followup-10pct` threshold policy metadata, per-fit max-relative-delta rollups, per-hull pass/deficit counts, and ranked mismatch output.
