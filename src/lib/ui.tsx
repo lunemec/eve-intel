@@ -90,7 +90,7 @@ export function renderShipPills(
   const flags = getShipRiskFlags(ship, cynoRisk);
   const elements = [];
 
-  if (flags.bait) {
+  if (flags.bait && hasEvidenceUrl(ship, "Bait")) {
     const bait = (
       <span
         key={`${ship.shipName}-pill-bait`}
@@ -103,7 +103,7 @@ export function renderShipPills(
     elements.push(wrapEvidenceLink(ship, "Bait", bait, mode));
   }
 
-  if (flags.hardCyno) {
+  if (flags.hardCyno && hasEvidenceUrl(ship, "Cyno")) {
     const title = cynoTitle(ship);
     const cyno = mode === "icon" || mode === "icon-link" ? (
         <img
@@ -122,6 +122,9 @@ export function renderShipPills(
   }
 
   for (const role of ship.rolePills ?? []) {
+    if (!hasEvidenceUrl(ship, role)) {
+      continue;
+    }
     const iconTypeId = ROLE_ICON_TYPE_IDS[role];
     const title = roleTitle(role);
     const roleElement = mode === "icon" || mode === "icon-link" ? (
@@ -165,7 +168,7 @@ function wrapEvidenceLink(
   if (mode !== "icon-link") {
     return element;
   }
-  const url = ship.pillEvidence?.[pillName as keyof NonNullable<ShipPrediction["pillEvidence"]>]?.url;
+  const url = evidenceUrl(ship, pillName);
   if (!url) {
     return element;
   }
@@ -180,4 +183,13 @@ function wrapEvidenceLink(
       {element}
     </a>
   );
+}
+
+function hasEvidenceUrl(ship: ShipPrediction, pillName: string): boolean {
+  return Boolean(evidenceUrl(ship, pillName));
+}
+
+function evidenceUrl(ship: ShipPrediction, pillName: string): string | undefined {
+  const url = ship.pillEvidence?.[pillName as keyof NonNullable<ShipPrediction["pillEvidence"]>]?.url;
+  return typeof url === "string" && url.length > 0 ? url : undefined;
 }

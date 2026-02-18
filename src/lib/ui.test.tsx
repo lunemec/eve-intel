@@ -39,7 +39,7 @@ describe("ui helpers", () => {
     expect(screen.getByText("100%")).toBeTruthy();
   });
 
-  it("suppresses cyno and bait pills when heuristic signals exist but evidence is missing", () => {
+  it("suppresses non-Fleet/Solo pills when selected evidence is missing", () => {
     const cynoRisk: CynoRisk = { potentialCyno: false, jumpAssociation: true, reasons: [] };
     render(
       <>
@@ -53,12 +53,39 @@ describe("ui helpers", () => {
 
     expect(screen.queryByText("Cyno")).toBeNull();
     expect(screen.queryByText("Bait")).toBeNull();
-    const web = screen.getByText("Web");
-    expect(web).toBeTruthy();
-    expect(web.getAttribute("title")?.length).toBeGreaterThan(10);
+    expect(screen.queryByText("Web")).toBeNull();
   });
 
-  it("renders cyno and bait pills when selected evidence exists", () => {
+  it("suppresses non-evidence icon-link pills while keeping evidence-backed icons", () => {
+    const webEvidenceUrl = "https://zkillboard.com/kill/42/";
+    render(
+      <>
+        {renderShipPills(
+          ship({
+            rolePills: ["Web", "Long Point"],
+            pillEvidence: {
+              Web: {
+                pillName: "Web",
+                causingModule: "Stasis Webifier II",
+                fitId: "700:Heavy tackle fit",
+                killmailId: 42,
+                url: webEvidenceUrl,
+                timestamp: "2026-02-14T11:00:00.000Z"
+              }
+            }
+          }),
+          undefined,
+          "icon-link"
+        )}
+      </>
+    );
+
+    const web = screen.getByLabelText("Web");
+    expect(web.closest("a")?.getAttribute("href")).toBe(webEvidenceUrl);
+    expect(screen.queryByLabelText("Long Point")).toBeNull();
+  });
+
+  it("renders only evidence-backed pills when selected evidence exists", () => {
     const cynoRisk: CynoRisk = { potentialCyno: false, jumpAssociation: true, reasons: [] };
     render(
       <>
@@ -97,7 +124,7 @@ describe("ui helpers", () => {
     const cyno = screen.getByText("Cyno");
     expect(bait).toBeTruthy();
     expect(cyno).toBeTruthy();
-    expect(screen.getAllByText("Web").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Web")).toBeNull();
   });
 
   it("renders icon-mode pills with image assets and links evidence-backed icons", () => {
@@ -139,7 +166,7 @@ describe("ui helpers", () => {
     const cyno = screen.getByLabelText("Cyno");
     expect(cyno).toBeTruthy();
     expect(cyno.getAttribute("title")?.length).toBeGreaterThan(10);
-    const web = screen.getByLabelText("Web");
+    const web = screen.getAllByLabelText("Web")[0];
     expect(web).toBeTruthy();
     expect(cyno.closest("a")?.getAttribute("href")).toBe(cynoEvidenceUrl);
     expect(web.closest("a")?.getAttribute("href")).toBe(webEvidenceUrl);

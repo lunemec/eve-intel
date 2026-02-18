@@ -157,4 +157,47 @@ describe("PilotCardView", () => {
     const fleetPill = container.querySelector(".player-threat-pill .risk-style-fleet");
     expect(fleetPill?.getAttribute("title")?.length).toBeGreaterThan(10);
   });
+
+  it("renders only evidence-backed non-Fleet/Solo pills across pilot-card pill surfaces", () => {
+    const metrics: FitMetricResult = { status: "unavailable", key: "k", reason: "No dogma" };
+    render(
+      <PilotCardView
+        pilot={pilot({
+          status: "ready",
+          predictedShips: [
+            {
+              shipTypeId: 12013,
+              shipName: "Onyx",
+              probability: 70,
+              source: "inferred",
+              reason: [],
+              rolePills: ["Web"]
+            },
+            {
+              shipTypeId: 11963,
+              shipName: "Rapier",
+              probability: 30,
+              source: "inferred",
+              reason: [],
+              rolePills: ["Long Point"],
+              pillEvidence: {
+                "Long Point": {
+                  pillName: "Long Point",
+                  causingModule: "Warp Disruptor II",
+                  fitId: "11963:Rapier fit",
+                  killmailId: 91001,
+                  url: "https://zkillboard.com/kill/91001/",
+                  timestamp: "2026-02-14T11:00:00.000Z"
+                }
+              }
+            }
+          ]
+        })}
+        getFitMetrics={vi.fn(() => metrics)}
+      />
+    );
+
+    expect(screen.queryAllByText("Web")).toHaveLength(0);
+    expect(screen.getAllByText("Long Point")).toHaveLength(2);
+  });
 });
