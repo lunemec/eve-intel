@@ -6,8 +6,7 @@ import { persistDevFitRecord } from "../devFitDump";
 import {
   deriveFitCandidates,
   deriveShipPredictions,
-  summarizeEvidenceCoverage,
-  summarizeTopEvidenceShips,
+  summarizeEvidence,
   type ShipPrediction
 } from "../intel";
 import type { PilotCard } from "../usePilotIntelPipeline";
@@ -70,23 +69,20 @@ export async function recomputeDerivedInference(params: {
   cacheKey: string;
   debugLog?: DebugLogger;
 }): Promise<DerivedInference> {
-  const evidenceCoverage = summarizeEvidenceCoverage(
-    params.row.characterId!,
-    params.row.inferenceKills,
-    params.row.inferenceLosses
-  );
-  params.debugLog?.("Inference evidence coverage", {
-    pilot: params.row.parsedEntry.pilotName,
-    ...evidenceCoverage
-  });
-
-  const topEvidence = summarizeTopEvidenceShips({
+  const evidenceSummary = summarizeEvidence({
     characterId: params.row.characterId!,
     kills: params.row.inferenceKills,
     losses: params.row.inferenceLosses,
     shipNamesByTypeId: params.namesById,
     limit: 10
   });
+  const evidenceCoverage = evidenceSummary.coverage;
+  params.debugLog?.("Inference evidence coverage", {
+    pilot: params.row.parsedEntry.pilotName,
+    ...evidenceCoverage
+  });
+
+  const topEvidence = evidenceSummary.topShips;
   params.debugLog?.("Inference top evidence ships", {
     pilot: params.row.parsedEntry.pilotName,
     ships: topEvidence

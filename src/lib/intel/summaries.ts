@@ -1,12 +1,30 @@
 import type { ZkillKillmail } from "../api/zkill";
 import type { EvidenceCoverage } from "../intel";
-import { collectEvidence } from "./evidence";
 
-export function summarizeEvidenceCoverage(
+type ShipEvidenceCounts = {
+  kills: number;
+  losses: number;
+};
+
+export type TopEvidenceShip = {
+  shipTypeId: number;
+  shipName: string;
+  kills: number;
+  losses: number;
+  total: number;
+};
+
+export type EvidenceSummary = {
+  coverage: EvidenceCoverage;
+  topShips: TopEvidenceShip[];
+};
+
+function scanEvidenceRows(
   characterId: number,
   kills: ZkillKillmail[],
   losses: ZkillKillmail[]
-): EvidenceCoverage {
+): { coverage: EvidenceCoverage; shipCounts: Map<number, ShipEvidenceCounts> } {
+  const shipCounts = new Map<number, ShipEvidenceCounts>();
   let killRowsWithMatchedAttackerShip = 0;
   let killRowsWithoutAttackers = 0;
   let killRowsWithAttackersButNoCharacterMatch = 0;
@@ -17,55 +35,78 @@ export function summarizeEvidenceCoverage(
       killRowsWithoutAttackers += 1;
       continue;
     }
-    const matched = attackers.find(
-      (entry) => entry.character_id === characterId && typeof entry.ship_type_id === "number"
-    );
-    if (matched) {
+
+    let sawCharacterMatch = false;
+    let firstCharacterMatchShipTypeId: number | undefined;
+    let hasCoverageMatch = false;
+    for (const attacker of attackers) {
+      if (attacker.character_id !== characterId) {
+        continue;
+      }
+      if (!sawCharacterMatch) {
+        sawCharacterMatch = true;
+        firstCharacterMatchShipTypeId = attacker.ship_type_id;
+      }
+      if (!hasCoverageMatch && typeof attacker.ship_type_id === "number") {
+        hasCoverageMatch = true;
+      }
+      if (sawCharacterMatch && hasCoverageMatch) {
+        break;
+      }
+    }
+
+    if (hasCoverageMatch) {
       killRowsWithMatchedAttackerShip += 1;
     } else {
       killRowsWithAttackersButNoCharacterMatch += 1;
+    }
+
+    if (firstCharacterMatchShipTypeId) {
+      incrementShipCounts(shipCounts, firstCharacterMatchShipTypeId, "kills");
     }
   }
 
   let lossRowsWithVictimShip = 0;
   for (const loss of losses) {
-    if (
-      (loss.victim.character_id === characterId || loss.victim.character_id === undefined) &&
-      typeof loss.victim.ship_type_id === "number"
-    ) {
+    const matchedCharacter = loss.victim.character_id === characterId || loss.victim.character_id === undefined;
+    const victimShipTypeId = loss.victim.ship_type_id;
+    if (matchedCharacter && typeof victimShipTypeId === "number") {
       lossRowsWithVictimShip += 1;
+    }
+    if (matchedCharacter && victimShipTypeId) {
+      incrementShipCounts(shipCounts, victimShipTypeId, "losses");
     }
   }
 
   return {
-    totalKills: kills.length,
-    totalLosses: losses.length,
-    killRowsWithMatchedAttackerShip,
-    killRowsWithoutAttackers,
-    killRowsWithAttackersButNoCharacterMatch,
-    lossRowsWithVictimShip
+    coverage: {
+      totalKills: kills.length,
+      totalLosses: losses.length,
+      killRowsWithMatchedAttackerShip,
+      killRowsWithoutAttackers,
+      killRowsWithAttackersButNoCharacterMatch,
+      lossRowsWithVictimShip
+    },
+    shipCounts
   };
 }
 
-export function summarizeTopEvidenceShips(params: {
-  characterId: number;
-  kills: ZkillKillmail[];
-  losses: ZkillKillmail[];
+function incrementShipCounts(
+  shipCounts: Map<number, ShipEvidenceCounts>,
+  shipTypeId: number,
+  key: keyof ShipEvidenceCounts
+): void {
+  const current = shipCounts.get(shipTypeId) ?? { kills: 0, losses: 0 };
+  current[key] += 1;
+  shipCounts.set(shipTypeId, current);
+}
+
+function buildTopEvidenceShips(params: {
+  shipCounts: Map<number, ShipEvidenceCounts>;
   shipNamesByTypeId: Map<number, string>;
   limit?: number;
-}): Array<{ shipTypeId: number; shipName: string; kills: number; losses: number; total: number }> {
-  const bucket = new Map<number, { kills: number; losses: number }>();
-  for (const ev of collectEvidence(params.characterId, params.kills, params.losses)) {
-    const current = bucket.get(ev.shipTypeId) ?? { kills: 0, losses: 0 };
-    if (ev.eventType === "kill") {
-      current.kills += 1;
-    } else {
-      current.losses += 1;
-    }
-    bucket.set(ev.shipTypeId, current);
-  }
-
-  return [...bucket.entries()]
+}): TopEvidenceShip[] {
+  return [...params.shipCounts.entries()]
     .map(([shipTypeId, counts]) => ({
       shipTypeId,
       shipName: params.shipNamesByTypeId.get(shipTypeId) ?? `Type ${shipTypeId}`,
@@ -75,4 +116,45 @@ export function summarizeTopEvidenceShips(params: {
     }))
     .sort((a, b) => b.total - a.total)
     .slice(0, Math.max(1, params.limit ?? 8));
+}
+
+export function summarizeEvidenceCoverage(
+  characterId: number,
+  kills: ZkillKillmail[],
+  losses: ZkillKillmail[]
+): EvidenceCoverage {
+  return scanEvidenceRows(characterId, kills, losses).coverage;
+}
+
+export function summarizeTopEvidenceShips(params: {
+  characterId: number;
+  kills: ZkillKillmail[];
+  losses: ZkillKillmail[];
+  shipNamesByTypeId: Map<number, string>;
+  limit?: number;
+}): TopEvidenceShip[] {
+  const scan = scanEvidenceRows(params.characterId, params.kills, params.losses);
+  return buildTopEvidenceShips({
+    shipCounts: scan.shipCounts,
+    shipNamesByTypeId: params.shipNamesByTypeId,
+    limit: params.limit
+  });
+}
+
+export function summarizeEvidence(params: {
+  characterId: number;
+  kills: ZkillKillmail[];
+  losses: ZkillKillmail[];
+  shipNamesByTypeId: Map<number, string>;
+  limit?: number;
+}): EvidenceSummary {
+  const scan = scanEvidenceRows(params.characterId, params.kills, params.losses);
+  return {
+    coverage: scan.coverage,
+    topShips: buildTopEvidenceShips({
+      shipCounts: scan.shipCounts,
+      shipNamesByTypeId: params.shipNamesByTypeId,
+      limit: params.limit
+    })
+  };
 }

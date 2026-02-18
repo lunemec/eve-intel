@@ -3,6 +3,7 @@
 All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
+- Streamlined inference evidence summarization scans by adding a shared one-pass summary path in `src/lib/intel/summaries.ts` and switching `recomputeDerivedInference` in `src/lib/pipeline/executors.ts` to derive coverage and top-evidence rows from the same pass; added regression coverage in `src/lib/pipeline/executors.recompute.test.ts`.
 - Improved fit-metric resolver hot-path performance by memoizing per-fit/per-character metric-key construction in `src/lib/useFitMetrics.ts`, avoiding repeated module-sort key rebuilds on cache hits while preserving existing result semantics; added regression coverage in `src/lib/useFitMetrics.test.ts`.
 - Completed Step-8 refactor hardening by rerunning required validations (`npm test`, `npm run build` last) and finalizing v0.2.9 release-note boundary coverage through `refactor(backtest): canonicalize zkill backtest tuning path`.
 - Canonicalized zKill backtest tuning by adding a Step-6 canonicalization gate (`scripts/tests/backtest-zkill-canonicalization.test.mjs`), introducing shared scoring helpers in `src/lib/backtestCore.ts`, routing `src/lib/backtest.ts` through the shared core, and delegating `scripts/backtest-zkill.mjs` to shared candidate scoring + recency predictor logic.

@@ -9,6 +9,7 @@ import {
   scoreShips
 } from "./intel/prediction";
 import {
+  summarizeEvidence as summarizeEvidenceFromEvidence,
   summarizeEvidenceCoverage as summarizeEvidenceCoverageFromEvidence,
   summarizeTopEvidenceShips as summarizeTopEvidenceShipsFromEvidence
 } from "./intel/summaries";
@@ -201,6 +202,19 @@ export function summarizeTopEvidenceShips(params: {
   limit?: number;
 }): Array<{ shipTypeId: number; shipName: string; kills: number; losses: number; total: number }> {
   return summarizeTopEvidenceShipsFromEvidence(params);
+}
+
+export function summarizeEvidence(params: {
+  characterId: number;
+  kills: ZkillKillmail[];
+  losses: ZkillKillmail[];
+  shipNamesByTypeId: Map<number, string>;
+  limit?: number;
+}): {
+  coverage: EvidenceCoverage;
+  topShips: Array<{ shipTypeId: number; shipName: string; kills: number; losses: number; total: number }>;
+} {
+  return summarizeEvidenceFromEvidence(params);
 }
 
 function isSoloKill(kill: ZkillKillmail, characterId: number): boolean {
