@@ -1,11 +1,11 @@
 # Session Handoff
 
-_Generated: 2026-02-18 13:21:31 UTC_
+_Generated: 2026-02-18 15:14:43 UTC_
 
 ## Git Context
 
 - **Branch:** `better_combat_capability`
-- **HEAD:** 6dfea7e: chore: auto-commit before merge (loop primary)
+- **HEAD:** b5a1dd2: chore: auto-commit before merge (loop primary)
 
 ## Tasks
 
@@ -36,12 +36,26 @@ _Generated: 2026-02-18 13:21:31 UTC_
 - [x] npm script wiring + arg contract tests
 - [x] Guardrail handling for partial failures + tests
 - [x] Final verification + changelog update
+- [x] Follow-up AC1 entry gate
+- [x] Follow-up baseline 10pct artifact
+- [x] Follow-up fit+hull gate evaluator
+- [x] Follow-up deterministic prioritization backlog
+- [x] Follow-up scoped parity diagnostics alignment
+- [x] T3 cruiser corpus/reference expansion
+- [x] T3 cruiser mechanic-cluster parity fixes
+- [x] T3 destroyer expansion+fix completion
+- [x] Follow-up final verification+changelog
+- [x] T3 cruiser residual Legion/Proteus gate closure
 
+### Remaining
+
+- [ ] Follow-up baseline 10pct artifact _(blocked by: task-1771422162-placeholder)_
 
 ## Key Files
 
 Recently modified:
 
+- `.ai/prompt_engineer.md`
 - `.ralph/agent/handoff.md`
 - `.ralph/agent/memories.md`
 - `.ralph/agent/scratchpad.md`
@@ -49,24 +63,19 @@ Recently modified:
 - `.ralph/agent/tasks.jsonl`
 - `.ralph/current-events`
 - `.ralph/current-loop-id`
-- `.ralph/events-20260218-124243.jsonl`
-- `.ralph/history.jsonl`
-- `.ralph/loop.lock`
+- `.ralph/events-20260218-134046.jsonl`
+- `.ralph/events-20260218-134115.jsonl`
 
 ## Next Session
 
-Session completed successfully. No pending work.
-
-**Original objective:**
+The following prompt can be used to continue where this session left off:
 
 ```
-# Ralph Implementation Prompt: Dogma New-Fit Failing Test Generation
+Continue the previous work. Remaining tasks (1):
+- Follow-up baseline 10pct artifact
+
+Original objective: # PROMPT: Ship Combat Capability Accuracy Follow-up
 
 ## Objective
-Implement the design in `specs/dogma-failing-test-generation/` to add a one-command workflow that turns newly appended zKill fits into scoped Dogma parity failures, with deterministic artifacts and non-zero exit on mismatch.
-
-## Spec Reference
-- `specs/dogma-failing-test-generation/requirements.md`
-- `specs/dogma-failing-test-generation/research/dogma-fit-test-workflow.md`
-- `specs/dogma-failing-test-generation/de...
+Implement the follow-up phase to improve Dogma combat capability parity against pyfa for currently surfaced metrics, prioritizing T3 c...
 ```

@@ -233,7 +233,11 @@ function isFittedSlotFlag(flag?: number): boolean {
   if (flag === undefined) {
     return false;
   }
-  return (flag >= 11 && flag <= 34) || (flag >= 92 && flag <= 99);
+  return (
+    (flag >= 11 && flag <= 34) || // low / mid / high
+    (flag >= 92 && flag <= 99) || // rigs
+    (flag >= 125 && flag <= 132) // subsystem slots
+  );
 }
 
 export function prepareFittedItems(
@@ -301,6 +305,15 @@ function isChargeLikeName(name: string): boolean {
     return false;
   }
   if (normalized.includes("launcher")) {
+    return false;
+  }
+  if (normalized.includes("missile guidance")) {
+    return false;
+  }
+  if (/\b(?:missile|rocket|torpedo)\s+bay\b/.test(normalized)) {
+    return false;
+  }
+  if (normalized.includes("artillery") && normalized.includes("probe")) {
     return false;
   }
   return (

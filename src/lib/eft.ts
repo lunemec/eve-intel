@@ -13,7 +13,7 @@ export function formatFitAsEft(shipName: string, fit?: FitCandidate): string {
     appendGroup(lines, "Mid Slots", grouped.mid);
     appendGroup(lines, "Low Slots", grouped.low);
     appendGroup(lines, "Rig Slots", grouped.rig);
-    appendGroup(lines, "Other", grouped.other);
+    appendGroup(lines, isStrategicCruiserTypeId(fit.shipTypeId) ? "Subsystems" : "Other", grouped.other);
     return lines.join("\n").trimEnd();
   }
 
@@ -55,4 +55,8 @@ function appendGroup(lines: string[], title: string, modules: string[]): void {
     lines.push(module);
   }
   lines.push("");
+}
+
+function isStrategicCruiserTypeId(shipTypeId: number): boolean {
+  return shipTypeId === 29984 || shipTypeId === 29986 || shipTypeId === 29988 || shipTypeId === 29990;
 }

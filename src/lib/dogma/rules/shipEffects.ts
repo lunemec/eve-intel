@@ -80,13 +80,31 @@ export function armorHpBonusMultiplier(ship: DogmaTypeEntry | undefined): number
   if (hasByExact(ship, "shipBonusArmorHPAD2")) {
     return 1.65;
   }
-  if (hasByPattern(ship, /armorhp/i)) {
+  if (
+    hasByExact(
+      ship,
+      "subsystemBonusAmarrDefensiveArmorHP",
+      "subsystemBonusGallenteDefensiveArmorHP",
+      "subsystemBonusMinmatarDefensiveShieldArmorHP"
+    )
+  ) {
+    return 1.25;
+  }
+  if (
+    hasByPattern(ship, /shiparmorhp/i) ||
+    hasByPattern(ship, /elitebonuscommandshiparmorhp/i) ||
+    hasByPattern(ship, /elitebonusjumpfreighterarmorhp/i) ||
+    hasByPattern(ship, /elitebonuslogifrigarmorhp/i)
+  ) {
     return 1.25;
   }
   return 1;
 }
 
 export function shieldHpBonusMultiplier(ship: DogmaTypeEntry | undefined): number {
+  if (hasByExact(ship, "subsystemBonusMinmatarDefensiveShieldArmorHP")) {
+    return 1.25;
+  }
   if (hasByExact(ship, "subsystemBonusCaldariDefensiveShieldHP")) {
     return 1.5;
   }

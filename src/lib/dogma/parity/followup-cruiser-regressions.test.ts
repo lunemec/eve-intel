@@ -9,6 +9,12 @@ import { parseEftToResolvedFit } from "./eft";
 
 const FOLLOWUP_REL_MAX = 0.1;
 const FOLLOWUP_CRUISER_REGRESSION_FIT_IDS = [
+  "manual-legion-augmented-plating-coverage-1",
+  "manual-loki-adaptive-defense-node-coverage-1",
+  "manual-proteus-eeg-augmented-support-nullifier-coverage-1",
+  "manual-proteus-nanobot-injector-coverage-1",
+  "manual-tengu-paomo1-kinetic-ham-1",
+  "manual-tengu-obfuscation-manifold-coverage-1",
   "zkill-legion-133446555",
   "zkill-legion-133466849",
   "zkill-legion-133466796",

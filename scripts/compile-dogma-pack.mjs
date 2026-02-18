@@ -107,6 +107,7 @@ async function main() {
   }
 
   const typeEntries = [];
+  const MASS_ATTRIBUTE_ID = 4;
   for (const row of invTypes) {
     const typeId = toNumber(row.typeID);
     const groupId = toNumber(row.groupID);
@@ -122,6 +123,11 @@ async function main() {
       const attrName = attributeNameById.get(attr.attributeId) ?? `attr_${attr.attributeId}`;
       attrs[attrName] = attr.value;
       attrsById[attr.attributeId] = attr.value;
+    }
+    const invMass = toNumber(row.mass);
+    if (invMass !== undefined && invMass > 0) {
+      attrs.Mass = invMass;
+      attrsById[MASS_ATTRIBUTE_ID] = invMass;
     }
     const effectRows = effectsByTypeId.get(typeId) ?? [];
     const effects = effectRows.map((effect) => effectNameById.get(effect.effectId) ?? `effect_${effect.effectId}`);

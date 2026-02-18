@@ -145,7 +145,7 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
   const defense = applyDefenseModifiers(
     index,
     effectiveShip,
-    [...high, ...mid, ...low, ...rig],
+    [...high, ...mid, ...low, ...rig, ...subsystemModules],
     assumptions
   );
   const speedAndSig = estimateSpeedAndSignature(index, effectiveShip, mid, low, rig, assumptions);
@@ -939,6 +939,11 @@ function getShipMissileDamageTypeMultiplier(
     const bonus = getAttrById(ship, 1535) ?? 25;
     return 1 + Math.max(0, bonus) * 0.05;
   }
+  if (primary === "kin" && effects.some((value) => /subsystembonuscaldarioffensive2missilelauncherkineticdamage/.test(value))) {
+    // Tengu Offensive - Accelerated Ejection Bay: +5% kinetic missile damage per level.
+    // Dogma parity assumes all-V pilot skills, so apply +25%.
+    return 1.25;
+  }
   if (primary === "kin" && effects.some((value) => /shipmissilekindamagecc/.test(value))) {
     const bonus = getAttrById(ship, 487) ?? 20;
     return 1 + Math.max(0, bonus) * 0.05;
@@ -1016,15 +1021,6 @@ function applyDefenseModifiers(
     armor: getAttrResolved(index, ship, "Armor Hitpoints", "armorHP") ?? 1800,
     hull: getAttrResolved(index, ship, "Structure Hitpoints", "structureHP", "hp") ?? 1600
   };
-  if (ship?.typeId === 29988) {
-    hp.shield += 500;
-    hp.hull += 600;
-    assumptions.push("Applied Gallente defensive subsystem hull profile HP uplift.");
-  }
-  if (ship?.typeId === 29990) {
-    hp.hull += 1500;
-    assumptions.push("Applied Minmatar defensive subsystem hull profile HP uplift.");
-  }
   if (ship?.typeId === 22446) {
     hp.shield *= 1.14;
     assumptions.push("Applied command-ship shield profile uplift for Vulture parity.");
@@ -1081,13 +1077,21 @@ function applyDefenseModifiers(
       hasPolarizedResistanceKiller = true;
     }
     applyCommandBurstDefenseBonus(index, mod, hp, resonance, assumptions);
-    if (Number(type.categoryId ?? 0) === 32 || hasAnyEffect(index, type, "subSystem")) {
-      // Subsystems alter hull behavior via effects; their raw attrs are not direct
-      // fitted-module HP/resist bonuses in the assembled ship profile.
+    const isSubsystem = Number(type.categoryId ?? 0) === 32 || hasAnyEffect(index, type, "subSystem");
+    const effectTags = getEffectNames(type).join("|");
+    if (isSubsystem) {
+      // Strategic cruiser subsystems can carry additive HP attrs (e.g. covert
+      // reconfiguration hull/armor bonuses) in addition to effect-driven behavior.
+      const shieldBonus = getAttrResolved(index, type, "Shield Hitpoint Bonus", "Shield Capacity Bonus", "Shield Bonus");
+      if (shieldBonus !== undefined && isShieldCapacityModifier(effectTags)) {
+        applyShieldCapacityBonus(hp, shieldBonus, effectTags);
+      }
+      applyHpBonus(hp, "armor", getAttrResolved(index, type, "Armor Hitpoint Bonus"), effectTags);
+      applyHpBonus(hp, "hull", getAttrResolved(index, type, "Structure Hitpoint Bonus"), effectTags);
+      applyHpBonus(hp, "hull", getAttrResolved(index, type, "Hitpoint Bonus"), effectTags);
       continue;
     }
     const attrs = type.attrs ?? {};
-    const effectTags = getEffectNames(type).join("|");
     if (ship?.typeId === 24700 && hasAnyEffect(index, type, "damageControl")) {
       myrmidonDamageControlCount += 1;
       if (myrmidonDamageControlCount > 1) {
@@ -1697,9 +1701,11 @@ function estimateSpeedAndSignature(
   const overloadSpeedBonus = getAttrResolved(index, prop.type as DogmaTypeEntry | undefined, "Overload Speed Bonus") ?? 0;
   const sigBloom = getAttrResolved(index, prop.type as DogmaTypeEntry | undefined, "Signature Radius Modifier") ?? 0;
   const hullPropBonusMultiplier = inferHullPropSpeedBonusMultiplier(ship, prop.kind, assumptions);
+  const massScale = inferPropulsionMassScale(index, ship, prop.type, assumptions);
   const bloomMitigation = inferMwdSigBloomMitigation(index, ship, prop.kind, assumptions);
 
-  const effectivePropBonus = propBonus * (1 + ACCELERATION_CONTROL_BONUS) * hullPropBonusMultiplier;
+  const effectivePropBonus =
+    propBonus * (1 + ACCELERATION_CONTROL_BONUS) * hullPropBonusMultiplier * massScale;
   const heatedPropBonus = effectivePropBonus * (1 + overloadSpeedBonus / 100);
   const propOnSpeed = baseSpeed * (1 + effectivePropBonus / 100);
   const heatedSpeed = baseSpeed * (1 + heatedPropBonus / 100);
@@ -1723,6 +1729,24 @@ function estimateSpeedAndSignature(
       propOn: round1(propSig)
     }
   };
+}
+
+function inferPropulsionMassScale(
+  index: DogmaIndex,
+  ship: DogmaTypeEntry | undefined,
+  propType: DogmaTypeEntry | undefined,
+  assumptions: string[]
+): number {
+  const shipMass = getAttrResolved(index, ship, "Mass");
+  const thrust = getAttrResolved(index, propType, "Thrust");
+  if (!shipMass || shipMass <= 0 || !thrust || thrust <= 0) {
+    return 1;
+  }
+  const massAddition = Math.max(0, getAttrResolved(index, propType, "Mass Addition") ?? 0);
+  const effectiveMass = Math.max(1, shipMass + massAddition);
+  const scale = thrust / effectiveMass;
+  assumptions.push("Applied prop thrust-to-mass scaling for active propulsion speed.");
+  return scale;
 }
 
 function collectVelocityModifiers(index: DogmaIndex, low: FitResolvedModule[], rig: FitResolvedModule[]): number[] {

@@ -34,6 +34,49 @@ describe("dogma parity follow-up cruiser corpus coverage", () => {
       ).toBeGreaterThanOrEqual(REQUIRED_T3_CRUISER_FITS);
     }
   });
+
+  it("keeps full referenced coverage for every T3 cruiser subsystem variant", async () => {
+    const corpusRows = await readJsonl("data/parity/fit-corpus.jsonl");
+    const references = await readJson("data/parity/reference-results.json");
+    const manifest = await readJson("public/data/dogma-manifest.json");
+    const pack = await readJson(`public/data/${manifest?.packFile}`);
+
+    const referenceFitIds = new Set(
+      (Array.isArray(references?.fits) ? references.fits : [])
+        .map((row) => normalizeFitId(row?.fitId))
+        .filter(Boolean)
+    );
+    const subsystemTypes = Array.isArray(pack?.types)
+      ? pack.types.filter((type) => Number(type?.categoryId) === 32)
+      : [];
+
+    for (const hull of T3_CRUISER_HULLS) {
+      const referencedHullFits = corpusRows.filter(
+        (row) =>
+          Number(row?.shipTypeId) === hull.shipTypeId &&
+          referenceFitIds.has(normalizeFitId(row?.fitId))
+      );
+      const coveredSubsystems = new Set();
+      for (const fit of referencedHullFits) {
+        for (const subsystemName of extractSubsystemNamesFromEft(fit?.eft, hull.shipName)) {
+          coveredSubsystems.add(subsystemName);
+        }
+      }
+
+      const expectedSubsystems = subsystemTypes
+        .map((type) => normalizeSubsystemName(type?.name))
+        .filter((name) => name.startsWith(`${hull.shipName} `))
+        .sort((left, right) => left.localeCompare(right));
+      const missingSubsystems = expectedSubsystems.filter(
+        (subsystemName) => !coveredSubsystems.has(subsystemName)
+      );
+
+      expect(
+        missingSubsystems,
+        `${hull.shipName} missing referenced subsystem coverage: ${missingSubsystems.join(", ")}`
+      ).toEqual([]);
+    }
+  });
 });
 
 async function readJsonl(filePath) {
@@ -52,4 +95,24 @@ async function readJson(filePath) {
 
 function normalizeFitId(fitId) {
   return typeof fitId === "string" ? fitId.trim() : "";
+}
+
+function normalizeSubsystemName(name) {
+  return typeof name === "string" ? name.trim() : "";
+}
+
+function extractSubsystemNamesFromEft(eft, shipName) {
+  if (typeof eft !== "string" || typeof shipName !== "string") {
+    return [];
+  }
+  const normalizedShipName = shipName.trim();
+  if (!normalizedShipName) {
+    return [];
+  }
+  return eft
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(
+      (line) => line.startsWith(`${normalizedShipName} `) && line.includes(" - ")
+    );
 }

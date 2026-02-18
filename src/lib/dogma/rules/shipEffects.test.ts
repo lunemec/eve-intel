@@ -153,6 +153,16 @@ describe("shipEffects rules", () => {
     expect(shieldHpBonusMultiplier(ship)).toBe(1.4);
   });
 
+  it("matches strategic cruiser defensive armor HP subsystem effects", () => {
+    const amarr = mk(["subsystemBonusAmarrDefensiveArmorHP"]);
+    const gallente = mk(["subsystemBonusGallenteDefensiveArmorHP"]);
+    const minmatar = mk(["subsystemBonusMinmatarDefensiveShieldArmorHP"]);
+    expect(armorHpBonusMultiplier(amarr)).toBe(1.25);
+    expect(armorHpBonusMultiplier(gallente)).toBe(1.25);
+    expect(armorHpBonusMultiplier(minmatar)).toBe(1.25);
+    expect(shieldHpBonusMultiplier(minmatar)).toBe(1.25);
+  });
+
   it("matches rookie resistance naming variants", () => {
     const ship = mk(["shipArmorEMResistanceRookie", "shipShieldEMResistanceRookie"]);
     expect(hasArmorResistBonus(ship)).toBe(true);

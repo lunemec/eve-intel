@@ -316,6 +316,158 @@
       }
     },
     {
+      "fitId": "manual-legion-augmented-plating-coverage-1",
+      "shipTypeId": 29986,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-18-618cfe3ce4b5",
+      "dpsTotal": 686.4047,
+      "alpha": 1734.4354,
+      "ehp": 20826.8481,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.55,
+          "exp": 0.75
+        },
+        "armor": {
+          "em": 0.56,
+          "therm": 0.53525,
+          "kin": 0.5471874999999999,
+          "exp": 0.6
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "runner": ".venv-pyfa/bin/python",
+        "envelope": "raw",
+        "pyfaMode": "local-python",
+        "pyfaVersion": "local-pyfa-direct-import",
+        "referenceMethod": "pyfa-auto",
+        "origin": "manual",
+        "tags": "manual,t3-subsystem,coverage,legion"
+      }
+    },
+    {
+      "fitId": "manual-loki-adaptive-defense-node-coverage-1",
+      "shipTypeId": 29990,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-18-618cfe3ce4b5",
+      "dpsTotal": 518.7197,
+      "alpha": 1558.0174,
+      "ehp": 37280.6512,
+      "resists": {
+        "shield": {
+          "em": 0.7881026481572881,
+          "therm": 0.7457231777887458,
+          "kin": 0.7457231777887458,
+          "exp": 0.7881026481572881
+        },
+        "armor": {
+          "em": 0.83,
+          "therm": 0.5856250000000001,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "runner": ".venv-pyfa/bin/python",
+        "envelope": "raw",
+        "pyfaMode": "local-python",
+        "pyfaVersion": "local-pyfa-direct-import",
+        "referenceMethod": "pyfa-auto",
+        "origin": "manual",
+        "tags": "manual,t3-subsystem,coverage,loki"
+      }
+    },
+    {
+      "fitId": "manual-proteus-eeg-augmented-support-nullifier-coverage-1",
+      "shipTypeId": 29988,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-18-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 23185.9892,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.4,
+          "kin": 0.7,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.625,
+          "therm": 0.634375,
+          "kin": 0.75625,
+          "exp": 0.6829983980560403
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "runner": ".venv-pyfa/bin/python",
+        "envelope": "raw",
+        "pyfaMode": "local-python",
+        "pyfaVersion": "local-pyfa-direct-import",
+        "referenceMethod": "pyfa-auto",
+        "origin": "manual",
+        "tags": "manual,t3-subsystem,coverage,proteus"
+      }
+    },
+    {
+      "fitId": "manual-proteus-nanobot-injector-coverage-1",
+      "shipTypeId": 29988,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-18-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 141313.8697,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.475,
+          "kin": 0.7375,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.7667708847385001,
+          "therm": 0.7630878241529837,
+          "kin": 0.8378301990055206,
+          "exp": 0.7679737621709817
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "runner": ".venv-pyfa/bin/python",
+        "envelope": "raw",
+        "pyfaMode": "local-python",
+        "pyfaVersion": "local-pyfa-direct-import",
+        "referenceMethod": "pyfa-auto",
+        "origin": "manual",
+        "tags": "manual,t3-subsystem,coverage,proteus"
+      }
+    },
+    {
       "fitId": "manual-prototype-exploration-ship-minimal-1",
       "shipTypeId": 2078,
       "source": "pyfa",
@@ -383,6 +535,79 @@
         "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
         "importedAt": "2026-02-17T13:29:10.899Z",
         "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "manual-tengu-obfuscation-manifold-coverage-1",
+      "shipTypeId": 29984,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-18-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 9125,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0,
+          "kin": 0,
+          "exp": 0
+        },
+        "armor": {
+          "em": 0,
+          "therm": 0,
+          "kin": 0,
+          "exp": 0
+        },
+        "hull": {
+          "em": 0,
+          "therm": 0,
+          "kin": 0,
+          "exp": 0
+        }
+      },
+      "metadata": {
+        "runner": ".venv-pyfa/bin/python",
+        "envelope": "raw",
+        "pyfaMode": "local-python",
+        "pyfaVersion": "local-pyfa-direct-import",
+        "referenceMethod": "pyfa-auto",
+        "origin": "manual",
+        "tags": "manual,t3-subsystem,coverage,tengu"
+      }
+    },
+    {
+      "fitId": "manual-tengu-paomo1-kinetic-ham-1",
+      "shipTypeId": 29984,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-18-618cfe3ce4b5",
+      "dpsTotal": 854.8594585336111,
+      "alpha": 1914.7958840176368,
+      "ehp": 16085.28285861778,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.6,
+          "kin": 0.8785758870539396,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.725,
+          "kin": 0.4375,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-18T16:29:52.492Z",
+        "importFile": "manual-tengu-paomo1.json"
       }
     },
     {

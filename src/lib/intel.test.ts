@@ -742,6 +742,112 @@ describe("deriveFitCandidates", () => {
     expect(high).not.toContain("Nova Rage Rocket");
   });
 
+  it("pairs missile guidance scripts to guidance computer modules instead of dropping the module", () => {
+    const characterId = 4014;
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 95,
+        killmail_time: "2026-02-10T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 29984,
+          items: [
+            { item_type_id: 12000, flag: 23 },
+            { item_type_id: 12001, flag: 23 },
+            { item_type_id: 10190, flag: 11 }
+          ]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const fits = deriveFitCandidates({
+      characterId,
+      losses,
+      predictedShips: [
+        {
+          shipTypeId: 29984,
+          shipName: "Tengu",
+          probability: 100,
+          source: "inferred",
+          reason: []
+        }
+      ],
+      itemNamesByTypeId: new Map([
+        [12000, "Missile Guidance Computer II"],
+        [12001, "Missile Range Script"],
+        [10190, "Magnetic Field Stabilizer II"]
+      ])
+    });
+
+    expect(fits).toHaveLength(1);
+    const mid = fits[0].eftSections!.mid;
+    expect(mid).toContain("Missile Guidance Computer II,Missile Range Script");
+    expect(mid).not.toContain("Missile Range Script");
+  });
+
+  it("pairs ammo to legacy bay/probe weapon modules instead of dropping the module entry", () => {
+    const characterId = 4015;
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 96,
+        killmail_time: "2026-02-10T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 11963,
+          items: [
+            { item_type_id: 13000, flag: 27 },
+            { item_type_id: 7997, flag: 27 },
+            { item_type_id: 13001, flag: 28 },
+            { item_type_id: 21542, flag: 28 },
+            { item_type_id: 13002, flag: 29 },
+            { item_type_id: 9419, flag: 29 },
+            { item_type_id: 13003, flag: 30 },
+            { item_type_id: 8103, flag: 30 }
+          ]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const fits = deriveFitCandidates({
+      characterId,
+      losses,
+      predictedShips: [
+        {
+          shipTypeId: 11963,
+          shipName: "Rapier",
+          probability: 100,
+          source: "inferred",
+          reason: []
+        }
+      ],
+      itemNamesByTypeId: new Map([
+        [7997, "XR-3200 Heavy Missile Bay"],
+        [13000, "Mjolnir Heavy Missile"],
+        [21542, "N-1 Neon Type Rocket Bay"],
+        [13001, "Nova Rage Rocket"],
+        [9419, "720mm 'Probe' Artillery I"],
+        [13002, "Republic Fleet EMP M"],
+        [8103, "Advanced 'Limos' Heavy Missile Bay I"],
+        [13003, "Scourge Fury Heavy Missile"]
+      ])
+    });
+
+    expect(fits).toHaveLength(1);
+    const high = fits[0].eftSections!.high;
+    expect(high).toContain("XR-3200 Heavy Missile Bay,Mjolnir Heavy Missile");
+    expect(high).toContain("N-1 Neon Type Rocket Bay,Nova Rage Rocket");
+    expect(high).toContain("720mm 'Probe' Artillery I,Republic Fleet EMP M");
+    expect(high).toContain("Advanced 'Limos' Heavy Missile Bay I,Scourge Fury Heavy Missile");
+    expect(high).not.toContain("Mjolnir Heavy Missile");
+    expect(high).not.toContain("Nova Rage Rocket");
+    expect(high).not.toContain("Republic Fleet EMP M");
+    expect(high).not.toContain("Scourge Fury Heavy Missile");
+  });
+
   it("includes drone bay entries in inferred EFT output", () => {
     const characterId = 4012;
     const losses: ZkillKillmail[] = [
@@ -787,6 +893,66 @@ describe("deriveFitCandidates", () => {
     expect(fits[0].eftSections?.high.filter((entry) => entry === "Modal Light Neutron Particle Accelerator I,Caldari Navy Antimatter Charge S")).toHaveLength(2);
     expect(fits[0].eftSections?.other).toContain("Warrior II x3");
     expect(fits[0].modulesBySlot?.other[0].quantity).toBe(3);
+  });
+
+  it("includes strategic cruiser subsystems from fitted subsystem flags", () => {
+    const characterId = 4013;
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 94,
+        killmail_time: "2026-02-10T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 29984,
+          items: [
+            { item_type_id: 45601, flag: 125 },
+            { item_type_id: 45609, flag: 126 },
+            { item_type_id: 45591, flag: 127 },
+            { item_type_id: 45620, flag: 128 },
+            { item_type_id: 2027, flag: 27 },
+            { item_type_id: 267, flag: 27 }
+          ]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const fits = deriveFitCandidates({
+      characterId,
+      losses,
+      predictedShips: [
+        {
+          shipTypeId: 29984,
+          shipName: "Tengu",
+          probability: 100,
+          source: "inferred",
+          reason: []
+        }
+      ],
+      itemNamesByTypeId: new Map([
+        [45601, "Tengu Offensive - Accelerated Ejection Bay"],
+        [45609, "Tengu Defensive - Covert Reconfiguration"],
+        [45591, "Tengu Core - Augmented Graviton Reactor"],
+        [45620, "Tengu Propulsion - Interdiction Nullifier"],
+        [2027, "Heavy Assault Missile Launcher II"],
+        [267, "Scourge Rage Heavy Assault Missile"]
+      ])
+    });
+
+    expect(fits).toHaveLength(1);
+    expect(fits[0].eftSections?.other).toEqual([
+      "Tengu Core - Augmented Graviton Reactor",
+      "Tengu Defensive - Covert Reconfiguration",
+      "Tengu Offensive - Accelerated Ejection Bay",
+      "Tengu Propulsion - Interdiction Nullifier"
+    ]);
+    expect(fits[0].modulesBySlot?.other.map((entry) => entry.typeId).sort((a, b) => a - b)).toEqual([
+      45591,
+      45601,
+      45609,
+      45620
+    ]);
   });
 });
 

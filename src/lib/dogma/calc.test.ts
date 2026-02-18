@@ -1227,7 +1227,7 @@ describe("dogma calc", () => {
     expect(loki.alpha).toBeGreaterThan(base.alpha * 1.2);
   });
 
-  it("applies gallente defensive subsystem HP uplift", () => {
+  it("applies gallente defensive subsystem additive shield/hull HP bonuses", () => {
     const pack: DogmaPack = {
       ...basePack,
       types: [
@@ -1245,31 +1245,33 @@ describe("dogma calc", () => {
           effects: []
         },
         {
-          typeId: 29988,
-          groupId: 963,
-          categoryId: 6,
-          name: "Proteus Defensive Test Ship",
+          typeId: 7403,
+          groupId: 954,
+          categoryId: 32,
+          name: "Proteus Defensive - Covert Reconfiguration",
           attrs: {
-            shieldCapacity: 2500,
-            armorHP: 2200,
-            structureHP: 2000
+            "Shield Capacity Bonus": 500,
+            "Structure Hitpoint Bonus": 600
           },
-          effects: []
+          effects: ["subSystem", "shieldCapacityAddPassive", "structureHPBonusAddPassive"]
         }
       ],
-      typeCount: basePack.types.length + 1
+      typeCount: basePack.types.length + 2
     };
     const index = buildDogmaIndex(pack);
     const base = calculateShipCombatMetrics(index, {
       shipTypeId: 7402,
       slots: emptySlots
     });
-    const proteus = calculateShipCombatMetrics(index, {
-      shipTypeId: 29988,
-      slots: emptySlots
+    const withSubsystem = calculateShipCombatMetrics(index, {
+      shipTypeId: 7402,
+      slots: {
+        ...emptySlots,
+        other: [{ typeId: 7403, name: "Proteus Defensive - Covert Reconfiguration" }]
+      }
     });
 
-    expect(proteus.ehp).toBeGreaterThan(base.ehp + 1200);
+    expect(withSubsystem.ehp).toBeGreaterThan(base.ehp + 1700);
   });
 
   it("keeps Sabre shield-extender EHP in sane envelope for sectioned EFT input", () => {
@@ -1838,5 +1840,62 @@ Small Core Defense Field Extender I`;
     expect(combined.alpha).toBeGreaterThanOrEqual(expectedCombinedAlpha - 80);
     expect(combined.alpha).toBeGreaterThan(3200);
     expect(combined.alpha).toBeLessThan(3400);
+  });
+
+  it("matches pyfa baseline for paomo1 Tengu on dps, ehp, and afterburner speed", () => {
+    const manifestPath = path.join(process.cwd(), "public", "data", "dogma-manifest.json");
+    if (!existsSync(manifestPath)) {
+      return;
+    }
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { packFile: string };
+    const packPath = path.join(process.cwd(), "public", "data", manifest.packFile);
+    if (!existsSync(packPath)) {
+      return;
+    }
+    const pack = JSON.parse(readFileSync(packPath, "utf8")) as DogmaPack;
+    const index = buildDogmaIndex(pack);
+
+    const eft = `[Tengu, paomo1's Tengu]
+Ballistic Control System II
+Ballistic Control System II
+Missile Guidance Enhancer II
+
+10MN Monopropellant Enduring Afterburner
+Large Clarity Ward Enduring Shield Booster
+Pith X-Type Kinetic Shield Hardener
+Republic Fleet Large Cap Battery
+Missile Guidance Computer II,Missile Range Script
+
+Covert Ops Cloaking Device II
+Interdiction Nullifier I
+Heavy Assault Missile Launcher II,Scourge Rage Heavy Assault Missile
+Heavy Assault Missile Launcher II,Scourge Rage Heavy Assault Missile
+Heavy Assault Missile Launcher II,Scourge Rage Heavy Assault Missile
+Heavy Assault Missile Launcher II,Scourge Rage Heavy Assault Missile
+Heavy Assault Missile Launcher II,Scourge Rage Heavy Assault Missile
+Heavy Assault Missile Launcher II,Scourge Rage Heavy Assault Missile
+
+Medium Ancillary Current Router I
+Medium Hydraulic Bay Thrusters I
+Medium Kinetic Shield Reinforcer I
+
+Tengu Core - Augmented Graviton Reactor
+Tengu Defensive - Covert Reconfiguration
+Tengu Offensive - Accelerated Ejection Bay
+Tengu Propulsion - Interdiction Nullifier`;
+
+    const parsed = parseEftToResolvedFit(index, eft);
+    const metrics = calculateShipCombatMetrics(index, {
+      shipTypeId: parsed.shipTypeId,
+      slots: parsed.slots,
+      drones: parsed.drones
+    });
+
+    // pyfa reference generated with scripts/pyfa_fitstats.py in all-V mode.
+    // Keep DPS as an envelope because the parity test already tracks exact dps/alpha drift.
+    expect(metrics.dpsTotal).toBeGreaterThan(845);
+    expect(metrics.dpsTotal).toBeLessThan(865);
+    expect(metrics.ehp).toBeCloseTo(16085.2829, 0);
+    expect(metrics.speed.propOn).toBeCloseTo(469.2252, 1);
   });
 });

@@ -10,6 +10,7 @@
   "manual-jump-freighter-minimal-1",
   "manual-prototype-exploration-ship-minimal-1",
   "manual-shuttle-minimal-1",
+  "manual-tengu-paomo1-kinetic-ham-1",
   "myrmidon-drone-1",
   "nergal-svcfitstat-1",
   "rand-zkill-133349010",
@@ -83,5 +84,10 @@
   "zkill-tengu-133445382",
   "zkill-titan-132932303",
   "zkill-vargur-133444556",
-  "zkill-vulture-133442589"
+  "zkill-vulture-133442589",
+  "manual-legion-augmented-plating-coverage-1",
+  "manual-loki-adaptive-defense-node-coverage-1",
+  "manual-proteus-eeg-augmented-support-nullifier-coverage-1",
+  "manual-proteus-nanobot-injector-coverage-1",
+  "manual-tengu-obfuscation-manifold-coverage-1"
 ]
