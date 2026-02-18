@@ -69,6 +69,12 @@ export function buildDogmaParityNewFitReport({
   const missingReferenceFitIds = normalizeFitIds(compareResult?.missingReferenceFitIds);
   const mismatches = normalizeReportMismatches(compareResult?.mismatches);
   const pyfaFailures = normalizePyfaFailures(syncResult?.failed);
+  const blockedSummary = buildDogmaParityNewFitBlockedSummary({
+    syncResult,
+    compareResult,
+    missingCorpusFitIds,
+    missingReferenceFitIds
+  });
 
   return {
     generatedAt: normalizeGeneratedAt(scope?.generatedAt),
@@ -79,12 +85,43 @@ export function buildDogmaParityNewFitReport({
       normalizeFitIds(compareResult?.comparedFitIds).length
     ),
     mismatchCount: normalizeNonNegativeInteger(compareResult?.mismatchCount, mismatches.length),
+    blockedFitCount: blockedSummary.blockedFitCount,
+    blockedFitIds: blockedSummary.blockedFitIds,
+    blockedFits: blockedSummary.blockedFits,
     pyfaFailureCount: normalizeNonNegativeInteger(syncResult?.pyfaFailureCount, pyfaFailures.length),
     missingCorpusFitIds,
     missingReferenceFitIds,
     mismatches,
     pyfaFailures,
     exitCode: normalizeExitCode(exitCode)
+  };
+}
+
+export function buildDogmaParityNewFitBlockedSummary({
+  syncResult,
+  compareResult,
+  missingCorpusFitIds,
+  missingReferenceFitIds
+}) {
+  const normalizedMissingCorpusFitIds = Array.isArray(missingCorpusFitIds)
+    ? normalizeFitIds(missingCorpusFitIds)
+    : mergeAndNormalizeFitIds(syncResult?.missingCorpusFitIds, compareResult?.missingCorpusFitIds);
+  const normalizedMissingReferenceFitIds = Array.isArray(missingReferenceFitIds)
+    ? normalizeFitIds(missingReferenceFitIds)
+    : normalizeFitIds(compareResult?.missingReferenceFitIds);
+
+  const blockedFits = normalizeBlockedFits({
+    syncResult,
+    compareResult,
+    missingCorpusFitIds: normalizedMissingCorpusFitIds,
+    missingReferenceFitIds: normalizedMissingReferenceFitIds
+  });
+  const blockedFitIds = normalizeFitIds(blockedFits.map((row) => row.fitId));
+
+  return {
+    blockedFitCount: blockedFitIds.length,
+    blockedFitIds,
+    blockedFits
   };
 }
 
@@ -158,12 +195,13 @@ export function buildDogmaParityNewFitDiagnosticsEvents({
     });
   }
 
-  const errors = normalizeDiagnosticsErrors({
+  const blockedSummary = buildDogmaParityNewFitBlockedSummary({
     syncResult,
     compareResult,
-    report
+    missingCorpusFitIds: normalizeFitIds(report?.missingCorpusFitIds),
+    missingReferenceFitIds: normalizeFitIds(report?.missingReferenceFitIds)
   });
-  for (const error of errors) {
+  for (const error of blockedSummary.blockedFits) {
     events.push({
       at,
       event: "error",
@@ -195,7 +233,12 @@ function serializeJsonl(rows) {
   return `${rows.map((row) => JSON.stringify(row)).join("\n")}\n`;
 }
 
-function normalizeDiagnosticsErrors({ syncResult, compareResult, report }) {
+function normalizeBlockedFits({
+  syncResult,
+  compareResult,
+  missingCorpusFitIds,
+  missingReferenceFitIds
+}) {
   const rows = [];
   const syncFailures = Array.isArray(syncResult?.failed) ? syncResult.failed : [];
   for (const failure of syncFailures) {
@@ -225,13 +268,13 @@ function normalizeDiagnosticsErrors({ syncResult, compareResult, report }) {
     });
   }
 
-  for (const fitId of normalizeFitIds(report?.missingCorpusFitIds)) {
+  for (const fitId of normalizeFitIds(missingCorpusFitIds)) {
     rows.push({
       fitId,
       reason: "missing_corpus_entry"
     });
   }
-  for (const fitId of normalizeFitIds(report?.missingReferenceFitIds)) {
+  for (const fitId of normalizeFitIds(missingReferenceFitIds)) {
     rows.push({
       fitId,
       reason: "missing_reference_result"

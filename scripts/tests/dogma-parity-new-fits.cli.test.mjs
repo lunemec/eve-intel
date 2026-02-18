@@ -69,6 +69,35 @@ function createCompareResult(overrides = {}) {
   };
 }
 
+function createReferenceFit(overrides = {}) {
+  return {
+    fitId: "fit-a",
+    shipTypeId: 123,
+    source: "pyfa",
+    sdeVersion: "test-sde",
+    dpsTotal: 100,
+    alpha: 100,
+    ehp: 1000,
+    resists: {
+      shield: { em: 0.1, therm: 0.2, kin: 0.3, exp: 0.4 },
+      armor: { em: 0.5, therm: 0.6, kin: 0.7, exp: 0.8 },
+      hull: { em: 0.33, therm: 0.33, kin: 0.33, exp: 0.33 }
+    },
+    ...overrides
+  };
+}
+
+function createCorpusEntry(overrides = {}) {
+  return {
+    fitId: "fit-a",
+    shipTypeId: 123,
+    eft: "[Ship, fit-a]",
+    origin: "manual",
+    tags: ["scope-test"],
+    ...overrides
+  };
+}
+
 describe("runDogmaParityNewFitsCli", () => {
   it("returns non-zero when scoped mismatches exist", async () => {
     const stdout = createLineCollector();
@@ -102,7 +131,7 @@ describe("runDogmaParityNewFitsCli", () => {
       })
     );
     expect(stdout.lines).toEqual([
-      "[dogma:parity:new-fits] runId=run-123 scoped=2 compared=2 mismatches=1 pyfaFailures=0"
+      "[dogma:parity:new-fits] runId=run-123 scoped=2 compared=2 mismatches=1 blocked=0 pyfaFailures=0"
     ]);
   });
 
@@ -138,7 +167,55 @@ describe("runDogmaParityNewFitsCli", () => {
       })
     );
     expect(stdout.lines).toEqual([
-      "[dogma:parity:new-fits] runId=run-123 scoped=2 compared=2 mismatches=0 pyfaFailures=0"
+      "[dogma:parity:new-fits] runId=run-123 scoped=2 compared=2 mismatches=0 blocked=0 pyfaFailures=0"
+    ]);
+  });
+
+  it("returns non-zero when scoped blockers exist without mismatches", async () => {
+    const stdout = createLineCollector();
+    const stderr = createLineCollector();
+    const artifactCalls = [];
+    const referenceFit = createReferenceFit();
+
+    const exitCode = await runDogmaParityNewFitsCli(["--fit-id", "fit-a"], {
+      parseArgsFn: () => createParsedArgs({ fitIdFlags: ["fit-a"] }),
+      resolveScopeFn: async () => createScope({ newFitIds: ["fit-a"] }),
+      readCorpusEntriesFn: async () => [createCorpusEntry()],
+      readReferenceResultsFn: async () => ({ fits: [referenceFit] }),
+      readDogmaManifestFn: async () => ({ activeVersion: "sde-test" }),
+      syncReferencesFn: async () =>
+        createSyncResult({
+          scopedFitIds: ["fit-a"],
+          scopedFitCount: 1,
+          referencesBeforeCount: 1,
+          referencesAfterCount: 1,
+          added: [],
+          skipped: [{ fitId: "fit-a", reason: "already_present" }],
+          failed: [],
+          pyfaFailureCount: 0,
+          missingCorpusFitIds: [],
+          mergedReferenceFits: [referenceFit]
+        }),
+      writeReferenceResultsFn: async () => {},
+      writeArtifactsFn: async (payload) => {
+        artifactCalls.push(payload);
+      },
+      shutdownPyfaFn: async () => {},
+      stdout: stdout.collect,
+      stderr: stderr.collect
+    });
+
+    expect(exitCode).toBe(1);
+    expect(stderr.lines).toEqual([]);
+    expect(artifactCalls).toHaveLength(1);
+    expect(artifactCalls[0].compareResult.failed).toEqual([
+      expect.objectContaining({
+        fitId: "fit-a",
+        reason: "dogma_compute_failed"
+      })
+    ]);
+    expect(stdout.lines).toEqual([
+      "[dogma:parity:new-fits] runId=run-123 scoped=1 compared=0 mismatches=0 blocked=1 pyfaFailures=0"
     ]);
   });
 

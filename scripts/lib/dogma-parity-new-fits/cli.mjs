@@ -4,6 +4,7 @@ import path from "node:path";
 import { shutdownPyfaLocalRuntimes } from "../../../tools/parity/pyfa-adapter/index.mjs";
 import {
   DEFAULT_DOGMA_PARITY_NEW_FITS_REPORT_PATH,
+  buildDogmaParityNewFitBlockedSummary,
   writeDogmaParityNewFitArtifacts
 } from "./artifacts.mjs";
 import { compareDogmaParityForScope } from "./compare.mjs";
@@ -231,8 +232,14 @@ export async function runDogmaParityNewFitsCli(argv, dependencies = {}) {
       computeActualForFit: computeActualForFitFn
     });
 
+    const blockedSummary = buildDogmaParityNewFitBlockedSummary({
+      syncResult,
+      compareResult
+    });
+
     const exitCode = resolveDogmaNewFitsExitCode({
-      mismatchCount: compareResult.mismatchCount
+      mismatchCount: compareResult.mismatchCount,
+      blockedFitCount: blockedSummary.blockedFitCount
     });
 
     await writeArtifactsFn({
@@ -245,7 +252,7 @@ export async function runDogmaParityNewFitsCli(argv, dependencies = {}) {
     });
 
     stdout(
-      `[dogma:parity:new-fits] runId=${scope.runId} scoped=${scope.newFitIds.length} compared=${compareResult.comparedFitCount} mismatches=${compareResult.mismatchCount} pyfaFailures=${syncResult.pyfaFailureCount}`
+      `[dogma:parity:new-fits] runId=${scope.runId} scoped=${scope.newFitIds.length} compared=${compareResult.comparedFitCount} mismatches=${compareResult.mismatchCount} blocked=${blockedSummary.blockedFitCount} pyfaFailures=${syncResult.pyfaFailureCount}`
     );
 
     return exitCode;
@@ -257,8 +264,8 @@ export async function runDogmaParityNewFitsCli(argv, dependencies = {}) {
   }
 }
 
-export function resolveDogmaNewFitsExitCode({ mismatchCount }) {
-  return Number(mismatchCount) > 0 ? 1 : 0;
+export function resolveDogmaNewFitsExitCode({ mismatchCount, blockedFitCount }) {
+  return Number(mismatchCount) > 0 || Number(blockedFitCount) > 0 ? 1 : 0;
 }
 
 async function readDogmaParityCorpusEntries(corpusPath = DEFAULT_CORPUS_PATH) {

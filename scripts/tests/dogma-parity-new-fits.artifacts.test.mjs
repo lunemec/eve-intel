@@ -97,6 +97,28 @@ describe("writeDogmaParityNewFitArtifacts", () => {
       scopedFitCount: 3,
       comparedFitCount: 2,
       mismatchCount: 2,
+      blockedFitCount: 4,
+      blockedFitIds: ["fit-b", "fit-x", "fit-y", "fit-z"],
+      blockedFits: [
+        {
+          fitId: "fit-b",
+          reason: "pyfa_failed",
+          stage: "timeout",
+          stderrTail: "stderr tail"
+        },
+        {
+          fitId: "fit-x",
+          reason: "missing_corpus_entry"
+        },
+        {
+          fitId: "fit-y",
+          reason: "missing_corpus_entry"
+        },
+        {
+          fitId: "fit-z",
+          reason: "missing_reference_result"
+        }
+      ],
       pyfaFailureCount: 1,
       missingCorpusFitIds: ["fit-x", "fit-y"],
       missingReferenceFitIds: ["fit-z"],
@@ -173,6 +195,9 @@ describe("writeDogmaParityNewFitArtifacts", () => {
 
     const reportFromDisk = JSON.parse(await readFile(reportPath, "utf8"));
     expect(reportFromDisk.exitCode).toBe(0);
+    expect(reportFromDisk.blockedFitCount).toBe(0);
+    expect(reportFromDisk.blockedFitIds).toEqual([]);
+    expect(reportFromDisk.blockedFits).toEqual([]);
     expect(result.diagnosticsEventsWritten).toBe(0);
     expect(existsSync(diagnosticsPath)).toBe(false);
   });
@@ -208,6 +233,16 @@ describe("writeDogmaParityNewFitArtifacts", () => {
 
     const diagnosticsRows = await readJsonl(diagnosticsPath);
     expect(result.diagnosticsEventsWritten).toBe(diagnosticsRows.length);
+    expect(result.report.blockedFitCount).toBe(1);
+    expect(result.report.blockedFitIds).toEqual(["fit-b"]);
+    expect(result.report.blockedFits).toEqual([
+      {
+        fitId: "fit-b",
+        reason: "dogma_compute_failed",
+        stage: "eft_parse",
+        stderrTail: "line 3: invalid slot"
+      }
+    ]);
     expect(diagnosticsRows).toContainEqual({
       at: "2026-02-18T13:10:00.000Z",
       event: "error",

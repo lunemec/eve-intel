@@ -15,6 +15,7 @@ All notable changes to this project are documented in this file.
 - Added deterministic new-fit parity report + optional diagnostics artifact writing (`reports/dogma-parity-new-fits-report.json` + JSONL events), and wired orchestrator emission with regression coverage.
 - Added first-class `dogma:parity:new-fits` npm script wiring and new-fit CLI argument-contract tests covering `--scope-file`/`--fit-id(s)` ergonomics and usage errors.
 - Added scoped compare guardrails that continue through per-fit Dogma parse/compute failures and emit structured diagnostics error events instead of aborting the full new-fit run.
+- Aligned scoped new-fit diagnostics with explicit blocker semantics by adding deterministic `blockedFitCount`/`blockedFitIds`/`blockedFits` report fields and making blocker-only scoped runs exit non-zero with blocker counts in CLI summaries.
 - Added an end-to-end zKill fit-fetch CLI (`npm run zkill:fits:fetch`) with strict argument validation and default `--max-records 200`.
 - Added deterministic ship-type pagination/merge ordering, strict `--before-killmail-id` cutoff behavior, and max-record short-circuiting.
 - Added header-aware retry/backoff (`Retry-After` and rate-limit headers first, exponential fallback second) with timeout-aware retry handling.
