@@ -22,11 +22,18 @@ Use this workflow for any code change in this repository (feature work, bug fixe
 4. Run targeted tests for the touched area.
 5. Run the full test suite: `npm test`.
 6. Run full compilation/build as the final verification step: `npm run build`.
+7. Update `CHANGELOG.md` with a concise summary of changes for the current version using git history between versions/tags.
 
 Additional enforcement:
 - Do not begin large structural refactors without characterization/regression tests in place first.
 - Keep behavior stable during refactors unless an intentional behavior change is explicitly documented.
 - If a build/type error appears after tests pass, fix it and rerun the validation order with `npm run build` last.
+
+## Changelog Maintenance
+- `CHANGELOG.md` must be kept up to date for every version.
+- Summaries must be derived from git history between versions (prefer tagged ranges, for example `git log <previous_tag>..<current_tag> --oneline`).
+- Entries should be concise, user-facing, and grouped by version.
+- If tags are missing for a version boundary, use the closest version marker commit(s) in git history and document the assumption in the changelog entry.
 
 ## Robustness Standards
 - Validate inputs at boundaries and fail clearly when data is invalid.
@@ -54,3 +61,4 @@ Additional enforcement:
 - Clear naming and readable structure.
 - Reference parity with `pyfa`/`svcfitstat` validated for combat calculations.
 - For combat capability bugfixes: new fit added to `data/parity/fit-corpus`, pyfa CLI harness reference generated, parity test updated, and Dogma fix implemented.
+- `CHANGELOG.md` updated with version-to-version summaries based on git history.

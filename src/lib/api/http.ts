@@ -14,6 +14,19 @@ export type FetchJsonMeta<T> = {
   status: number;
 };
 
+export type ConditionalHeaders = {
+  etag?: string;
+  lastModified?: string;
+};
+
+export type FetchJsonConditionalMeta<T> = {
+  data: T | null;
+  headers: Headers;
+  fetchedAt: number;
+  status: number;
+  notModified: boolean;
+};
+
 export type HttpCachePolicy = {
   cacheable: boolean;
   ttlMs: number;
@@ -70,6 +83,91 @@ export async function fetchJsonWithMeta<T>(
           headers: response.headers,
           fetchedAt: Date.now(),
           status: response.status
+        };
+      }
+
+      if (isRetryable(response.status) && attempt < DEFAULT_RETRIES) {
+        const delayMs = retryDelayMs(response, attempt);
+        onRetry?.({ status: response.status, attempt: attempt + 1, delayMs });
+        await sleep(delayMs, externalSignal);
+        continue;
+      }
+
+      throw new HttpError(response.status);
+    } catch (error) {
+      if (isAbortError(error)) {
+        if (externalSignal?.aborted) {
+          throw error;
+        }
+        if (attempt < DEFAULT_RETRIES) {
+          const delayMs = backoffDelay(attempt);
+          onRetry?.({ status: 0, attempt: attempt + 1, delayMs });
+          await sleep(delayMs, externalSignal);
+          continue;
+        }
+      }
+
+      if (isNetworkError(error) && attempt < DEFAULT_RETRIES) {
+        const delayMs = backoffDelay(attempt);
+        onRetry?.({ status: 0, attempt: attempt + 1, delayMs });
+        await sleep(delayMs, externalSignal);
+        continue;
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timer);
+      externalSignal?.removeEventListener("abort", abortExternal);
+    }
+  }
+
+  throw new HttpError(0, "HTTP retry exhausted");
+}
+
+export async function fetchJsonWithMetaConditional<T>(
+  url: string,
+  init?: RequestInit,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  externalSignal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void,
+  conditional?: ConditionalHeaders
+): Promise<FetchJsonConditionalMeta<T>> {
+  if (externalSignal?.aborted) {
+    throw new DOMException("Aborted", "AbortError");
+  }
+
+  const requestInit = withConditionalHeaders(init, conditional);
+
+  for (let attempt = 0; attempt <= DEFAULT_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const abortExternal = () => controller.abort();
+    externalSignal?.addEventListener("abort", abortExternal);
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(url, {
+        ...requestInit,
+        signal: controller.signal
+      });
+
+      if (response.status === 304) {
+        return {
+          data: null,
+          headers: response.headers,
+          fetchedAt: Date.now(),
+          status: response.status,
+          notModified: true
+        };
+      }
+
+      if (response.ok) {
+        const data = (await response.json()) as T;
+        return {
+          data,
+          headers: response.headers,
+          fetchedAt: Date.now(),
+          status: response.status,
+          notModified: false
         };
       }
 
@@ -185,6 +283,24 @@ function parseCacheControl(value: string): Map<string, string | undefined> {
     directives.set(key, directiveValue);
   }
   return directives;
+}
+
+function withConditionalHeaders(init: RequestInit | undefined, conditional?: ConditionalHeaders): RequestInit | undefined {
+  if (!conditional?.etag && !conditional?.lastModified) {
+    return init;
+  }
+
+  const headers = new Headers(init?.headers);
+  if (conditional.etag) {
+    headers.set("If-None-Match", conditional.etag);
+  }
+  if (conditional.lastModified) {
+    headers.set("If-Modified-Since", conditional.lastModified);
+  }
+  return {
+    ...(init ?? {}),
+    headers
+  };
 }
 
 function isAbortError(error: unknown): boolean {

@@ -618,12 +618,15 @@ async function runPilotPageFetch(
     pilot.exhaustedLosses = lossRows.length === 0 || addedLosses === 0;
   }
 
-  params.updatePilotCard(pilot.entry.pilotName, {
-    fetchPhase: "history",
-    inferenceKills: toSortedRows(pilot.historyKills, deps),
-    inferenceLosses: toSortedRows(pilot.historyLosses, deps)
-  });
-  return addedKills + addedLosses;
+  const totalAdded = addedKills + addedLosses;
+  if (totalAdded > 0) {
+    params.updatePilotCard(pilot.entry.pilotName, {
+      fetchPhase: "history",
+      inferenceKills: toSortedRows(pilot.historyKills, deps),
+      inferenceLosses: toSortedRows(pilot.historyLosses, deps)
+    });
+  }
+  return totalAdded;
 }
 
 async function resolveCorpAllianceNames(

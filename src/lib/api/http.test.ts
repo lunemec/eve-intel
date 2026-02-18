@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HttpError, fetchJson, fetchJsonWithMeta, resolveHttpCachePolicy } from "./http";
+import { HttpError, fetchJson, fetchJsonWithMeta, fetchJsonWithMetaConditional, resolveHttpCachePolicy } from "./http";
 
 describe("fetchJson", () => {
   afterEach(() => {
@@ -198,6 +198,33 @@ describe("fetchJson", () => {
     expect(result.status).toBe(200);
     expect(result.headers.get("cache-control")).toContain("max-age=3600");
     expect(typeof result.fetchedAt).toBe("number");
+  });
+
+  it("sends conditional headers and returns notModified on HTTP 304", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, {
+      status: 304,
+      headers: {
+        etag: "\"etag-1\"",
+        "last-modified": "Wed, 18 Feb 2026 00:00:00 GMT"
+      }
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchJsonWithMetaConditional<unknown>(
+      "https://example.test",
+      undefined,
+      250,
+      undefined,
+      undefined,
+      { etag: "\"etag-1\"", lastModified: "Wed, 18 Feb 2026 00:00:00 GMT" }
+    );
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    const headers = new Headers(init?.headers);
+    expect(headers.get("if-none-match")).toBe("\"etag-1\"");
+    expect(headers.get("if-modified-since")).toBe("Wed, 18 Feb 2026 00:00:00 GMT");
+    expect(result.notModified).toBe(true);
+    expect(result.status).toBe(304);
+    expect(result.data).toBeNull();
   });
 });
 

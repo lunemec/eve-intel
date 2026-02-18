@@ -3,7 +3,7 @@
  */
 import { renderHook, waitFor } from "@testing-library/react";
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { usePilotIntelPipelineEffect } from "./usePilotIntelPipelineEffect";
 import type { ParsedPilotInput, Settings } from "../types";
 import type { PilotCard } from "./usePilotIntelPipeline";
@@ -25,6 +25,10 @@ const ENTRY_B: ParsedPilotInput = {
 };
 
 describe("usePilotIntelPipelineEffect", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("clears cards and logs when entries are empty", async () => {
     const logDebug = vi.fn();
     const logError = vi.fn();
@@ -56,7 +60,9 @@ describe("usePilotIntelPipelineEffect", () => {
           createLoadingCard,
           createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
           createProcessPilot: vi.fn(() => vi.fn()),
-          runPilotPipeline
+          runPilotPipeline,
+          fetchLatestKillsPage: vi.fn(async () => []),
+          fetchLatestLossesPage: vi.fn(async () => [])
         }
       )
     );
@@ -112,7 +118,9 @@ describe("usePilotIntelPipelineEffect", () => {
             createLoadingCard,
             createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
             createProcessPilot: vi.fn(() => vi.fn()),
-            runPilotPipeline
+            runPilotPipeline,
+            fetchLatestKillsPage: vi.fn(async () => []),
+            fetchLatestLossesPage: vi.fn(async () => [])
           }
         );
         return { pilotCards };
@@ -156,4 +164,76 @@ describe("usePilotIntelPipelineEffect", () => {
     unmount();
     expect(signalByPilot.get("Pilot B")?.aborted).toBe(false);
   });
+
+  it("background revalidation reruns pilot pipeline only when latest page-1 kill/loss IDs change", async () => {
+    vi.useFakeTimers();
+    const logDebug = vi.fn();
+    const logError = vi.fn();
+    const setNetworkNotice = vi.fn();
+    const setPilotCards = vi.fn();
+    const createLoadingCard = vi.fn((entry: ParsedPilotInput): PilotCard => ({
+      parsedEntry: entry,
+      status: "loading",
+      predictedShips: [],
+      fitCandidates: [],
+      kills: [],
+      losses: [],
+      inferenceKills: [],
+      inferenceLosses: []
+    }));
+
+    let refreshCalls = 0;
+    const fetchLatestKillsPage = vi.fn(async () => {
+      refreshCalls += 1;
+      if (refreshCalls < 2) {
+        return [{ killmail_id: 101, killmail_time: "2026-02-18T00:00:00Z", victim: {}, attackers: [] }];
+      }
+      return [{ killmail_id: 202, killmail_time: "2026-02-18T00:01:00Z", victim: {}, attackers: [] }];
+    });
+    const fetchLatestLossesPage = vi.fn(async () => [{ killmail_id: 301, killmail_time: "2026-02-18T00:00:00Z", victim: {}, attackers: [] }]);
+
+    const runPilotPipeline = vi.fn(async ({ entries, updatePilotCard }: {
+      entries: ParsedPilotInput[];
+      updatePilotCard: (pilotName: string, patch: Partial<PilotCard>) => void;
+    }) => {
+      updatePilotCard(entries[0].pilotName, {
+        characterId: 9001,
+        inferenceKills: [{ killmail_id: 101, killmail_time: "2026-02-18T00:00:00Z", victim: {}, attackers: [] }],
+        inferenceLosses: [{ killmail_id: 301, killmail_time: "2026-02-18T00:00:00Z", victim: {}, attackers: [] }]
+      });
+    });
+
+    renderHook(() =>
+      usePilotIntelPipelineEffect(
+        {
+          entries: [ENTRY],
+          settings: SETTINGS,
+          dogmaIndex: null,
+          logDebugRef: { current: logDebug },
+          setPilotCards,
+          setNetworkNotice
+        },
+        {
+          createLoadingCard,
+          createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
+          createProcessPilot: vi.fn(() => vi.fn()),
+          runPilotPipeline,
+          fetchLatestKillsPage,
+          fetchLatestLossesPage
+        }
+      )
+    );
+
+    await vi.advanceTimersByTimeAsync(0);
+    expect(runPilotPipeline).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(46_000);
+    await Promise.resolve();
+    expect(runPilotPipeline).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(46_000);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(runPilotPipeline).toHaveBeenCalledTimes(2);
+  }, 10_000);
 });

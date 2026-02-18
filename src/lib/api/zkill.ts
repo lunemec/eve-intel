@@ -1,14 +1,16 @@
 import { getCachedStateAsync, setCachedAsync } from "../cache";
-import { fetchJsonWithMeta, resolveHttpCachePolicy, type RetryInfo } from "./http";
+import { fetchJsonWithMeta, fetchJsonWithMetaConditional, resolveHttpCachePolicy, type RetryInfo } from "./http";
 
 const ZKILL_BASE = "https://zkillboard.com/api";
 const ZKILL_CACHE_TTL_MS = 1000 * 60 * 10;
+const ZKILL_PAGE_ONE_REVALIDATE_MS = 1000 * 45;
 export const ZKILL_MAX_LOOKBACK_DAYS = 7;
 const ESI_BASE = "https://esi.evetech.net/latest";
 const ESI_DATASOURCE = "tranquility";
 const KILLMAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 const MAX_HYDRATE = 50;
 const HYDRATE_CONCURRENCY = 5;
+const zkillRefreshInFlight = new Map<string, Promise<ZkillKillmail[]>>();
 
 export type ZkillAttacker = {
   character_id?: number;
@@ -49,6 +51,13 @@ export type ZkillCharacterStats = {
   danger?: number;
   iskDestroyed?: number;
   iskLost?: number;
+};
+
+type ZkillListCacheEnvelope = {
+  rows: ZkillKillmail[];
+  etag?: string;
+  lastModified?: string;
+  validatedAt: number;
 };
 
 export async function fetchRecentKills(
@@ -113,7 +122,8 @@ export async function fetchLatestKillsPage(
     `${ZKILL_BASE}/kills/characterID/${characterId}/page/${normalizedPage}/`,
     cacheKey,
     signal,
-    onRetry
+    onRetry,
+    { aggressiveRevalidate: normalizedPage === 1 }
   );
 }
 
@@ -129,7 +139,8 @@ export async function fetchLatestLossesPage(
     `${ZKILL_BASE}/losses/characterID/${characterId}/page/${normalizedPage}/`,
     cacheKey,
     signal,
-    onRetry
+    onRetry,
+    { aggressiveRevalidate: normalizedPage === 1 }
   );
 }
 
@@ -171,35 +182,46 @@ async function fetchZkillList(
   url: string,
   cacheKey: string,
   signal?: AbortSignal,
-  onRetry?: (info: RetryInfo) => void
+  onRetry?: (info: RetryInfo) => void,
+  options?: { aggressiveRevalidate?: boolean }
 ): Promise<ZkillKillmail[]> {
-  const cached = await getCachedStateAsync<ZkillKillmail[]>(cacheKey);
-  if (cached.value) {
-    if (!Array.isArray(cached.value)) {
-      return refreshZkillList(url, cacheKey, onRetry, signal);
+  const cached = await getCachedStateAsync<ZkillKillmail[] | ZkillListCacheEnvelope>(cacheKey);
+  const normalizedEnvelope = normalizeListCacheEnvelope(cached.value);
+  if (normalizedEnvelope) {
+    const cachedRows = normalizedEnvelope.rows;
+    if (!Array.isArray(cachedRows)) {
+      return refreshZkillListDeduped(url, cacheKey, onRetry, signal, normalizedEnvelope);
     }
-    const normalizedCached = normalizeZkillArray(cached.value);
-    if (normalizedCached.length !== cached.value.length) {
-      await setCachedAsync(cacheKey, normalizedCached, ZKILL_CACHE_TTL_MS);
+    const normalizedCached = normalizeZkillArray(cachedRows);
+    if (normalizedCached.length !== cachedRows.length) {
+      const repaired = { ...normalizedEnvelope, rows: normalizedCached };
+      await setCachedAsync(cacheKey, repaired, ZKILL_CACHE_TTL_MS);
     }
-    if (normalizedCached.length === 0 && cached.value.length > 0) {
-      return refreshZkillList(url, cacheKey, onRetry, signal);
+    if (normalizedCached.length === 0 && cachedRows.length > 0) {
+      return refreshZkillListDeduped(url, cacheKey, onRetry, signal, normalizedEnvelope);
     }
     if (normalizedCached.length === 0) {
       // Empty cache entries can be stale/poisoned from transient upstream responses.
       try {
-        return await refreshZkillList(url, cacheKey, onRetry, signal);
+        return await refreshZkillListDeduped(url, cacheKey, onRetry, signal, normalizedEnvelope);
       } catch {
         return [];
       }
     }
+
+    const needsAggressiveRevalidate =
+      Boolean(options?.aggressiveRevalidate) &&
+      Date.now() - normalizedEnvelope.validatedAt >= ZKILL_PAGE_ONE_REVALIDATE_MS;
+
     if (cached.stale) {
-      void refreshZkillList(url, cacheKey, onRetry);
+      void refreshZkillListDeduped(url, cacheKey, onRetry, undefined, normalizedEnvelope);
+    } else if (needsAggressiveRevalidate) {
+      void refreshZkillListDeduped(url, cacheKey, onRetry, undefined, normalizedEnvelope);
     }
     return normalizedCached;
   }
 
-  return refreshZkillList(url, cacheKey, onRetry, signal);
+  return refreshZkillListDeduped(url, cacheKey, onRetry, signal);
 }
 
 async function fetchLatestPaged(
@@ -238,13 +260,35 @@ function lookbackDaysToSeconds(days: number): number {
   return clampedDays * 24 * 60 * 60;
 }
 
+function refreshZkillListDeduped(
+  url: string,
+  cacheKey: string,
+  onRetry?: (info: RetryInfo) => void,
+  signal?: AbortSignal,
+  cachedEnvelope?: ZkillListCacheEnvelope
+): Promise<ZkillKillmail[]> {
+  const inFlightKey = `${cacheKey}|${signal ? "fg" : "bg"}`;
+  const existing = zkillRefreshInFlight.get(inFlightKey);
+  if (existing) {
+    return existing;
+  }
+
+  const request = refreshZkillList(url, cacheKey, onRetry, signal, cachedEnvelope)
+    .finally(() => {
+      zkillRefreshInFlight.delete(inFlightKey);
+    });
+  zkillRefreshInFlight.set(inFlightKey, request);
+  return request;
+}
+
 async function refreshZkillList(
   url: string,
   cacheKey: string,
   onRetry?: (info: RetryInfo) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  cachedEnvelope?: ZkillListCacheEnvelope
 ): Promise<ZkillKillmail[]> {
-  const response = await fetchJsonWithMeta<unknown>(
+  const response = await fetchJsonWithMetaConditional<unknown>(
     url,
     {
       headers: {
@@ -253,8 +297,42 @@ async function refreshZkillList(
     },
     12000,
     signal,
-    onRetry
+    onRetry,
+    cachedEnvelope
+      ? {
+          etag: cachedEnvelope.etag,
+          lastModified: cachedEnvelope.lastModified
+        }
+      : undefined
   );
+
+  if (response.notModified) {
+    if (!cachedEnvelope) {
+      return refreshZkillList(url, cacheKey, onRetry, signal);
+    }
+    const cachePolicy = resolveHttpCachePolicy(response.headers, {
+      fallbackTtlMs: ZKILL_CACHE_TTL_MS,
+      fallbackStaleMs: ZKILL_CACHE_TTL_MS,
+      fetchedAt: response.fetchedAt
+    });
+    if (cachePolicy.cacheable) {
+      await setCachedAsync(
+        cacheKey,
+        {
+          ...cachedEnvelope,
+          validatedAt: response.fetchedAt
+        },
+        cachePolicy.ttlMs,
+        cachePolicy.staleMs
+      );
+    }
+    return cachedEnvelope.rows;
+  }
+
+  if (response.data === null) {
+    return cachedEnvelope?.rows ?? [];
+  }
+
   const data = await parseZkillResponse(response.data, signal, onRetry);
   const cachePolicy = resolveHttpCachePolicy(response.headers, {
     fallbackTtlMs: ZKILL_CACHE_TTL_MS,
@@ -262,7 +340,17 @@ async function refreshZkillList(
     fetchedAt: response.fetchedAt
   });
   if (cachePolicy.cacheable) {
-    await setCachedAsync(cacheKey, data, cachePolicy.ttlMs, cachePolicy.staleMs);
+    await setCachedAsync(
+      cacheKey,
+      {
+        rows: data,
+        etag: response.headers.get("etag") ?? undefined,
+        lastModified: response.headers.get("last-modified") ?? undefined,
+        validatedAt: response.fetchedAt
+      },
+      cachePolicy.ttlMs,
+      cachePolicy.staleMs
+    );
   }
   return data;
 }
@@ -388,6 +476,33 @@ function normalizeZkillArray(payload: unknown[]): ZkillKillmail[] {
     const row = entry as Partial<ZkillKillmail>;
     return typeof row.killmail_id === "number" && typeof row.killmail_time === "string";
   });
+}
+
+function normalizeListCacheEnvelope(value: ZkillKillmail[] | ZkillListCacheEnvelope | null): ZkillListCacheEnvelope | null {
+  if (!value) {
+    return null;
+  }
+  if (Array.isArray(value)) {
+    return {
+      rows: value,
+      validatedAt: 0
+    };
+  }
+  if (typeof value !== "object") {
+    return null;
+  }
+  const candidate = value as Partial<ZkillListCacheEnvelope>;
+  if (!Array.isArray(candidate.rows)) {
+    return null;
+  }
+  return {
+    rows: candidate.rows,
+    etag: typeof candidate.etag === "string" ? candidate.etag : undefined,
+    lastModified: typeof candidate.lastModified === "string" ? candidate.lastModified : undefined,
+    validatedAt: typeof candidate.validatedAt === "number" && Number.isFinite(candidate.validatedAt)
+      ? candidate.validatedAt
+      : 0
+  };
 }
 
 function formatPayloadSnippet(payload: unknown): string {
