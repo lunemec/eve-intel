@@ -23,7 +23,7 @@ import {
 } from "./api/zkill";
 import { getCachedStateAsync, setCachedAsync } from "./cache";
 import { deriveFitCandidates, derivePilotStats, deriveShipPredictions } from "./intel";
-import { evaluateCynoRisk, estimateShipCynoChance } from "./cyno";
+import { deriveShipCynoBaitEvidence, evaluateCynoRisk, estimateShipCynoChance } from "./cyno";
 import { deriveShipRolePills } from "./roles";
 
 vi.mock("./api/esi", () => ({
@@ -94,7 +94,8 @@ vi.mock("./cyno", () => ({
     jumpAssociation: false,
     reasons: []
   })),
-  estimateShipCynoChance: vi.fn(() => new Map())
+  estimateShipCynoChance: vi.fn(() => new Map()),
+  deriveShipCynoBaitEvidence: vi.fn(() => new Map())
 }));
 
 function deferred<T>() {
@@ -158,6 +159,7 @@ describe("usePilotIntelPipeline", () => {
     });
     vi.mocked(deriveShipRolePills).mockReturnValue(new Map());
     vi.mocked(estimateShipCynoChance).mockReturnValue(new Map());
+    vi.mocked(deriveShipCynoBaitEvidence).mockReturnValue(new Map());
     vi.mocked(evaluateCynoRisk).mockReturnValue({
       potentialCyno: false,
       jumpAssociation: false,

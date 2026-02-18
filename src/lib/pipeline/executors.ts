@@ -10,8 +10,9 @@ import {
   type ShipPrediction
 } from "../intel";
 import type { PilotCard } from "../usePilotIntelPipeline";
-import { estimateShipCynoChance, evaluateCynoRisk, type CynoRisk } from "../cyno";
-import { deriveShipRolePills } from "../roles";
+import { deriveShipCynoBaitEvidence, estimateShipCynoChance, evaluateCynoRisk, type CynoRisk } from "../cyno";
+import { deriveShipRolePills, type RolePillEvidence } from "../roles";
+import type { PillEvidence, PillEvidenceByName } from "../pillEvidence";
 import { DEV_FIT_DUMP_ENABLED, TOP_SHIP_CANDIDATES } from "./constants";
 import type { DebugLogger, PipelineSignal, RetryBuilder } from "./types";
 
@@ -137,6 +138,7 @@ export async function recomputeDerivedInference(params: {
     losses: params.row.inferenceLosses,
     namesByTypeId: params.namesById
   });
+  const roleEvidenceByShip = new Map<string, RolePillEvidence[]>();
   const rolePillsByShip = deriveShipRolePills({
     predictedShips,
     fitCandidates,
@@ -144,31 +146,37 @@ export async function recomputeDerivedInference(params: {
     characterId: params.row.characterId!,
     namesByTypeId: params.namesById,
     onEvidence: (shipName, evidence) => {
-      if (evidence.length === 0) {
-        return;
-      }
-      params.debugLog?.("Role pill evidence", {
-        pilot: params.row.parsedEntry.pilotName,
-        ship: shipName,
-        evidence: evidence.map((row) => ({
-          pillName: row.pillName,
-          causingModule: row.causingModule,
-          fitId: row.fitId,
-          killmailId: row.killmailId,
-          zkillUrl: row.url,
-          timestamp: row.timestamp
-        }))
-      });
+      roleEvidenceByShip.set(shipName, evidence);
     }
+  });
+  const cynoBaitEvidenceByShip = deriveShipCynoBaitEvidence({
+    predictedShips,
+    fitCandidates,
+    losses: params.row.inferenceLosses,
+    characterId: params.row.characterId!,
+    namesByTypeId: params.namesById
   });
   const predictedShipsWithCyno = predictedShips.map((ship) => {
     const cyno = cynoByShip.get(ship.shipName);
     const rolePills = rolePillsByShip.get(ship.shipName) ?? [];
+    const pillEvidence = mergeShipPillEvidence(
+      roleEvidenceByShip.get(ship.shipName) ?? [],
+      cynoBaitEvidenceByShip.get(ship.shipName)
+    );
+    if (pillEvidence) {
+      logDisplayedPillEvidence({
+        debugLog: params.debugLog,
+        pilotName: params.row.parsedEntry.pilotName,
+        shipName: ship.shipName,
+        pillEvidence
+      });
+    }
     return {
       ...ship,
       cynoCapable: cyno?.cynoCapable ?? false,
       cynoChance: cyno?.cynoChance ?? 0,
-      rolePills
+      rolePills,
+      pillEvidence
     };
   });
 
@@ -188,6 +196,82 @@ export async function recomputeDerivedInference(params: {
   });
   await setCachedAsync(params.cacheKey, derived, 1000 * 60 * 15, 1000 * 60 * 5);
   return derived;
+}
+
+function mergeShipPillEvidence(
+  roleEvidence: RolePillEvidence[],
+  cynoBaitEvidence?: PillEvidenceByName
+): PillEvidenceByName | undefined {
+  const merged: PillEvidenceByName = {};
+  if (cynoBaitEvidence) {
+    for (const row of Object.values(cynoBaitEvidence)) {
+      if (!row) {
+        continue;
+      }
+      merged[row.pillName] = row;
+    }
+  }
+  for (const row of roleEvidence) {
+    merged[row.pillName] = {
+      pillName: row.pillName,
+      causingModule: row.causingModule,
+      fitId: row.fitId,
+      killmailId: row.killmailId,
+      url: row.url,
+      timestamp: row.timestamp
+    };
+  }
+  return Object.keys(merged).length > 0 ? merged : undefined;
+}
+
+function logDisplayedPillEvidence(params: {
+  debugLog?: DebugLogger;
+  pilotName: string;
+  shipName: string;
+  pillEvidence: PillEvidenceByName;
+}): void {
+  for (const row of Object.values(params.pillEvidence)) {
+    if (!row) {
+      continue;
+    }
+    params.debugLog?.("Displayed pill evidence", buildPillEvidenceDebugPayload(params.pilotName, params.shipName, row));
+  }
+}
+
+function buildPillEvidenceDebugPayload(pilotName: string, shipName: string, row: PillEvidence): {
+  pilot: string;
+  ship: string;
+  pillName: string;
+  causingModule: string;
+  fitId: string;
+  eventType: "kill" | "loss";
+  killmailId: number;
+  zkillUrl: string;
+  timestamp: string;
+} {
+  return {
+    pilot: pilotName,
+    ship: shipName,
+    pillName: row.pillName,
+    causingModule: row.causingModule,
+    fitId: row.fitId,
+    eventType: inferPillEventType(row.url),
+    killmailId: row.killmailId,
+    zkillUrl: row.url,
+    timestamp: row.timestamp
+  };
+}
+
+function inferPillEventType(url: string): "kill" | "loss" {
+  try {
+    const parsed = new URL(url);
+    if (/^\/loss\/\d+\/?$/.test(parsed.pathname)) {
+      return "loss";
+    }
+  } catch {
+    // URL validity is handled upstream by pill-evidence normalization.
+  }
+  return "kill";
 }
 
 async function persistDerivedFitsForDev(params: {
