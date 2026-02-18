@@ -1,11 +1,11 @@
 # Session Handoff
 
-_Generated: 2026-02-18 12:08:18 UTC_
+_Generated: 2026-02-18 12:17:49 UTC_
 
 ## Git Context
 
 - **Branch:** `better_combat_capability`
-- **HEAD:** 494198f: chore: auto-commit before merge (loop primary)
+- **HEAD:** 3dad833: chore: auto-commit before merge (loop primary)
 
 ## Tasks
 
@@ -19,12 +19,15 @@ _Generated: 2026-02-18 12:08:18 UTC_
 - [x] JSONL output + structured errors + manifest
 - [x] CLI integration + npm script wiring
 - [x] Final verify + changelog from git history
+- [x] Add CLI entrypoint orchestration tests and import-safe main
+- [x] Run final objective verification and release notes sweep
 
 
 ## Key Files
 
 Recently modified:
 
+- `.ralph/agent/handoff.md`
 - `.ralph/agent/memories.md`
 - `.ralph/agent/memories.md.lock`
 - `.ralph/agent/scratchpad.md`
@@ -34,7 +37,6 @@ Recently modified:
 - `.ralph/current-events`
 - `.ralph/current-loop-id`
 - `.ralph/events-20260218-112745.jsonl`
-- `.ralph/events-20260218-112959.jsonl`
 
 ## Next Session
 

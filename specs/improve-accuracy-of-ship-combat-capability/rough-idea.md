@@ -1,0 +1,1 @@
+I would like to improve accuracy of ship combat capability. There is already a ralph task in progress, and many tests. This is supposed to follow up once the current ralph task completes, to identify next possible gaps in our dogma simulator and fix them.
