@@ -4,8 +4,9 @@ import {
   formatFetchZkillFitsUsage,
   parseFetchZkillFitsArgs
 } from "./lib/zkill-fit-fetch-cli/args.mjs";
+import { runFetchZkillFitPipeline } from "./lib/zkill-fit-fetch-cli/pipeline.mjs";
 
-function run(argv) {
+export async function runFetchZkillFitsCli(argv) {
   let parsed;
   try {
     parsed = parseFetchZkillFitsArgs(argv);
@@ -24,12 +25,32 @@ function run(argv) {
     return 0;
   }
 
-  throw new Error(
-    "Not implemented: fetch pipeline will be added in subsequent tasks after CLI argument contract is validated."
-  );
+  try {
+    const result = await runFetchZkillFitPipeline(parsed);
+    console.log(
+      `[fetch-zkill-fits] records=${result.manifest.output.recordsWritten} duplicates=${result.manifest.output.duplicatesSkipped} errors=${result.manifest.output.errorsLogged}`
+    );
+    return 0;
+  } catch (error) {
+    console.error(`[fetch-zkill-fits] fatal: ${formatRuntimeError(error)}`);
+    return 1;
+  }
 }
 
-const exitCode = run(process.argv.slice(2));
+function formatRuntimeError(error) {
+  if (!error || typeof error !== "object") {
+    return "Unknown error";
+  }
+
+  const message = typeof error.message === "string" && error.message.trim() ? error.message : "";
+  if (!message) {
+    return "Unknown error";
+  }
+
+  return message;
+}
+
+const exitCode = await runFetchZkillFitsCli(process.argv.slice(2));
 if (exitCode !== 0) {
   process.exit(exitCode);
 }

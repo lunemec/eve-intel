@@ -26,6 +26,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "backtest:zkill": "node scripts/backtest-zkill.mjs",
+    "zkill:fits:fetch": "node scripts/fetch-zkill-fits.mjs",
     "desktop:dev:web": "vite",
     "desktop:dev:app": "set VITE_DEV_SERVER_URL=http://localhost:5173&& electron ./electron/main.cjs",
     "desktop:run": "npm run build && electron ./electron/main.cjs",
