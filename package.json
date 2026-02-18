@@ -20,6 +20,7 @@
     "dogma:parity:import": "node scripts/import-parity-pyfa-results.mjs",
     "dogma:fixtures:zkill": "node scripts/build-dogma-fit-corpus.mjs",
     "dogma:parity:open-items": "node scripts/generate-dogma-parity-open-items.mjs",
+    "dogma:parity:new-fits": "node scripts/run-dogma-parity-new-fits.mjs",
     "prebuild": "npm run sde:prepare",
     "build": "tsc -b && vite build",
     "preview": "vite preview",

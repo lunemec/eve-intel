@@ -123,6 +123,7 @@ export function parseDogmaParityNewFitsArgs(argv = []) {
     }
   }
 
+  validateScopeSource(parsed);
   return parsed;
 }
 
@@ -343,6 +344,22 @@ function parseIntegerArgument({ token, value }) {
     throw new DogmaParityNewFitsCliUsageError(`${token} must be a non-negative number.`);
   }
   return Math.trunc(numeric);
+}
+
+function validateScopeSource(parsed) {
+  if (parsed.help) {
+    return;
+  }
+
+  const hasScopeFile = typeof parsed.scopeFilePath === "string";
+  const hasFitIdFlags = Array.isArray(parsed.fitIdFlags) && parsed.fitIdFlags.length > 0;
+  if (hasScopeFile || hasFitIdFlags) {
+    return;
+  }
+
+  throw new DogmaParityNewFitsCliUsageError(
+    "Provide scope input via --scope-file or --fit-id/--fit-ids."
+  );
 }
 
 function readNextValue(argv, token, nextIndex) {
