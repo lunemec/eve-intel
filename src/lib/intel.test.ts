@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { collectShipTypeIdsForNaming, deriveFitCandidates, derivePilotStats, deriveShipPredictions } from "./intel";
+import {
+  collectShipTypeIdsForNaming,
+  deriveFitCandidates,
+  derivePilotStats,
+  deriveShipPredictions,
+  summarizeEvidenceCoverage,
+  summarizeTopEvidenceShips
+} from "./intel";
 import type { ParsedPilotInput } from "../types";
 import type { ZkillKillmail } from "./api/zkill";
 
@@ -543,5 +550,367 @@ describe("deriveFitCandidates", () => {
     expect(fits[0].eftSections?.high).toContain("Warp Scrambler II");
     expect(fits[0].eftSections?.mid).toContain("5MN Microwarpdrive II");
     expect(fits[0].eftSections?.low).toContain("Medium Shield Extender II");
+    expect(fits[0].modulesBySlot?.high[0].typeId).toBe(9001);
+    expect(fits[0].modulesBySlot?.high[0].name).toBe("Warp Scrambler II");
+    expect(fits[0].modulesBySlot?.mid[0].typeId).toBe(9002);
+    expect(fits[0].modulesBySlot?.low[0].typeId).toBe(9003);
+  });
+
+  it("does not truncate >20 items and prefers module over charge-like item per slot", () => {
+    const characterId = 4002;
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 41,
+        killmail_time: "2026-02-10T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 800,
+          items: [
+            { item_type_id: 9100, flag: 11 },
+            { item_type_id: 9101, flag: 12 },
+            { item_type_id: 9102, flag: 13 },
+            { item_type_id: 9103, flag: 14 },
+            { item_type_id: 9200, flag: 19 },
+            { item_type_id: 9201, flag: 20 },
+            { item_type_id: 9300, flag: 27 },
+            { item_type_id: 9400, flag: 27 }, // charge-like for same slot
+            { item_type_id: 9301, flag: 28 },
+            { item_type_id: 9400, flag: 28 }, // charge-like for same slot
+            { item_type_id: 9302, flag: 29 },
+            { item_type_id: 9400, flag: 29 }, // charge-like for same slot
+            { item_type_id: 9303, flag: 30 },
+            { item_type_id: 9400, flag: 30 }, // charge-like for same slot
+            { item_type_id: 9304, flag: 31 },
+            { item_type_id: 9500, flag: 31 }, // probe for same slot
+            { item_type_id: 9305, flag: 32 },
+            { item_type_id: 9400, flag: 32 },
+            { item_type_id: 9306, flag: 33 },
+            { item_type_id: 9400, flag: 33 },
+            { item_type_id: 9307, flag: 34 },
+            { item_type_id: 9400, flag: 34 },
+            { item_type_id: 9600, flag: 92 },
+            { item_type_id: 9601, flag: 93 }
+          ]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const fits = deriveFitCandidates({
+      characterId,
+      losses,
+      predictedShips: [
+        {
+          shipTypeId: 800,
+          shipName: "Eris",
+          probability: 100,
+          source: "inferred",
+          reason: []
+        }
+      ],
+      itemNamesByTypeId: new Map([
+        [9100, "IFFA Compact Damage Control"],
+        [9101, "Magnetic Field Stabilizer II"],
+        [9102, "Nanofiber Internal Structure II"],
+        [9103, "Vortex Compact Magnetic Field Stabilizer"],
+        [9200, "5MN Y-T8 Compact Microwarpdrive"],
+        [9201, "Dread Guristas Warp Scrambler"],
+        [9300, "Interdiction Sphere Launcher I"],
+        [9301, "Light Neutron Blaster II"],
+        [9302, "Light Neutron Blaster II"],
+        [9303, "Light Neutron Blaster II"],
+        [9304, "Light Neutron Blaster II"],
+        [9305, "Light Neutron Blaster II"],
+        [9306, "Light Neutron Blaster II"],
+        [9307, "Light Neutron Blaster II"],
+        [9400, "Void S"],
+        [9500, "Warp Disrupt Probe"],
+        [9600, "Small Transverse Bulkhead II"],
+        [9601, "Small Transverse Bulkhead II"]
+      ])
+    });
+
+    expect(fits).toHaveLength(1);
+    const sections = fits[0].eftSections!;
+    expect(sections.low).toContain("Vortex Compact Magnetic Field Stabilizer");
+    expect(sections.mid).toContain("Dread Guristas Warp Scrambler");
+    expect(sections.high.filter((row) => row === "Light Neutron Blaster II,Void S")).toHaveLength(6);
+    expect(sections.high).toContain("Light Neutron Blaster II");
+    expect(sections.high).toContain("Interdiction Sphere Launcher I,Void S");
+    expect(sections.high.some((row) => row === "Light Neutron Blaster II,Warp Disrupt Probe")).toBe(false);
+    expect(sections.high.some((row) => row === "Void S")).toBe(false);
+    expect(sections.high.some((row) => row === "Warp Disrupt Probe")).toBe(false);
+  });
+
+  it("pairs launcher ammo to launcher modules and does not emit standalone rocket ammo", () => {
+    const characterId = 4010;
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 91,
+        killmail_time: "2026-02-10T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 91000,
+          items: [
+            { item_type_id: 10631, flag: 27 },
+            { item_type_id: 24473, flag: 27 },
+            { item_type_id: 10631, flag: 28 },
+            { item_type_id: 24473, flag: 28 },
+            { item_type_id: 10631, flag: 29 },
+            { item_type_id: 24473, flag: 29 },
+            { item_type_id: 22782, flag: 30 },
+            { item_type_id: 22778, flag: 30 }
+          ]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const fits = deriveFitCandidates({
+      characterId,
+      losses,
+      predictedShips: [
+        {
+          shipTypeId: 91000,
+          shipName: "Heretic",
+          probability: 100,
+          source: "inferred",
+          reason: []
+        }
+      ],
+      itemNamesByTypeId: new Map([
+        [10631, "Rocket Launcher II"],
+        [24473, "Nova Rage Rocket"],
+        [22782, "Interdiction Sphere Launcher I"],
+        [22778, "Warp Disrupt Probe"]
+      ])
+    });
+
+    expect(fits).toHaveLength(1);
+    const high = fits[0].eftSections!.high;
+    expect(high.filter((entry) => entry === "Rocket Launcher II,Nova Rage Rocket")).toHaveLength(3);
+    expect(high).toContain("Interdiction Sphere Launcher I,Warp Disrupt Probe");
+    expect(high).not.toContain("Nova Rage Rocket");
+  });
+
+  it("keeps launcher ammo pairing when ammo is only present via charge_item_type_id", () => {
+    const characterId = 4011;
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 92,
+        killmail_time: "2026-02-10T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 91001,
+          items: [
+            { item_type_id: 10631, flag: 28, charge_item_type_id: 24473 },
+            { item_type_id: 10631, flag: 29, charge_item_type_id: 24473 },
+            { item_type_id: 22782, flag: 30, charge_item_type_id: 22778 }
+          ]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const fits = deriveFitCandidates({
+      characterId,
+      losses,
+      predictedShips: [
+        {
+          shipTypeId: 91001,
+          shipName: "Heretic",
+          probability: 100,
+          source: "inferred",
+          reason: []
+        }
+      ],
+      itemNamesByTypeId: new Map([
+        [10631, "Rocket Launcher II"],
+        [24473, "Nova Rage Rocket"],
+        [22782, "Interdiction Sphere Launcher I"],
+        [22778, "Warp Disrupt Probe"]
+      ])
+    });
+
+    expect(fits).toHaveLength(1);
+    const high = fits[0].eftSections!.high;
+    expect(high.filter((entry) => entry === "Rocket Launcher II,Nova Rage Rocket")).toHaveLength(2);
+    expect(high).toContain("Interdiction Sphere Launcher I,Warp Disrupt Probe");
+    expect(high).not.toContain("Nova Rage Rocket");
+  });
+
+  it("includes drone bay entries in inferred EFT output", () => {
+    const characterId = 4012;
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 93,
+        killmail_time: "2026-02-10T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 593,
+          items: [
+            { item_type_id: 7579, flag: 27 },
+            { item_type_id: 23009, flag: 27 },
+            { item_type_id: 7579, flag: 28 },
+            { item_type_id: 23009, flag: 28 },
+            { item_type_id: 31888, flag: 87, quantity_destroyed: 3 }
+          ]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const fits = deriveFitCandidates({
+      characterId,
+      losses,
+      predictedShips: [
+        {
+          shipTypeId: 593,
+          shipName: "Tristan",
+          probability: 100,
+          source: "inferred",
+          reason: []
+        }
+      ],
+      itemNamesByTypeId: new Map([
+        [7579, "Modal Light Neutron Particle Accelerator I"],
+        [23009, "Caldari Navy Antimatter Charge S"],
+        [31888, "Warrior II"]
+      ])
+    });
+
+    expect(fits).toHaveLength(1);
+    expect(fits[0].eftSections?.high.filter((entry) => entry === "Modal Light Neutron Particle Accelerator I,Caldari Navy Antimatter Charge S")).toHaveLength(2);
+    expect(fits[0].eftSections?.other).toContain("Warrior II x3");
+    expect(fits[0].modulesBySlot?.other[0].quantity).toBe(3);
+  });
+});
+
+describe("summaries", () => {
+  it("summarizes evidence coverage counters", () => {
+    const characterId = 777;
+    const kills: ZkillKillmail[] = [
+      {
+        killmail_id: 1,
+        killmail_time: "2026-02-10T00:00:00Z",
+        victim: {},
+        attackers: [],
+        zkb: {}
+      },
+      {
+        killmail_id: 2,
+        killmail_time: "2026-02-09T00:00:00Z",
+        victim: {},
+        attackers: [{ character_id: 999, ship_type_id: 123 }],
+        zkb: {}
+      },
+      {
+        killmail_id: 3,
+        killmail_time: "2026-02-08T00:00:00Z",
+        victim: {},
+        attackers: [{ character_id: characterId, ship_type_id: 321 }],
+        zkb: {}
+      }
+    ];
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 4,
+        killmail_time: "2026-02-07T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 456
+        },
+        attackers: [],
+        zkb: {}
+      },
+      {
+        killmail_id: 5,
+        killmail_time: "2026-02-06T00:00:00Z",
+        victim: {
+          character_id: 42,
+          ship_type_id: 457
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const summary = summarizeEvidenceCoverage(characterId, kills, losses);
+
+    expect(summary.totalKills).toBe(3);
+    expect(summary.totalLosses).toBe(2);
+    expect(summary.killRowsWithoutAttackers).toBe(1);
+    expect(summary.killRowsWithAttackersButNoCharacterMatch).toBe(1);
+    expect(summary.killRowsWithMatchedAttackerShip).toBe(1);
+    expect(summary.lossRowsWithVictimShip).toBe(1);
+  });
+
+  it("returns top evidence ships in descending total order with fallback names", () => {
+    const characterId = 100;
+    const kills: ZkillKillmail[] = [
+      makeKillmail({
+        id: 10,
+        time: "2026-02-10T00:00:00Z",
+        attackerCharacterId: characterId,
+        attackerShipTypeId: 2001
+      }),
+      makeKillmail({
+        id: 11,
+        time: "2026-02-09T00:00:00Z",
+        attackerCharacterId: characterId,
+        attackerShipTypeId: 2001
+      }),
+      makeKillmail({
+        id: 12,
+        time: "2026-02-08T00:00:00Z",
+        attackerCharacterId: characterId,
+        attackerShipTypeId: 2002
+      })
+    ];
+    const losses: ZkillKillmail[] = [
+      makeKillmail({
+        id: 13,
+        time: "2026-02-07T00:00:00Z",
+        victimCharacterId: characterId,
+        victimShipTypeId: 2002
+      }),
+      makeKillmail({
+        id: 14,
+        time: "2026-02-06T00:00:00Z",
+        victimCharacterId: characterId,
+        victimShipTypeId: 2999
+      })
+    ];
+
+    const rows = summarizeTopEvidenceShips({
+      characterId,
+      kills,
+      losses,
+      shipNamesByTypeId: new Map([
+        [2001, "Rifter"],
+        [2002, "Thrasher"]
+      ]),
+      limit: 2
+    });
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      shipTypeId: 2001,
+      shipName: "Rifter",
+      kills: 2,
+      losses: 0,
+      total: 2
+    });
+    expect(rows[1]).toMatchObject({
+      shipTypeId: 2002,
+      shipName: "Thrasher",
+      kills: 1,
+      losses: 1,
+      total: 2
+    });
   });
 });

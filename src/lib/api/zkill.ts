@@ -1,5 +1,5 @@
 import { getCachedStateAsync, setCachedAsync } from "../cache";
-import { fetchJson, type RetryInfo } from "./http";
+import { fetchJsonWithMeta, resolveHttpCachePolicy, type RetryInfo } from "./http";
 
 const ZKILL_BASE = "https://zkillboard.com/api";
 const ZKILL_CACHE_TTL_MS = 1000 * 60 * 10;
@@ -23,6 +23,9 @@ export type ZkillVictim = {
 export type ZkillItem = {
   item_type_id: number;
   flag?: number;
+  charge_item_type_id?: number;
+  quantity_destroyed?: number;
+  quantity_dropped?: number;
 };
 
 export type ZkillKillmail = {
@@ -41,6 +44,8 @@ export type ZkillCharacterStats = {
   kills?: number;
   losses?: number;
   solo?: number;
+  avgGangSize?: number;
+  gangRatio?: number;
   danger?: number;
   iskDestroyed?: number;
   iskLost?: number;
@@ -94,6 +99,38 @@ export async function fetchLatestLosses(
 ): Promise<ZkillKillmail[]> {
   const key = `eve-intel.cache.zkill.losses.latest.${characterId}`;
   return fetchZkillList(`${ZKILL_BASE}/losses/characterID/${characterId}/`, key, signal, onRetry);
+}
+
+export async function fetchLatestKillsPage(
+  characterId: number,
+  page: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const normalizedPage = Math.max(1, Math.floor(page));
+  const cacheKey = `eve-intel.cache.zkill.kills.latest.${characterId}.page.${normalizedPage}`;
+  return fetchZkillList(
+    `${ZKILL_BASE}/kills/characterID/${characterId}/page/${normalizedPage}/`,
+    cacheKey,
+    signal,
+    onRetry
+  );
+}
+
+export async function fetchLatestLossesPage(
+  characterId: number,
+  page: number,
+  signal?: AbortSignal,
+  onRetry?: (info: RetryInfo) => void
+): Promise<ZkillKillmail[]> {
+  const normalizedPage = Math.max(1, Math.floor(page));
+  const cacheKey = `eve-intel.cache.zkill.losses.latest.${characterId}.page.${normalizedPage}`;
+  return fetchZkillList(
+    `${ZKILL_BASE}/losses/characterID/${characterId}/page/${normalizedPage}/`,
+    cacheKey,
+    signal,
+    onRetry
+  );
 }
 
 export async function fetchLatestKillsPaged(
@@ -176,9 +213,10 @@ async function fetchLatestPaged(
   const totalPages = Math.max(1, Math.floor(maxPages));
 
   for (let page = 1; page <= totalPages; page += 1) {
-    const cacheKey = `eve-intel.cache.zkill.${side}.latest.${characterId}.page.${page}`;
-    const url = `${ZKILL_BASE}/${side}/characterID/${characterId}/page/${page}/`;
-    const rows = await fetchZkillList(url, cacheKey, signal, onRetry);
+    const rows =
+      side === "kills"
+        ? await fetchLatestKillsPage(characterId, page, signal, onRetry)
+        : await fetchLatestLossesPage(characterId, page, signal, onRetry);
     const beforeCount = unique.size;
 
     for (const row of rows) {
@@ -206,7 +244,7 @@ async function refreshZkillList(
   onRetry?: (info: RetryInfo) => void,
   signal?: AbortSignal
 ): Promise<ZkillKillmail[]> {
-  const raw = await fetchJson<unknown>(
+  const response = await fetchJsonWithMeta<unknown>(
     url,
     {
       headers: {
@@ -217,8 +255,15 @@ async function refreshZkillList(
     signal,
     onRetry
   );
-  const data = await parseZkillResponse(raw, signal, onRetry);
-  await setCachedAsync(cacheKey, data, ZKILL_CACHE_TTL_MS);
+  const data = await parseZkillResponse(response.data, signal, onRetry);
+  const cachePolicy = resolveHttpCachePolicy(response.headers, {
+    fallbackTtlMs: ZKILL_CACHE_TTL_MS,
+    fallbackStaleMs: ZKILL_CACHE_TTL_MS,
+    fetchedAt: response.fetchedAt
+  });
+  if (cachePolicy.cacheable) {
+    await setCachedAsync(cacheKey, data, cachePolicy.ttlMs, cachePolicy.staleMs);
+  }
   return data;
 }
 
@@ -229,7 +274,7 @@ async function refreshCharacterStats(
   onRetry?: (info: RetryInfo) => void
 ): Promise<ZkillCharacterStats | null> {
   try {
-    const raw = await fetchJson<unknown>(
+    const response = await fetchJsonWithMeta<unknown>(
       `${ZKILL_BASE}/stats/characterID/${characterId}/`,
       {
         headers: {
@@ -240,10 +285,20 @@ async function refreshCharacterStats(
       signal,
       onRetry
     );
-    const stats = parseCharacterStats(raw);
-    await setCachedAsync(cacheKey, stats, ZKILL_CACHE_TTL_MS);
+    const stats = parseCharacterStats(response.data);
+    const cachePolicy = resolveHttpCachePolicy(response.headers, {
+      fallbackTtlMs: ZKILL_CACHE_TTL_MS,
+      fallbackStaleMs: ZKILL_CACHE_TTL_MS,
+      fetchedAt: response.fetchedAt
+    });
+    if (cachePolicy.cacheable) {
+      await setCachedAsync(cacheKey, stats, cachePolicy.ttlMs, cachePolicy.staleMs);
+    }
     return stats;
-  } catch {
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw error;
+    }
     await setCachedAsync(cacheKey, null, 1000 * 60 * 5);
     return null;
   }
@@ -367,7 +422,32 @@ function parseCharacterStats(payload: unknown): ZkillCharacterStats | null {
     "shipCountLost.all"
   ]);
   const solo = extractNumber(root, ["solo", "soloKills", "soloKills.all"]);
-  const dangerRaw = extractNumber(root, ["danger", "dangerRatio"]);
+  const avgGangSize = extractNumber(root, [
+    "avgGang",
+    "avgGangSize",
+    "averageGang",
+    "averageGangSize",
+    "gangAverage",
+    "gang.average",
+    "gang.avg",
+    "gangAverage.all"
+  ]);
+  const gangRatioRaw = extractNumber(root, [
+    "gangRatio",
+    "gangPercent",
+    "gang",
+    "gangKillsRatio",
+    "gang.value",
+    "gang.all"
+  ]);
+  const dangerRaw = extractNumber(root, [
+    "danger",
+    "dangerRatio",
+    "dangerous",
+    "dangerousRatio",
+    "dangerous.value",
+    "dangerous.all"
+  ]);
   const iskDestroyed = extractNumber(root, ["iskDestroyed", "isk.destroyed", "iskDestroyed.all"]);
   const iskLost = extractNumber(root, ["iskLost", "isk.lost", "iskLost.all"]);
 
@@ -375,6 +455,8 @@ function parseCharacterStats(payload: unknown): ZkillCharacterStats | null {
     kills === undefined &&
     losses === undefined &&
     solo === undefined &&
+    avgGangSize === undefined &&
+    gangRatioRaw === undefined &&
     dangerRaw === undefined &&
     iskDestroyed === undefined &&
     iskLost === undefined
@@ -382,11 +464,14 @@ function parseCharacterStats(payload: unknown): ZkillCharacterStats | null {
     return null;
   }
 
+  const gangRatio = normalizeDangerPercent(gangRatioRaw);
   const danger = normalizeDangerPercent(dangerRaw);
   return {
     kills,
     losses,
     solo,
+    avgGangSize,
+    gangRatio,
     danger,
     iskDestroyed,
     iskLost
@@ -436,7 +521,14 @@ function normalizeDangerPercent(value?: number): number | undefined {
   if (value <= 1) {
     return Number((value * 100).toFixed(1));
   }
+  if (value <= 10) {
+    return Number((value * 10).toFixed(1));
+  }
   return Number(value.toFixed(1));
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
 }
 
 async function hydrateKillmailSummaries(
@@ -493,7 +585,7 @@ async function fetchKillmailDetails(
   }
 
   try {
-    const detail = await fetchJson<{
+    const response = await fetchJsonWithMeta<{
       killmail_id: number;
       killmail_time: string;
       solar_system_id?: number;
@@ -508,14 +600,21 @@ async function fetchKillmailDetails(
     );
 
     const normalized: ZkillKillmail = {
-      killmail_id: detail.killmail_id,
-      killmail_time: detail.killmail_time,
-      solar_system_id: detail.solar_system_id,
-      victim: detail.victim,
-      attackers: detail.attackers
+      killmail_id: response.data.killmail_id,
+      killmail_time: response.data.killmail_time,
+      solar_system_id: response.data.solar_system_id,
+      victim: response.data.victim,
+      attackers: response.data.attackers
     };
 
-    await setCachedAsync(cacheKey, normalized, KILLMAIL_CACHE_TTL_MS);
+    const cachePolicy = resolveHttpCachePolicy(response.headers, {
+      fallbackTtlMs: KILLMAIL_CACHE_TTL_MS,
+      fallbackStaleMs: KILLMAIL_CACHE_TTL_MS,
+      fetchedAt: response.fetchedAt
+    });
+    if (cachePolicy.cacheable) {
+      await setCachedAsync(cacheKey, normalized, cachePolicy.ttlMs, cachePolicy.staleMs);
+    }
     return normalized;
   } catch {
     return null;

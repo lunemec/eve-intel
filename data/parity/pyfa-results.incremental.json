@@ -1,0 +1,900 @@
+{
+  "fits": [
+    {
+      "fitId": "manual-capsule-minimal-1",
+      "shipTypeId": 670,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 677.3603248127179,
+      "resists": {
+        "armor": {
+          "em": 0.6,
+          "exp": 0.09999999999999998,
+          "kin": 0.25,
+          "therm": 0.35
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.4,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "manual-expedition-command-ship-minimal-1",
+      "shipTypeId": 89607,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 36803.58980957282,
+      "resists": {
+        "armor": {
+          "em": 0.6,
+          "exp": 0.2799999999999999,
+          "kin": 0.48,
+          "therm": 0.48
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.4,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "manual-jump-freighter-minimal-1",
+      "shipTypeId": 28844,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 468145.4616609538,
+      "resists": {
+        "armor": {
+          "em": 0.5,
+          "exp": 0.09999999999999998,
+          "kin": 0.34375,
+          "therm": 0.5875
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.475,
+          "therm": 0.4
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "manual-prototype-exploration-ship-minimal-1",
+      "shipTypeId": 2078,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 823.3258992394351,
+      "resists": {
+        "armor": {
+          "em": 0.5,
+          "exp": 0.09999999999999998,
+          "kin": 0.35,
+          "therm": 0.35
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.4,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "manual-shuttle-minimal-1",
+      "shipTypeId": 672,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 796.1342711728713,
+      "resists": {
+        "armor": {
+          "em": 0.5,
+          "exp": 0.09999999999999998,
+          "kin": 0.25,
+          "therm": 0.44999999999999996
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.4,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-attack-battlecruiser-133447773",
+      "shipTypeId": 4302,
+      "dpsTotal": 1325.8294007919028,
+      "alpha": 5237.695580647735,
+      "ehp": 10273.771230056613,
+      "resists": {
+        "armor": {
+          "em": 0.5,
+          "exp": 0.19999999999999996,
+          "kin": 0.25,
+          "therm": 0.35
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.4,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-black-ops-133447642",
+      "shipTypeId": 22428,
+      "dpsTotal": 1245.1467351718136,
+      "alpha": 2663.002145817955,
+      "ehp": 51658.78889367159,
+      "resists": {
+        "armor": {
+          "em": 0.7496124979375427,
+          "exp": 0.7446047478962936,
+          "kin": 0.7045427475663004,
+          "therm": 0.6744962473188055
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.6799999999999999,
+          "kin": 0.53,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-blockade-runner-133448704",
+      "shipTypeId": 12729,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 22062.24830796751,
+      "resists": {
+        "armor": {
+          "em": 0.5,
+          "exp": 0.09999999999999998,
+          "kin": 0.625,
+          "therm": 0.8625
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.6771087971920582,
+          "exp": 0.6625,
+          "kin": 0.7975,
+          "therm": 0.865
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-capital-industrial-ship-133419370",
+      "shipTypeId": 28352,
+      "dpsTotal": 40.0,
+      "alpha": 300.0,
+      "ehp": 2063144.1658825218,
+      "resists": {
+        "armor": {
+          "em": 0.575,
+          "exp": 0.235,
+          "kin": 0.4475,
+          "therm": 0.4475
+        },
+        "hull": {
+          "em": 0.598,
+          "exp": 0.598,
+          "kin": 0.598,
+          "therm": 0.598
+        },
+        "shield": {
+          "em": 0.5762052963145763,
+          "exp": 0.7881026481572881,
+          "kin": 0.7457231777887458,
+          "therm": 0.660964237051661
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-carrier-133436113",
+      "shipTypeId": 23757,
+      "dpsTotal": 46.666666666666664,
+      "alpha": 350.0,
+      "ehp": 1038871.6397929295,
+      "resists": {
+        "armor": {
+          "em": 0.8186183762036894,
+          "exp": 0.8255123801654267,
+          "kin": 0.7279275643055341,
+          "therm": 0.7642038890647962
+        },
+        "hull": {
+          "em": 0.61475,
+          "exp": 0.61475,
+          "kin": 0.61475,
+          "therm": 0.61475
+        },
+        "shield": {
+          "em": 0.4195,
+          "exp": 0.70975,
+          "kin": 0.6517,
+          "therm": 0.5355999999999999
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-command-destroyer-133448856",
+      "shipTypeId": 37480,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 15689.06568016394,
+      "resists": {
+        "armor": {
+          "em": 0.83,
+          "exp": 0.235,
+          "kin": 0.36250000000000004,
+          "therm": 0.5856250000000001
+        },
+        "hull": {
+          "em": 0.598,
+          "exp": 0.598,
+          "kin": 0.598,
+          "therm": 0.598
+        },
+        "shield": {
+          "em": 0.7515000000000001,
+          "exp": 0.7515000000000001,
+          "kin": 0.7018,
+          "therm": 0.7018
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-corvette-133446733",
+      "shipTypeId": 596,
+      "dpsTotal": 5.1909722222222205,
+      "alpha": 7.475,
+      "ehp": 991.2280592705306,
+      "resists": {
+        "armor": {
+          "em": 0.54,
+          "exp": 0.2639999999999999,
+          "kin": 0.30999999999999994,
+          "therm": 0.4019999999999999
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.4,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-covert-ops-133448514",
+      "shipTypeId": 11172,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 2724.633016237494,
+      "resists": {
+        "armor": {
+          "em": 0.5,
+          "exp": 0.09999999999999998,
+          "kin": 0.44999999999999996,
+          "therm": 0.35
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.5,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-destroyer-133448049",
+      "shipTypeId": 16236,
+      "dpsTotal": 335.0829342867101,
+      "alpha": 645.6327372138962,
+      "ehp": 4366.10053182364,
+      "resists": {
+        "armor": {
+          "em": 0.5,
+          "exp": 0.19999999999999996,
+          "kin": 0.25,
+          "therm": 0.35
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.4,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-dreadnought-133448144",
+      "shipTypeId": 19726,
+      "dpsTotal": 6279.422475349479,
+      "alpha": 102422.45011652741,
+      "ehp": 1049897.402072861,
+      "resists": {
+        "armor": {
+          "em": 0.575,
+          "exp": 0.235,
+          "kin": 0.36250000000000004,
+          "therm": 0.5325
+        },
+        "hull": {
+          "em": 0.598,
+          "exp": 0.598,
+          "kin": 0.598,
+          "therm": 0.598
+        },
+        "shield": {
+          "em": 0.8103408828306773,
+          "exp": 0.7637499999999999,
+          "kin": 0.7164999999999999,
+          "therm": 0.738816893728687
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-electronic-attack-ship-133448772",
+      "shipTypeId": 11174,
+      "dpsTotal": 13.37980769230769,
+      "alpha": 25.047,
+      "ehp": 4678.571103055439,
+      "resists": {
+        "armor": {
+          "em": 0.575,
+          "exp": 0.235,
+          "kin": 0.72375,
+          "therm": 0.5856250000000001
+        },
+        "hull": {
+          "em": 0.598,
+          "exp": 0.598,
+          "kin": 0.598,
+          "therm": 0.598
+        },
+        "shield": {
+          "em": 0.125,
+          "exp": 0.5625,
+          "kin": 0.7375,
+          "therm": 0.475
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-exhumer-133448858",
+      "shipTypeId": 22544,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 31205.796417034308,
+      "resists": {
+        "armor": {
+          "em": 0.6,
+          "exp": 0.09999999999999998,
+          "kin": 0.25,
+          "therm": 0.35
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.6447212773552548,
+          "exp": 0.716,
+          "kin": 0.6592,
+          "therm": 0.7157770218842038
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-expedition-frigate-133446782",
+      "shipTypeId": 33697,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 4931.102942516463,
+      "resists": {
+        "armor": {
+          "em": 0.6599999999999999,
+          "exp": 0.235,
+          "kin": 0.36250000000000004,
+          "therm": 0.4475
+        },
+        "hull": {
+          "em": 0.598,
+          "exp": 0.598,
+          "kin": 0.598,
+          "therm": 0.598
+        },
+        "shield": {
+          "em": 0.38750000000000007,
+          "exp": 0.5625,
+          "kin": 0.475,
+          "therm": 0.29999999999999993
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-flag-cruiser-133418808",
+      "shipTypeId": 45534,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 356226.6791044776,
+      "resists": {
+        "armor": {
+          "em": 0.9199999999999999,
+          "exp": 0.9199999999999999,
+          "kin": 0.9199999999999999,
+          "therm": 0.9199999999999999
+        },
+        "hull": {
+          "em": 0.46399999999999997,
+          "exp": 0.46399999999999997,
+          "kin": 0.46399999999999997,
+          "therm": 0.46399999999999997
+        },
+        "shield": {
+          "em": 0.9199999999999999,
+          "exp": 0.9199999999999999,
+          "kin": 0.9199999999999999,
+          "therm": 0.9199999999999999
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-force-auxiliary-133448105",
+      "shipTypeId": 37604,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 3401974.5265277857,
+      "resists": {
+        "armor": {
+          "em": 0.8882281481607698,
+          "exp": 0.8211650370572315,
+          "kin": 0.6439656387526257,
+          "therm": 0.8546965926090007
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.4,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-force-recon-ship-133447466",
+      "shipTypeId": 11957,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 138067.4019780714,
+      "resists": {
+        "armor": {
+          "em": 0.575,
+          "exp": 0.235,
+          "kin": 0.6015625,
+          "therm": 0.8246875
+        },
+        "hull": {
+          "em": 0.598,
+          "exp": 0.598,
+          "kin": 0.598,
+          "therm": 0.598
+        },
+        "shield": {
+          "em": 0.7698623889599746,
+          "exp": 0.7881026481572881,
+          "kin": 0.8410769861179661,
+          "therm": 0.8728615888943729
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-freighter-133351247",
+      "shipTypeId": 34328,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 551067.8188507992,
+      "resists": {
+        "armor": {
+          "em": 0.575,
+          "exp": 0.235,
+          "kin": 0.4475,
+          "therm": 0.4475
+        },
+        "hull": {
+          "em": 0.598,
+          "exp": 0.598,
+          "kin": 0.598,
+          "therm": 0.598
+        },
+        "shield": {
+          "em": 0.6885893732918961,
+          "exp": 0.7046874999999999,
+          "kin": 0.6456249999999999,
+          "therm": 0.5274999999999999
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-hauler-133446261",
+      "shipTypeId": 648,
+      "dpsTotal": 9.323937908496733,
+      "alpha": 114.125,
+      "ehp": 6446.11396980153,
+      "resists": {
+        "armor": {
+          "em": 0.5,
+          "exp": 0.09999999999999998,
+          "kin": 0.25,
+          "therm": 0.44999999999999996
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.4,
+          "therm": 0.62
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-heavy-assault-cruiser-56615140",
+      "shipTypeId": 2836,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 43939.044067298135,
+      "resists": {
+        "armor": {
+          "em": 0.771250078597229,
+          "exp": 0.7808286146559679,
+          "kin": 0.878125,
+          "therm": 0.7781875
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.85,
+          "therm": 0.6
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-heavy-interdiction-cruiser-133448632",
+      "shipTypeId": 11995,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 53034.5082737938,
+      "resists": {
+        "armor": {
+          "em": 0.575,
+          "exp": 0.235,
+          "kin": 0.68125,
+          "therm": 0.8831249999999999
+        },
+        "hull": {
+          "em": 0.598,
+          "exp": 0.598,
+          "kin": 0.598,
+          "therm": 0.598
+        },
+        "shield": {
+          "em": 0.6465911653691745,
+          "exp": 0.8232955826845872,
+          "kin": 0.8939773496107524,
+          "therm": 0.9293182330738349
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-industrial-command-ship-133448827",
+      "shipTypeId": 28606,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 245040.31243519558,
+      "resists": {
+        "armor": {
+          "em": 0.5,
+          "exp": 0.09999999999999998,
+          "kin": 0.35,
+          "therm": 0.35
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.5156631957880872,
+          "exp": 0.7578315978940435,
+          "kin": 0.7093979174728523,
+          "therm": 0.7515974991948932
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-lancer-dreadnought-133431340",
+      "shipTypeId": 77281,
+      "dpsTotal": 3423.7811781886994,
+      "alpha": 31301.709181109487,
+      "ehp": 2351504.3279761258,
+      "resists": {
+        "armor": {
+          "em": 0.5,
+          "exp": 0.09999999999999998,
+          "kin": 0.5125,
+          "therm": 0.43125
+        },
+        "hull": {
+          "em": 0.49749999999999994,
+          "exp": 0.49749999999999994,
+          "kin": 0.49749999999999994,
+          "therm": 0.49749999999999994
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.5,
+          "kin": 0.55,
+          "therm": 0.30000000000000004
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-logistics-frigate-133448652",
+      "shipTypeId": 37457,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 14671.992173420398,
+      "resists": {
+        "armor": {
+          "em": 0.7713206043558298,
+          "exp": 0.7701170285892815,
+          "kin": 0.7681236062259359,
+          "therm": 0.8133756891428596
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.0,
+          "exp": 0.75,
+          "kin": 0.55,
+          "therm": 0.19999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "dpsTotal": 0.0,
+      "alpha": 0.0,
+      "ehp": 16435.313137378245,
+      "resists": {
+        "armor": {
+          "em": 0.6,
+          "exp": 0.09999999999999998,
+          "kin": 0.25,
+          "therm": 0.35
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.32499999999999996,
+          "exp": 0.6625,
+          "kin": 0.595,
+          "therm": 0.45999999999999996
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-stealth-bomber-133446781",
+      "shipTypeId": 12034,
+      "dpsTotal": 376.43162975066576,
+      "alpha": 3732.09375,
+      "ehp": 5540.259374925112,
+      "resists": {
+        "armor": {
+          "em": 0.7,
+          "exp": 0.09999999999999998,
+          "kin": 0.25,
+          "therm": 0.43125
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "exp": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "therm": 0.32999999999999996
+        },
+        "shield": {
+          "em": 0.25,
+          "exp": 0.5,
+          "kin": 0.4,
+          "therm": 0.30000000000000004
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-supercarrier-132527614",
+      "shipTypeId": 3514,
+      "dpsTotal": 154.22222222222223,
+      "alpha": 1238.0,
+      "ehp": 22250765.274337437,
+      "resists": {
+        "armor": {
+          "em": 0.8281337610348263,
+          "exp": 0.7965446123416596,
+          "kin": 0.7892529419797786,
+          "therm": 0.7969632195305411
+        },
+        "hull": {
+          "em": 0.665,
+          "exp": 0.665,
+          "kin": 0.665,
+          "therm": 0.665
+        },
+        "shield": {
+          "em": 0.8732562409352808,
+          "exp": 0.8740935836183956,
+          "kin": 0.8489123003420749,
+          "therm": 0.7985497337894331
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    },
+    {
+      "fitId": "zkill-titan-132932303",
+      "shipTypeId": 671,
+      "dpsTotal": 7637.4985995,
+      "alpha": 82484.9848746,
+      "ehp": 24521542.69297133,
+      "resists": {
+        "armor": {
+          "em": 0.8183439119798479,
+          "exp": 0.8008521578029172,
+          "kin": 0.7638470855738024,
+          "therm": 0.7638470855738024
+        },
+        "hull": {
+          "em": 0.61475,
+          "exp": 0.61475,
+          "kin": 0.61475,
+          "therm": 0.61475
+        },
+        "shield": {
+          "em": 0.8637504590054268,
+          "exp": 0.8646506023897753,
+          "kin": 0.8375807228677304,
+          "therm": 0.7834409638236406
+        }
+      },
+      "pyfaVersion": "local-pyfa-direct-all5-raw-eft"
+    }
+  ]
+}

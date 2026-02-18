@@ -433,7 +433,7 @@ body {
 
 .fleet-summary-grid {
   display: grid;
-  grid-template-columns: minmax(170px, 1.9fr) minmax(150px, 1.3fr) minmax(150px, 1.3fr) minmax(160px, 1.2fr) minmax(220px, 1.8fr);
+  grid-template-columns: minmax(170px, 1.9fr) minmax(145px, 1.2fr) minmax(145px, 1.2fr) minmax(190px, 1.7fr) minmax(185px, 1.4fr);
   column-gap: 10px;
 }
 
@@ -480,6 +480,7 @@ body {
 
 .fleet-col-ship {
   overflow: hidden;
+  gap: 6px;
 }
 
 .fleet-col-alerts {
@@ -571,6 +572,16 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.fleet-summary-probability {
+  flex: 0 0 auto;
+  color: #dce8f8;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .fleet-summary-muted {
@@ -580,7 +591,7 @@ body {
 
 .pilot-card {
   display: grid;
-  grid-template-columns: 1.25fr 1fr;
+  grid-template-columns: 1.25fr 2.3fr;
   gap: 12px;
 }
 
@@ -596,6 +607,9 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
+  max-width: 400px;
+  justify-self: start;
 }
 
 .player-card.threat-high {
@@ -732,10 +746,11 @@ body {
 }
 
 .affiliation-logo {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 999px;
   border: 1px solid #ffffff1a;
+  margin-right: 6px;
 }
 
 .threat-indicator {
@@ -747,6 +762,19 @@ body {
   justify-content: center;
   min-width: 40px;
   padding: 4px 8px;
+}
+
+.player-threat-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-threat-pill {
+  min-height: 20px;
+  display: flex;
+  align-items: center;
 }
 
 .threat-score {
@@ -811,6 +839,10 @@ body {
   font-weight: 600;
 }
 
+.stat-value .risk-badge {
+  margin-left: 8px;
+}
+
 .player-card-footer {
   align-items: center;
   display: flex;
@@ -855,7 +887,9 @@ body {
 }
 
 .ship-column li {
+  position: relative;
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
   font-size: 1rem;
@@ -915,6 +949,24 @@ body {
 .ship-main {
   display: grid;
   gap: 4px;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.ship-fit-and-metrics {
+  display: grid;
+  grid-template-columns: minmax(0, 350px) minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.ship-probability {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: #d8e3f3;
+  font-weight: 600;
 }
 
 .ship-title-row {
@@ -965,6 +1017,10 @@ body {
 }
 
 .ship-eft {
+  display: block;
+  width: 100%;
+  max-width: 350px;
+  box-sizing: border-box;
   margin: 4px 0 0;
   white-space: pre-wrap;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -974,6 +1030,202 @@ body {
   border: 1px solid #273544;
   border-radius: 4px;
   padding: 6px;
+}
+
+.ship-metrics {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 4px;
+  border: 1px solid #2a394a;
+  border-radius: 4px;
+  background: #0b1219;
+  padding: 7px;
+  display: grid;
+  gap: 6px;
+  min-height: 128px;
+}
+
+.ship-metrics-low {
+  opacity: 0.84;
+}
+
+.ship-metrics-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.77rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8ea4bc;
+}
+
+.ship-metrics-head strong {
+  color: #c6d7eb;
+  font-size: 0.74rem;
+  background: #1b2a39;
+  border: 1px solid #30455b;
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+.ship-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.ship-metric-tile {
+  border: 1px solid #273544;
+  background: #101922;
+  border-radius: 4px;
+  padding: 4px 5px;
+  display: grid;
+  gap: 2px;
+}
+
+.ship-metric-tile span {
+  font-size: 0.68rem;
+  color: #8ea4bc;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ship-metric-tile strong {
+  font-size: 0.82rem;
+  color: #d7e4f3;
+  font-weight: 600;
+}
+
+.ship-metric-tile-wide {
+  grid-column: 1 / -1;
+}
+
+.damage-inline {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+.damage-inline .damage-em {
+  color: #7fb0ff;
+}
+
+.damage-inline .damage-th {
+  color: #ffb07a;
+}
+
+.damage-inline .damage-ki {
+  color: #8cdd9a;
+}
+
+.damage-inline .damage-ex {
+  color: #ff8f8f;
+}
+
+.ship-ehp-block {
+  border: 1px solid #273544;
+  background: #101922;
+  border-radius: 4px;
+  padding: 5px;
+}
+
+.ship-ehp-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+
+.ship-ehp-head span {
+  font-size: 0.68rem;
+  color: #8ea4bc;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ship-ehp-head strong {
+  font-size: 0.82rem;
+  color: #d7e4f3;
+}
+
+.ship-resist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.74rem;
+  color: #a9b9cc;
+}
+
+.ship-resist-table th,
+.ship-resist-table td {
+  padding: 1px 4px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ship-resist-cell {
+  min-width: 56px;
+}
+
+.ship-resist-value {
+  display: block;
+}
+
+.ship-resist-bar {
+  display: block;
+  width: 100%;
+  height: 4px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: #24303d;
+  overflow: hidden;
+}
+
+.ship-resist-bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: currentColor;
+}
+
+.ship-resist-table th {
+  text-align: left;
+  color: #8ea4bc;
+  font-weight: 600;
+  width: 16px;
+}
+
+.damage-em {
+  color: #7fb0ff;
+}
+
+.damage-th {
+  color: #ffb07a;
+}
+
+.damage-ki {
+  color: #8cdd9a;
+}
+
+.damage-ex {
+  color: #ff8f8f;
+}
+
+.ship-metrics-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #aab8cb;
+}
+
+.ship-metrics-row strong {
+  color: #d8e3f3;
+  font-weight: 600;
+  text-align: right;
 }
 
 .fit-copy-button {
@@ -1057,6 +1309,18 @@ body {
 }
 
 .risk-role-support {
+  color: #9fdfc8;
+  border-color: #3a6d5a;
+  background: #20372f;
+}
+
+.risk-style-fleet {
+  color: #bdb8e7;
+  border-color: #59517d;
+  background: #2f2a44;
+}
+
+.risk-style-solo {
   color: #9fdfc8;
   border-color: #3a6d5a;
   background: #20372f;
@@ -1217,5 +1481,21 @@ body {
   .fleet-summary-line {
     grid-template-columns: 1fr;
     row-gap: 4px;
+  }
+
+  .ship-fit-and-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .ship-eft {
+    max-width: 100%;
+  }
+
+  .player-card-header {
+    align-items: flex-start;
+  }
+
+  .player-threat-stack {
+    align-self: flex-end;
   }
 }

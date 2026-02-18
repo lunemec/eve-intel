@@ -13,6 +13,14 @@ declare global {
 
   interface Window {
     eveIntelDesktop?: {
+      appendParityFitDump?: (record: {
+        key: string;
+        shipName: string;
+        shipTypeId?: number;
+        eft: string;
+        sourceLossKillmailId?: number;
+        firstSeenAt: string;
+      }) => Promise<{ ok: boolean; deduped?: boolean; path?: string; reason?: string }>;
       onClipboardText: (callback: (text: string) => void) => () => void;
       minimizeWindow: () => Promise<void>;
       toggleMaximizeWindow: () => Promise<boolean>;

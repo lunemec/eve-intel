@@ -1,0 +1,2951 @@
+{
+  "fits": [
+    {
+      "fitId": "crow-mwd-1",
+      "shipTypeId": 11176,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 22.704405577666616,
+      "alpha": 55.962500000000006,
+      "ehp": 2797.8411513859273,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.30000000000000004,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.55,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.405Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "eris-void-1",
+      "shipTypeId": 22460,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 290.58251396648046,
+      "alpha": 409.61237625,
+      "ehp": 4801.759212412513,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.4,
+          "kin": 0.7,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.5125,
+          "kin": 0.675,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.408Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "gila-drone-1",
+      "shipTypeId": 17715,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 91.21347969387185,
+      "alpha": 391.875,
+      "ehp": 18936.7101275233,
+      "resists": {
+        "shield": {
+          "em": 0.45999999999999996,
+          "therm": 0.5679999999999998,
+          "kin": 0.6759999999999999,
+          "exp": 0.73
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.44999999999999996,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.408Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "gnosis-mixed-1",
+      "shipTypeId": 3756,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 200.65974162011173,
+      "alpha": 678.851971875,
+      "ehp": 21766.645698709515,
+      "resists": {
+        "shield": {
+          "em": 0.275,
+          "therm": 0.275,
+          "kin": 0.275,
+          "exp": 0.275
+        },
+        "armor": {
+          "em": 0.32499999999999996,
+          "therm": 0.32499999999999996,
+          "kin": 0.32499999999999996,
+          "exp": 0.32499999999999996
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.408Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "heretic-rocket-1",
+      "shipTypeId": 22452,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 68.30065359477123,
+      "alpha": 141.075,
+      "ehp": 9242.735467409608,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.60625,
+          "exp": 0.78125
+        },
+        "armor": {
+          "em": 0.6599999999999999,
+          "therm": 0.558,
+          "kin": 0.6174999999999999,
+          "exp": 0.728
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.408Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "impel-armor-1",
+      "shipTypeId": 12753,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 81192.06001455041,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.7375,
+          "exp": 0.890625
+        },
+        "armor": {
+          "em": 0.745,
+          "therm": 0.6685,
+          "kin": 0.80875,
+          "exp": 0.898
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.408Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "manual-capsule-minimal-1",
+      "shipTypeId": 670,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 677.3603248127179,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.6,
+          "therm": 0.35,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.898Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "manual-expedition-command-ship-minimal-1",
+      "shipTypeId": 89607,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 36803.58980957282,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.6,
+          "therm": 0.48,
+          "kin": 0.48,
+          "exp": 0.2799999999999999
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "manual-jump-freighter-minimal-1",
+      "shipTypeId": 28844,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 468145.4616609538,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.4,
+          "kin": 0.475,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.5875,
+          "kin": 0.34375,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "manual-prototype-exploration-ship-minimal-1",
+      "shipTypeId": 2078,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 823.3258992394351,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.35,
+          "kin": 0.35,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "manual-shuttle-minimal-1",
+      "shipTypeId": 672,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 796.1342711728713,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.44999999999999996,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "myrmidon-drone-1",
+      "shipTypeId": 24700,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 23229.756390461487,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.35,
+          "kin": 0.35,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.408Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "nergal-svcfitstat-1",
+      "shipTypeId": 52250,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 59.89583333333332,
+      "alpha": 150.9375,
+      "ehp": 9693.519595223945,
+      "resists": {
+        "shield": {
+          "em": 0.07499999999999996,
+          "therm": 0.5375,
+          "kin": 0.44499999999999995,
+          "exp": 0.86125
+        },
+        "armor": {
+          "em": 0.7576594470429221,
+          "therm": 0.878829723521461,
+          "kin": 0.7646898003304358,
+          "exp": 0.8303616129300455
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.408Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "rand-zkill-133349010",
+      "shipTypeId": 22466,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 882.9028631284915,
+      "alpha": 1866.8429226562503,
+      "ehp": 54015.217816499586,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.6499999999999999,
+          "kin": 0.86875,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.7761320659624996,
+          "therm": 0.8544858428756248,
+          "kin": 0.9272429214378124,
+          "exp": 0.5970377187324993
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133349010
+      }
+    },
+    {
+      "fitId": "rand-zkill-133423603",
+      "shipTypeId": 22468,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 121.61797292516246,
+      "alpha": 522.5,
+      "ehp": 186498.80393658928,
+      "resists": {
+        "shield": {
+          "em": 0.9235835082039177,
+          "therm": 0.8777336131262683,
+          "kin": 0.8166004196894026,
+          "exp": 0.8471670164078354
+        },
+        "armor": {
+          "em": 0.915,
+          "therm": 0.72375,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133423603
+      }
+    },
+    {
+      "fitId": "rand-zkill-133429565",
+      "shipTypeId": 22446,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 318.9411043618153,
+      "alpha": 1087.9344969558338,
+      "ehp": 205594.26908036874,
+      "resists": {
+        "shield": {
+          "em": 0.7962226885437806,
+          "therm": 0.9196677420870225,
+          "kin": 0.8795016131305337,
+          "exp": 0.7991693552175562
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.8831249999999999,
+          "kin": 0.68125,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133429565
+      }
+    },
+    {
+      "fitId": "rand-zkill-133431164",
+      "shipTypeId": 52250,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 100.11160714285714,
+      "alpha": 252.28125,
+      "ehp": 9400.223171664573,
+      "resists": {
+        "shield": {
+          "em": 0.07499999999999996,
+          "therm": 0.5375,
+          "kin": 0.44499999999999995,
+          "exp": 0.86125
+        },
+        "armor": {
+          "em": 0.73,
+          "therm": 0.865,
+          "kin": 0.7933149555325383,
+          "exp": 0.811
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133431164
+      }
+    },
+    {
+      "fitId": "rand-zkill-133433470",
+      "shipTypeId": 28710,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 1380.9092357120435,
+      "alpha": 5509.9873267442,
+      "ehp": 85519.15166598617,
+      "resists": {
+        "shield": {
+          "em": 0.7107804439268226,
+          "therm": 0.7506039999999999,
+          "kin": 0.7817784999999999,
+          "exp": 0.79217
+        },
+        "armor": {
+          "em": 0.65,
+          "therm": 0.71125,
+          "kin": 0.540625,
+          "exp": 0.37
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133433470
+      }
+    },
+    {
+      "fitId": "rand-zkill-133442037",
+      "shipTypeId": 11371,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 369.61686726141704,
+      "alpha": 724.6764182735308,
+      "ehp": 5967.887590000708,
+      "resists": {
+        "shield": {
+          "em": 0.7625,
+          "therm": 0.62,
+          "kin": 0.43000000000000005,
+          "exp": 0.525
+        },
+        "armor": {
+          "em": 0.9075,
+          "therm": 0.699375,
+          "kin": 0.3062499999999999,
+          "exp": 0.4588749999999999
+        },
+        "hull": {
+          "em": 0.49749999999999994,
+          "therm": 0.49749999999999994,
+          "kin": 0.49749999999999994,
+          "exp": 0.49749999999999994
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133442037
+      }
+    },
+    {
+      "fitId": "rand-zkill-133442553",
+      "shipTypeId": 28665,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 2537.6340724666106,
+      "alpha": 5820.413494958216,
+      "ehp": 77304.78610374607,
+      "resists": {
+        "shield": {
+          "em": 0.6882550000000001,
+          "therm": 0.7090380000000001,
+          "kin": 0.7506039999999999,
+          "exp": 0.79217
+        },
+        "armor": {
+          "em": 0.79,
+          "therm": 0.601875,
+          "kin": 0.4750000000000001,
+          "exp": 0.37
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133442553
+      }
+    },
+    {
+      "fitId": "rand-zkill-133444226",
+      "shipTypeId": 35683,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 566.4799577868544,
+      "alpha": 986.887943983178,
+      "ehp": 13448.968985678006,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.475,
+          "kin": 0.7375,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.7166666666666667,
+          "therm": 0.72375,
+          "kin": 0.8158333333333334,
+          "exp": 0.49
+        },
+        "hull": {
+          "em": 0.732,
+          "therm": 0.732,
+          "kin": 0.732,
+          "exp": 0.732
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133444226
+      }
+    },
+    {
+      "fitId": "rand-zkill-133444442",
+      "shipTypeId": 24700,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 285.71210937499995,
+      "alpha": 617.1381562500001,
+      "ehp": 37364.0082550732,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.475,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.68125,
+          "therm": 0.6234398671646373,
+          "kin": 0.6288419910452998,
+          "exp": 0.6331239987850252
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133444442
+      }
+    },
+    {
+      "fitId": "rand-zkill-133445409",
+      "shipTypeId": 24688,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 266.6666666666667,
+      "alpha": 2000,
+      "ehp": 49801.912373000894,
+      "resists": {
+        "shield": {
+          "em": 0.19999999999999996,
+          "therm": 0.3599999999999999,
+          "kin": 0.52,
+          "exp": 0.6
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.44999999999999996,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133445409
+      }
+    },
+    {
+      "fitId": "rand-zkill-133445909",
+      "shipTypeId": 29990,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 712.3828821113425,
+      "alpha": 1276.5305893450911,
+      "ehp": 21010.75504828797,
+      "resists": {
+        "shield": {
+          "em": 0.5,
+          "therm": 0.4,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.8,
+          "therm": 0.5125,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133445909
+      }
+    },
+    {
+      "fitId": "rand-zkill-133446123",
+      "shipTypeId": 11186,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 29.644380900508356,
+      "alpha": 261.25,
+      "ehp": 3023.928548648698,
+      "resists": {
+        "shield": {
+          "em": 0.09999999999999998,
+          "therm": 0.2799999999999999,
+          "kin": 0.45999999999999996,
+          "exp": 0.6399999999999999
+        },
+        "armor": {
+          "em": 0.6499999999999999,
+          "therm": 0.5449999999999999,
+          "kin": 0.47499999999999987,
+          "exp": 0.51
+        },
+        "hull": {
+          "em": 0.5645,
+          "therm": 0.5645,
+          "kin": 0.5645,
+          "exp": 0.5645
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133446123
+      }
+    },
+    {
+      "fitId": "rand-zkill-133447017",
+      "shipTypeId": 22460,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 443.3034375,
+      "alpha": 598.4596406250001,
+      "ehp": 11002.644534273488,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.475,
+          "kin": 0.7375,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.6566,
+          "therm": 0.6651849999999999,
+          "kin": 0.77679,
+          "exp": 0.6097066779098795
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133447017
+      }
+    },
+    {
+      "fitId": "rand-zkill-133447046",
+      "shipTypeId": 29340,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 282.23975730589484,
+      "alpha": 1782.9373111248424,
+      "ehp": 34067.11003294082,
+      "resists": {
+        "shield": {
+          "em": 0.5633721965980705,
+          "therm": 0.5275,
+          "kin": 0.645625,
+          "exp": 0.7046874999999999
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.5325,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-random-backtest",
+        "killmailId": 133447046
+      }
+    },
+    {
+      "fitId": "raven-cruise-1",
+      "shipTypeId": 638,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 85.28033642907118,
+      "alpha": 651.8875,
+      "ehp": 38225.00524198929,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.44999999999999996,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.408Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "sabre-shield-extender-1",
+      "shipTypeId": 22456,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 301.15966305865913,
+      "alpha": 727.7523257812501,
+      "ehp": 7883.721516082688,
+      "resists": {
+        "shield": {
+          "em": 0.5,
+          "therm": 0.4,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.8,
+          "therm": 0.5125,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.408Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "wolf-mwd-1",
+      "shipTypeId": 11371,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 46.76392283519552,
+      "alpha": 113.00501953125,
+      "ehp": 4825.647750918386,
+      "resists": {
+        "shield": {
+          "em": 0.75,
+          "therm": 0.6,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.9,
+          "therm": 0.675,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:06:26.408Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-apocalypse-133445346",
+      "shipTypeId": 642,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 320,
+      "alpha": 2400,
+      "ehp": 48597.88497307754,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.625,
+          "therm": 0.5636874999999999,
+          "kin": 0.555625,
+          "exp": 0.571
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.463Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-astarte-133424956",
+      "shipTypeId": 22466,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 53400.72674339855,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.6499999999999999,
+          "kin": 0.86875,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.69453125,
+          "therm": 0.8014453125000001,
+          "kin": 0.90072265625,
+          "exp": 0.7398984681410885
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-attack-battlecruiser-133447773",
+      "shipTypeId": 4302,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 1325.8294007919028,
+      "alpha": 5237.695580647735,
+      "ehp": 10273.771230056613,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.35,
+          "kin": 0.25,
+          "exp": 0.19999999999999996
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-basilisk-133440259",
+      "shipTypeId": 11985,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 38755.02566505091,
+      "resists": {
+        "shield": {
+          "em": 0.40937499999999993,
+          "therm": 0.881875,
+          "kin": 0.8228125,
+          "exp": 0.7046874999999999
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.8831249999999999,
+          "kin": 0.68125,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:05:50.978Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-black-ops-133447642",
+      "shipTypeId": 22428,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 1245.1467351718136,
+      "alpha": 2663.002145817955,
+      "ehp": 51658.78889367159,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.53,
+          "exp": 0.6799999999999999
+        },
+        "armor": {
+          "em": 0.7496124979375427,
+          "therm": 0.6744962473188055,
+          "kin": 0.7045427475663004,
+          "exp": 0.7446047478962936
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-blockade-runner-133448704",
+      "shipTypeId": 12729,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 22062.24830796751,
+      "resists": {
+        "shield": {
+          "em": 0.6771087971920582,
+          "therm": 0.865,
+          "kin": 0.7975,
+          "exp": 0.6625
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.8625,
+          "kin": 0.625,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-capital-industrial-ship-133419370",
+      "shipTypeId": 28352,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 40,
+      "alpha": 300,
+      "ehp": 2063144.1658825218,
+      "resists": {
+        "shield": {
+          "em": 0.5762052963145763,
+          "therm": 0.660964237051661,
+          "kin": 0.7457231777887458,
+          "exp": 0.7881026481572881
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.4475,
+          "kin": 0.4475,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-carrier-133436113",
+      "shipTypeId": 23757,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 46.666666666666664,
+      "alpha": 350,
+      "ehp": 1038871.6397929295,
+      "resists": {
+        "shield": {
+          "em": 0.4195,
+          "therm": 0.5355999999999999,
+          "kin": 0.6517,
+          "exp": 0.70975
+        },
+        "armor": {
+          "em": 0.8186183762036894,
+          "therm": 0.7642038890647962,
+          "kin": 0.7279275643055341,
+          "exp": 0.8255123801654267
+        },
+        "hull": {
+          "em": 0.61475,
+          "therm": 0.61475,
+          "kin": 0.61475,
+          "exp": 0.61475
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-claymore-133432657",
+      "shipTypeId": 22468,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 167876.13480014924,
+      "resists": {
+        "shield": {
+          "em": 0.9152410592629152,
+          "therm": 0.8643856948206644,
+          "kin": 0.7965785422309966,
+          "exp": 0.8304821185258304
+        },
+        "armor": {
+          "em": 0.915,
+          "therm": 0.72375,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-command-destroyer-133448856",
+      "shipTypeId": 37480,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 15689.06568016394,
+      "resists": {
+        "shield": {
+          "em": 0.7515000000000001,
+          "therm": 0.7018,
+          "kin": 0.7018,
+          "exp": 0.7515000000000001
+        },
+        "armor": {
+          "em": 0.83,
+          "therm": 0.5856250000000001,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-corvette-133446733",
+      "shipTypeId": 596,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 5.1909722222222205,
+      "alpha": 7.475,
+      "ehp": 991.2280592705306,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.54,
+          "therm": 0.4019999999999999,
+          "kin": 0.30999999999999994,
+          "exp": 0.2639999999999999
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-covert-ops-133448514",
+      "shipTypeId": 11172,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 2724.633016237494,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.5,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.35,
+          "kin": 0.44999999999999996,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-crow-126043648",
+      "shipTypeId": 11176,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 36.94625998547567,
+      "alpha": 101.75,
+      "ehp": 5208.555437100214,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.30000000000000004,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.55,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:39:43.928Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-curse-133444492",
+      "shipTypeId": 20125,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 29774.395894256257,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.671875,
+          "exp": 0.8359375
+        },
+        "armor": {
+          "em": 0.636928638797625,
+          "therm": 0.6297541747738653,
+          "kin": 0.6327285993115143,
+          "exp": 0.745
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:05:50.978Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-destroyer-133448049",
+      "shipTypeId": 16236,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 335.0829342867101,
+      "alpha": 645.6327372138962,
+      "ehp": 4366.10053182364,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.35,
+          "kin": 0.25,
+          "exp": 0.19999999999999996
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-drake-133444423",
+      "shipTypeId": 24698,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 58535.58155307439,
+      "resists": {
+        "shield": {
+          "em": 0.7174701975430509,
+          "therm": 0.738816893728687,
+          "kin": 0.7164999999999999,
+          "exp": 0.7637499999999999
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.5325,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:05:50.978Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-dreadnought-133448144",
+      "shipTypeId": 19726,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 6279.422475349479,
+      "alpha": 102422.45011652741,
+      "ehp": 1049897.402072861,
+      "resists": {
+        "shield": {
+          "em": 0.8103408828306773,
+          "therm": 0.738816893728687,
+          "kin": 0.7164999999999999,
+          "exp": 0.7637499999999999
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.5325,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-electronic-attack-ship-133448772",
+      "shipTypeId": 11174,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 13.37980769230769,
+      "alpha": 25.047,
+      "ehp": 4678.571103055439,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.475,
+          "kin": 0.7375,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.5856250000000001,
+          "kin": 0.72375,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-exhumer-133448858",
+      "shipTypeId": 22544,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 31205.796417034308,
+      "resists": {
+        "shield": {
+          "em": 0.6447212773552548,
+          "therm": 0.7157770218842038,
+          "kin": 0.6592,
+          "exp": 0.716
+        },
+        "armor": {
+          "em": 0.6,
+          "therm": 0.35,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-expedition-frigate-133446782",
+      "shipTypeId": 33697,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 4931.102942516463,
+      "resists": {
+        "shield": {
+          "em": 0.38750000000000007,
+          "therm": 0.29999999999999993,
+          "kin": 0.475,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.6599999999999999,
+          "therm": 0.4475,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-flag-cruiser-133418808",
+      "shipTypeId": 45534,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 356226.6791044776,
+      "resists": {
+        "shield": {
+          "em": 0.9199999999999999,
+          "therm": 0.9199999999999999,
+          "kin": 0.9199999999999999,
+          "exp": 0.9199999999999999
+        },
+        "armor": {
+          "em": 0.9199999999999999,
+          "therm": 0.9199999999999999,
+          "kin": 0.9199999999999999,
+          "exp": 0.9199999999999999
+        },
+        "hull": {
+          "em": 0.46399999999999997,
+          "therm": 0.46399999999999997,
+          "kin": 0.46399999999999997,
+          "exp": 0.46399999999999997
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-force-auxiliary-133448105",
+      "shipTypeId": 37604,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 3401974.5265277857,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.8882281481607698,
+          "therm": 0.8546965926090007,
+          "kin": 0.6439656387526257,
+          "exp": 0.8211650370572315
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-force-recon-ship-133447466",
+      "shipTypeId": 11957,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 138067.4019780714,
+      "resists": {
+        "shield": {
+          "em": 0.7698623889599746,
+          "therm": 0.8728615888943729,
+          "kin": 0.8410769861179661,
+          "exp": 0.7881026481572881
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.8246875,
+          "kin": 0.6015625,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-freighter-133351247",
+      "shipTypeId": 34328,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 551067.8188507992,
+      "resists": {
+        "shield": {
+          "em": 0.6885893732918961,
+          "therm": 0.5274999999999999,
+          "kin": 0.6456249999999999,
+          "exp": 0.7046874999999999
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.4475,
+          "kin": 0.4475,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-gila-126059140",
+      "shipTypeId": 17715,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 38042.410346684155,
+      "resists": {
+        "shield": {
+          "em": 0.45999999999999996,
+          "therm": 0.5679999999999998,
+          "kin": 0.6759999999999999,
+          "exp": 0.8636681588144246
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.44999999999999996,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:39:43.929Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-golem-133445887",
+      "shipTypeId": 28710,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 40,
+      "alpha": 300,
+      "ehp": 83174.5733156896,
+      "resists": {
+        "shield": {
+          "em": 0.7508714986335169,
+          "therm": 0.7164999999999999,
+          "kin": 0.7519374999999999,
+          "exp": 0.76375
+        },
+        "armor": {
+          "em": 0.65,
+          "therm": 0.71125,
+          "kin": 0.540625,
+          "exp": 0.37
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-harbinger-133445759",
+      "shipTypeId": 24696,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 48429.784718133866,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.475,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.7344401428249843,
+          "therm": 0.6547721856724796,
+          "kin": 0.6016602142374765,
+          "exp": 0.6682415701121385
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:05:50.978Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-hauler-133446261",
+      "shipTypeId": 648,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 9.323937908496733,
+      "alpha": 114.125,
+      "ehp": 6446.11396980153,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.62,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.44999999999999996,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-heavy-assault-cruiser-56615140",
+      "shipTypeId": 2836,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 43939.044067298135,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.6,
+          "kin": 0.85,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.771250078597229,
+          "therm": 0.7781875,
+          "kin": 0.878125,
+          "exp": 0.7808286146559679
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-heavy-interdiction-cruiser-133448632",
+      "shipTypeId": 11995,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 53034.5082737938,
+      "resists": {
+        "shield": {
+          "em": 0.6465911653691745,
+          "therm": 0.9293182330738349,
+          "kin": 0.8939773496107524,
+          "exp": 0.8232955826845872
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.8831249999999999,
+          "kin": 0.68125,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-hecate-126092096",
+      "shipTypeId": 35683,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 385.3552757352941,
+      "alpha": 825.431000625,
+      "ehp": 6525.555485285437,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.4,
+          "kin": 0.7,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.6666666666666667,
+          "therm": 0.675,
+          "kin": 0.7833333333333333,
+          "exp": 0.4
+        },
+        "hull": {
+          "em": 0.5533333333333333,
+          "therm": 0.5533333333333333,
+          "kin": 0.5533333333333333,
+          "exp": 0.5533333333333333
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:39:43.929Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-hurricane-133446205",
+      "shipTypeId": 24702,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 55626.869823630695,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.475,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.745,
+          "therm": 0.5856250000000001,
+          "kin": 0.5218750000000001,
+          "exp": 0.5808534374296532
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:05:50.978Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-industrial-command-ship-133448827",
+      "shipTypeId": 28606,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 245040.31243519558,
+      "resists": {
+        "shield": {
+          "em": 0.5156631957880872,
+          "therm": 0.7515974991948932,
+          "kin": 0.7093979174728523,
+          "exp": 0.7578315978940435
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.35,
+          "kin": 0.35,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-kronos-133442214",
+      "shipTypeId": 28661,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 114973.43405494616,
+      "resists": {
+        "shield": {
+          "em": 0.3760479983200349,
+          "therm": 0.5632335988240245,
+          "kin": 0.7192215992440156,
+          "exp": 0.6880239991600174
+        },
+        "armor": {
+          "em": 0.7709070232590123,
+          "therm": 0.7518649385340141,
+          "kin": 0.7684253577617255,
+          "exp": 0.7531060195878319
+        },
+        "hull": {
+          "em": 0.7186,
+          "therm": 0.7186,
+          "kin": 0.7186,
+          "exp": 0.7186
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-lancer-dreadnought-133431340",
+      "shipTypeId": 77281,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 3423.7811781886994,
+      "alpha": 31301.709181109487,
+      "ehp": 2351504.3279761258,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.30000000000000004,
+          "kin": 0.55,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.43125,
+          "kin": 0.5125,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.49749999999999994,
+          "therm": 0.49749999999999994,
+          "kin": 0.49749999999999994,
+          "exp": 0.49749999999999994
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-legion-133446555",
+      "shipTypeId": 29986,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 686.4047065732381,
+      "alpha": 1734.435394308731,
+      "ehp": 16830.695708895513,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.55,
+          "exp": 0.75
+        },
+        "armor": {
+          "em": 0.56,
+          "therm": 0.53525,
+          "kin": 0.5471874999999999,
+          "exp": 0.6
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T11:03:18.225Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-logistics-frigate-133448652",
+      "shipTypeId": 37457,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 14671.992173420398,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.19999999999999996,
+          "kin": 0.55,
+          "exp": 0.75
+        },
+        "armor": {
+          "em": 0.7713206043558298,
+          "therm": 0.8133756891428596,
+          "kin": 0.7681236062259359,
+          "exp": 0.7701170285892815
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-loki-133446334",
+      "shipTypeId": 29990,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 518.7197205559355,
+      "alpha": 1558.017423356297,
+      "ehp": 37715.36352808149,
+      "resists": {
+        "shield": {
+          "em": 0.7881026481572881,
+          "therm": 0.7457231777887458,
+          "kin": 0.7457231777887458,
+          "exp": 0.7881026481572881
+        },
+        "armor": {
+          "em": 0.83,
+          "therm": 0.5856250000000001,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T11:03:18.226Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-malediction-126066291",
+      "shipTypeId": 11186,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 19.771241830065357,
+      "alpha": 40.8375,
+      "ehp": 3099.4779991981486,
+      "resists": {
+        "shield": {
+          "em": 0.09999999999999998,
+          "therm": 0.2799999999999999,
+          "kin": 0.45999999999999996,
+          "exp": 0.6399999999999999
+        },
+        "armor": {
+          "em": 0.6499999999999999,
+          "therm": 0.5449999999999999,
+          "kin": 0.47499999999999987,
+          "exp": 0.51
+        },
+        "hull": {
+          "em": 0.5645,
+          "therm": 0.5645,
+          "kin": 0.5645,
+          "exp": 0.5645
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T09:39:43.929Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-megathron-133445295",
+      "shipTypeId": 641,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 73.33333333333333,
+      "alpha": 550,
+      "ehp": 66748.36657371245,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.475,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.4475,
+          "kin": 0.4475,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-mining-barge-133448254",
+      "shipTypeId": 17476,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 16435.313137378245,
+      "resists": {
+        "shield": {
+          "em": 0.32499999999999996,
+          "therm": 0.45999999999999996,
+          "kin": 0.595,
+          "exp": 0.6625
+        },
+        "armor": {
+          "em": 0.6,
+          "therm": 0.35,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-nighthawk-133442175",
+      "shipTypeId": 22470,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 101681.56582032218,
+      "resists": {
+        "shield": {
+          "em": 0.734063205020415,
+          "therm": 0.9321928474103323,
+          "kin": 0.8982892711154983,
+          "exp": 0.8304821185258304
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.8831249999999999,
+          "kin": 0.68125,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-osprey-navy-issue-133444477",
+      "shipTypeId": 29340,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 13238.861302983398,
+      "resists": {
+        "shield": {
+          "em": 0.4764313561024808,
+          "therm": 0.5811450848819846,
+          "kin": 0.5740000000000001,
+          "exp": 0.645
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.44999999999999996,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:05:50.978Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-paladin-133444564",
+      "shipTypeId": 28659,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 108184.00215449775,
+      "resists": {
+        "shield": {
+          "em": 0.30000000000000004,
+          "therm": 0.44000000000000006,
+          "kin": 0.6325000000000001,
+          "exp": 0.7375
+        },
+        "armor": {
+          "em": 0.7830203637864843,
+          "therm": 0.7179264729224297,
+          "kin": 0.7152142274697607,
+          "exp": 0.7396244365437812
+        },
+        "hull": {
+          "em": 0.531,
+          "therm": 0.531,
+          "kin": 0.531,
+          "exp": 0.531
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-proteus-133444509",
+      "shipTypeId": 29988,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 17740.163667629626,
+      "resists": {
+        "shield": {
+          "em": 0,
+          "therm": 0.4,
+          "kin": 0.7,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.625,
+          "therm": 0.634375,
+          "kin": 0.75625,
+          "exp": 0.6829983980560403
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T11:03:18.226Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-raven-133446381",
+      "shipTypeId": 638,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 61436.328843733274,
+      "resists": {
+        "shield": {
+          "em": 0.40937499999999993,
+          "therm": 0.5274999999999999,
+          "kin": 0.6456249999999999,
+          "exp": 0.9162912020117072
+        },
+        "armor": {
+          "em": 0.575,
+          "therm": 0.5325,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:05:50.978Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-rokh-133445409",
+      "shipTypeId": 24688,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 266.6666666666667,
+      "alpha": 2000,
+      "ehp": 49801.912373000894,
+      "resists": {
+        "shield": {
+          "em": 0.19999999999999996,
+          "therm": 0.3599999999999999,
+          "kin": 0.52,
+          "exp": 0.6
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.44999999999999996,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-scimitar-133441504",
+      "shipTypeId": 11978,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 31259.11447028923,
+      "resists": {
+        "shield": {
+          "em": 0.85234375,
+          "therm": 0.7637499999999999,
+          "kin": 0.6456249999999999,
+          "exp": 0.7046874999999999
+        },
+        "armor": {
+          "em": 0.915,
+          "therm": 0.72375,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:05:50.978Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-stealth-bomber-133446781",
+      "shipTypeId": 12034,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 376.43162975066576,
+      "alpha": 3732.09375,
+      "ehp": 5540.259374925112,
+      "resists": {
+        "shield": {
+          "em": 0.25,
+          "therm": 0.30000000000000004,
+          "kin": 0.4,
+          "exp": 0.5
+        },
+        "armor": {
+          "em": 0.7,
+          "therm": 0.43125,
+          "kin": 0.25,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-supercarrier-132527614",
+      "shipTypeId": 3514,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 154.22222222222223,
+      "alpha": 1238,
+      "ehp": 22250765.274337437,
+      "resists": {
+        "shield": {
+          "em": 0.8732562409352808,
+          "therm": 0.7985497337894331,
+          "kin": 0.8489123003420749,
+          "exp": 0.8740935836183956
+        },
+        "armor": {
+          "em": 0.8281337610348263,
+          "therm": 0.7969632195305411,
+          "kin": 0.7892529419797786,
+          "exp": 0.7965446123416596
+        },
+        "hull": {
+          "em": 0.665,
+          "therm": 0.665,
+          "kin": 0.665,
+          "exp": 0.665
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-tempest-133439148",
+      "shipTypeId": 639,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 54773.22185235963,
+      "resists": {
+        "shield": {
+          "em": 0.125,
+          "therm": 0.29999999999999993,
+          "kin": 0.475,
+          "exp": 0.5625
+        },
+        "armor": {
+          "em": 0.6599999999999999,
+          "therm": 0.4475,
+          "kin": 0.36250000000000004,
+          "exp": 0.235
+        },
+        "hull": {
+          "em": 0.598,
+          "therm": 0.598,
+          "kin": 0.598,
+          "exp": 0.598
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-tengu-133445382",
+      "shipTypeId": 29984,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 472.0717782604153,
+      "alpha": 1982.609002897849,
+      "ehp": 17849.602739764734,
+      "resists": {
+        "shield": {
+          "em": 0.32499999999999996,
+          "therm": 0.73,
+          "kin": 0.69625,
+          "exp": 0.6625
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.725,
+          "kin": 0.4375,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T11:03:18.226Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-titan-132932303",
+      "shipTypeId": 671,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 7637.4985995,
+      "alpha": 82484.9848746,
+      "ehp": 24521542.69297133,
+      "resists": {
+        "shield": {
+          "em": 0.8637504590054268,
+          "therm": 0.7834409638236406,
+          "kin": 0.8375807228677304,
+          "exp": 0.8646506023897753
+        },
+        "armor": {
+          "em": 0.8183439119798479,
+          "therm": 0.7638470855738024,
+          "kin": 0.7638470855738024,
+          "exp": 0.8008521578029172
+        },
+        "hull": {
+          "em": 0.61475,
+          "therm": 0.61475,
+          "kin": 0.61475,
+          "exp": 0.61475
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5-raw-eft",
+        "importedAt": "2026-02-17T13:29:10.899Z",
+        "importFile": "pyfa-results.incremental.json"
+      }
+    },
+    {
+      "fitId": "zkill-vargur-133444556",
+      "shipTypeId": 28665,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 92102.19549137459,
+      "resists": {
+        "shield": {
+          "em": 0.7764220368995108,
+          "therm": 0.6979961433649731,
+          "kin": 0.7411395514556913,
+          "exp": 0.7842829595464094
+        },
+        "armor": {
+          "em": 0.8128143994960104,
+          "therm": 0.6451272990445198,
+          "kin": 0.5320359987400262,
+          "exp": 0.43844319848803137
+        },
+        "hull": {
+          "em": 0.6951499999999999,
+          "therm": 0.6951499999999999,
+          "kin": 0.6951499999999999,
+          "exp": 0.6951499999999999
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    },
+    {
+      "fitId": "zkill-vulture-133442589",
+      "shipTypeId": 22446,
+      "source": "pyfa",
+      "sdeVersion": "2026-02-17-618cfe3ce4b5",
+      "dpsTotal": 0,
+      "alpha": 0,
+      "ehp": 150816.30817118537,
+      "resists": {
+        "shield": {
+          "em": 0.8205727891146469,
+          "therm": 0.84,
+          "kin": 0.76,
+          "exp": 0.8247
+        },
+        "armor": {
+          "em": 0.5,
+          "therm": 0.8625,
+          "kin": 0.625,
+          "exp": 0.09999999999999998
+        },
+        "hull": {
+          "em": 0.32999999999999996,
+          "therm": 0.32999999999999996,
+          "kin": 0.32999999999999996,
+          "exp": 0.32999999999999996
+        }
+      },
+      "metadata": {
+        "referenceMethod": "pyfa-manual",
+        "pyfaVersion": "local-pyfa-direct-all5",
+        "importedAt": "2026-02-17T10:35:59.467Z",
+        "importFile": "pyfa-results.json"
+      }
+    }
+  ]
+}

@@ -1,4 +1,6 @@
 const path = require("node:path");
+const fs = require("node:fs");
+const fsPromises = require("node:fs/promises");
 const { app, BrowserWindow, clipboard, ipcMain, shell } = require("electron");
 const { autoUpdater } = require("electron-updater");
 
@@ -23,6 +25,9 @@ const appIconPath =
   process.platform === "win32"
     ? path.join(__dirname, "..", "build", "icon.ico")
     : path.join(__dirname, "..", "build", "icon.png");
+const parityFitDumpPath = path.join(process.cwd(), "data", "parity", "fit-corpus.dev.jsonl");
+const parityFitDumpKeys = new Set();
+let parityFitDumpLoaded = false;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -306,6 +311,74 @@ ipcMain.handle("updater:quit-and-install", () => {
   return true;
 });
 
+ipcMain.handle("parity-fit-dump:append", async (_event, record) => {
+  try {
+    if (!record || typeof record !== "object") {
+      return { ok: false, reason: "invalid-record" };
+    }
+    const key = String(record.key ?? "").trim();
+    const shipTypeId = Number(record.shipTypeId);
+    const eft = String(record.eft ?? "").trim();
+    const shipName = String(record.shipName ?? "").trim();
+    if (!key || !Number.isFinite(shipTypeId) || shipTypeId <= 0 || !eft) {
+      return { ok: false, reason: "missing-required-fields" };
+    }
+
+    await ensureParityFitDumpLoaded();
+    if (parityFitDumpKeys.has(key)) {
+      return { ok: true, deduped: true, path: parityFitDumpPath };
+    }
+
+    const entry = {
+      fitId: `dev-${key}`,
+      shipTypeId,
+      eft,
+      origin: "manual",
+      tags: inferTags(eft),
+      devFitKey: key,
+      shipName,
+      sourceLossKillmailId: Number(record.sourceLossKillmailId ?? 0) || undefined,
+      firstSeenAt: String(record.firstSeenAt ?? new Date().toISOString())
+    };
+
+    await fsPromises.mkdir(path.dirname(parityFitDumpPath), { recursive: true });
+    await fsPromises.appendFile(parityFitDumpPath, `${JSON.stringify(entry)}\n`, "utf8");
+    parityFitDumpKeys.add(key);
+    return { ok: true, deduped: false, path: parityFitDumpPath };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error && error.message ? error.message : String(error)
+    };
+  }
+});
+
+async function ensureParityFitDumpLoaded() {
+  if (parityFitDumpLoaded) {
+    return;
+  }
+  parityFitDumpLoaded = true;
+  if (!fs.existsSync(parityFitDumpPath)) {
+    return;
+  }
+  const raw = await fsPromises.readFile(parityFitDumpPath, "utf8");
+  for (const line of raw.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      continue;
+    }
+    try {
+      const row = JSON.parse(trimmed);
+      const key = String(row.devFitKey ?? "").trim();
+      if (key) {
+        parityFitDumpKeys.add(key);
+      }
+    } catch {
+      // Ignore malformed historical rows.
+    }
+  }
+}
+
 function isInternalUrl(url) {
   if (!url) {
     return false;
@@ -337,4 +410,17 @@ function formatUpdaterError(error) {
   } catch {
     return String(error);
   }
+}
+
+function inferTags(eft) {
+  const lower = String(eft ?? "").toLowerCase();
+  const tags = [];
+  if (/(blaster|rail|hybrid)/.test(lower)) tags.push("hybrid-turret");
+  if (/(autocannon|artillery|projectile)/.test(lower)) tags.push("projectile-turret");
+  if (/(laser|beam|pulse)/.test(lower)) tags.push("laser-turret");
+  if (/(launcher|missile|rocket|torpedo)/.test(lower)) tags.push("missile");
+  if (/drone/.test(lower)) tags.push("drone-primary");
+  if (/(shield|invulnerability|extender)/.test(lower)) tags.push("shield-tank");
+  if (/(armor|plate|membrane)/.test(lower)) tags.push("armor-tank");
+  return tags;
 }

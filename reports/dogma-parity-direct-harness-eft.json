@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-02-17T09:00:54.286374Z",
+  "count": 11,
+  "fits": [
+    {
+      "fitId": "crow-mwd-1",
+      "shipTypeId": 11176,
+      "eft": "[Crow, Rockets]\n\nRocket Launcher II, Caldari Navy Nova Rocket\n\n5MN Y-T8 Compact Microwarpdrive\n\nBallistic Control System II"
+    },
+    {
+      "fitId": "eris-void-1",
+      "shipTypeId": 22460,
+      "eft": "[Eris, Void test]\n\nLight Neutron Blaster II, Void S\nLight Neutron Blaster II, Void S\nLight Neutron Blaster II, Void S\n\n5MN Y-T8 Compact Microwarpdrive\n\nMagnetic Field Stabilizer II\n\nSmall Transverse Bulkhead II"
+    },
+    {
+      "fitId": "gila-drone-1",
+      "shipTypeId": 17715,
+      "eft": "[Gila, Drone baseline]\n\nRapid Light Missile Launcher II, Caldari Navy Scourge Light Missile\nRapid Light Missile Launcher II, Caldari Navy Scourge Light Missile\n\n10MN Y-S8 Compact Afterburner\nMultispectrum Shield Hardener II\n\nDrone Damage Amplifier II\n\nCaldari Navy Vespa x4"
+    },
+    {
+      "fitId": "gnosis-mixed-1",
+      "shipTypeId": 3756,
+      "eft": "[Gnosis, Mixed]\n\nHeavy Neutron Blaster II, Void M\nHeavy Neutron Blaster II, Void M\n\n50MN Cold-Gas Enduring Microwarpdrive\n\nMagnetic Field Stabilizer II\n\nHammerhead II x5"
+    },
+    {
+      "fitId": "heretic-rocket-1",
+      "shipTypeId": 22452,
+      "eft": "[Heretic, Rockets]\n\nRocket Launcher II, Nova Rage Rocket\nRocket Launcher II, Nova Rage Rocket\n\n5MN Quad LiF Restrained Microwarpdrive\n\nDamage Control II\n\nSmall Trimark Armor Pump II"
+    },
+    {
+      "fitId": "impel-armor-1",
+      "shipTypeId": 12753,
+      "eft": "[Impel, Plate tank]\n\nDamage Control II\nMultispectrum Energized Membrane II\n1600mm Steel Plates II\n\nMedium Trimark Armor Pump II"
+    },
+    {
+      "fitId": "myrmidon-drone-1",
+      "shipTypeId": 24700,
+      "eft": "[Myrmidon, Drones]\n\nDrone Link Augmentor I\n\n50MN Microwarpdrive II\n\nDrone Damage Amplifier II\n\nHammerhead II x5"
+    },
+    {
+      "fitId": "nergal-svcfitstat-1",
+      "shipTypeId": 52250,
+      "eft": "[Nergal, Nergsdfasdfl fit]\n\nSmall Armor Repairer II\nAssault Damage Control II\nAdaptive Nano Plating II\nAdaptive Nano Plating II\n\nSmall Hull Repairer II\nSmall Shield Booster I\nSmall Compact Pb-Acid Cap Battery\n\nLight Entropic Disintegrator I, Tetryon Exotic Plasma S\n[Empty High slot]\n\nSmall Anti-Kinetic Pump I\nSmall Anti-Kinetic Pump I\n\nHobgoblin II x5"
+    },
+    {
+      "fitId": "raven-cruise-1",
+      "shipTypeId": 638,
+      "eft": "[Raven, Cruise]\n\nCruise Missile Launcher II, Caldari Navy Scourge Cruise Missile\n\n100MN Afterburner II\n\nBallistic Control System II"
+    },
+    {
+      "fitId": "sabre-shield-extender-1",
+      "shipTypeId": 22456,
+      "eft": "[Sabre, Inferred 100%]\n\nHigh Slots:\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\n200mm AutoCannon II,Republic Fleet EMP S\nInterdiction Sphere Launcher I,Warp Disrupt Probe\n\nMid Slots:\n5MN Y-T8 Compact Microwarpdrive\nFaint Epsilon Scoped Warp Scrambler\nFleeting Compact Stasis Webifier\nMedium Shield Extender II\n\nLow Slots:\nGyrostabilizer II\nNanofiber Internal Structure II\n\nRig Slots:\nSmall Core Defense Field Extender I\nSmall Core Defense Field Extender I"
+    },
+    {
+      "fitId": "wolf-mwd-1",
+      "shipTypeId": 11371,
+      "eft": "[Wolf, MWD]\n\n200mm AutoCannon II, EMP S\n\n5MN Y-T8 Compact Microwarpdrive\n\nGyrostabilizer II"
+    }
+  ]
+}
