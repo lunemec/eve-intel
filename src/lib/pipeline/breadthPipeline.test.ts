@@ -223,7 +223,7 @@ describe("pipeline/breadthPipeline", () => {
         ensureExplicitShipTypeId: vi.fn(),
         loadPilotSnapshot: vi.fn(async () => ({
           snapshot: {
-            version: 1,
+            version: 2,
             pilotKey: "pilot a",
             characterId: 101,
             lookbackDays: 7,
@@ -322,7 +322,7 @@ describe("pipeline/breadthPipeline", () => {
         ensureExplicitShipTypeId: vi.fn(),
         loadPilotSnapshot: vi.fn(async () => ({
           snapshot: {
-            version: 1,
+            version: 2,
             pilotKey: "pilot a",
             characterId: 101,
             lookbackDays: 7,
@@ -415,7 +415,7 @@ describe("pipeline/breadthPipeline", () => {
         ensureExplicitShipTypeId: vi.fn(),
         loadPilotSnapshot: vi.fn(async () => ({
           snapshot: {
-            version: 1,
+            version: 2,
             pilotKey: "pilot a",
             characterId: 101,
             lookbackDays: 7,

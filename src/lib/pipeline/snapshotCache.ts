@@ -2,7 +2,9 @@ import { getCachedStateAsync, setCachedAsync } from "../cache";
 import type { PilotCard } from "../usePilotIntelPipeline";
 import type { PilotProcessedSnapshot } from "./types";
 
-const SNAPSHOT_VERSION = 1;
+const SNAPSHOT_VERSION = 2;
+const SNAPSHOT_KEY_NAMESPACE = "v2";
+const SNAPSHOT_SOURCE_NAMESPACE = "snapshot-src-v2";
 const SNAPSHOT_TTL_MS = 15 * 60 * 1000;
 const SNAPSHOT_STALE_MS = 5 * 60 * 1000;
 
@@ -59,7 +61,7 @@ function buildPilotSnapshotKey(params: {
   characterId: number;
   lookbackDays: number;
 }): string {
-  return `eve-intel.cache.pipeline.snapshot.v1.${params.characterId}.${params.lookbackDays}.${normalizePilotName(params.pilotName)}`;
+  return `eve-intel.cache.pipeline.snapshot.${SNAPSHOT_KEY_NAMESPACE}.${params.characterId}.${params.lookbackDays}.${normalizePilotName(params.pilotName)}`;
 }
 
 export function buildPilotSnapshotSourceSignature(params: {
@@ -71,7 +73,7 @@ export function buildPilotSnapshotSourceSignature(params: {
   const lossIds = params.row.inferenceLosses.map((row) => row.killmail_id).join(",");
   const explicitShip = params.row.parsedEntry.explicitShip?.trim().toLowerCase() ?? "";
   return [
-    "snapshot-src-v1",
+    SNAPSHOT_SOURCE_NAMESPACE,
     explicitShip,
     params.lookbackDays,
     params.topShips,

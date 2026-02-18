@@ -33,7 +33,7 @@ export function buildDerivedInferenceKey(params: {
   const lossHead = params.losses.slice(0, 8).map((l) => l.killmail_id).join(",");
   const lossTail = params.losses.slice(-8).map((l) => l.killmail_id).join(",");
   return [
-    "derived.inference.v7",
+    "derived.inference.v8",
     params.characterId,
     params.lookbackDays,
     params.topShips,

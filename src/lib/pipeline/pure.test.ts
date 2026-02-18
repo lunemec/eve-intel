@@ -42,7 +42,7 @@ describe("pipeline pure helpers", () => {
     });
 
     expect(keyA).toBe(keyB);
-    expect(keyA).toContain("derived.inference.v7");
+    expect(keyA).toContain("derived.inference.v8");
   });
 
   it("checks derived inference usability including explicit ship pinning", () => {
