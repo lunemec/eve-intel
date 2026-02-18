@@ -3,6 +3,7 @@
 All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
+- Added follow-up baseline CLI scaffolding with an explicit precondition entry gate (`dogma:parity:followup:baseline`) that exits before baseline generation unless the prerequisite task is marked complete.
 - Added deterministic new-fit scope helpers for scoped Dogma parity workflows, including scope-file loading and manual fit-id normalization with regression tests.
 - Added scoped Dogma parity comparison helpers that evaluate only selected new-fit IDs, with deterministic ordering and explicit missing-corpus/reference reporting tests.
 - Added scoped pyfa reference sync helpers that process only selected new-fit IDs, deterministically merge references by `fitId`, and continue through missing-corpus/pyfa-failure cases with regression tests.

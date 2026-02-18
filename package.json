@@ -21,6 +21,7 @@
     "dogma:fixtures:zkill": "node scripts/build-dogma-fit-corpus.mjs",
     "dogma:parity:open-items": "node scripts/generate-dogma-parity-open-items.mjs",
     "dogma:parity:new-fits": "node scripts/run-dogma-parity-new-fits.mjs",
+    "dogma:parity:followup:baseline": "node scripts/run-dogma-parity-followup-baseline.mjs",
     "prebuild": "npm run sde:prepare",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
