@@ -3,6 +3,7 @@
 All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
+- Canonicalized zKill backtest tuning by adding a Step-6 canonicalization gate (`scripts/tests/backtest-zkill-canonicalization.test.mjs`), introducing shared scoring helpers in `src/lib/backtestCore.ts`, routing `src/lib/backtest.ts` through the shared core, and delegating `scripts/backtest-zkill.mjs` to shared candidate scoring + recency predictor logic.
 - Canonicalized zKill rate-limit probe implementation by adding a Step-5 wrapper-shape gate (`scripts/tests/zkill-rate-limit-probe-canonicalization.test.mjs`) and converting `scripts/zkill-rate-limit-probe.mjs` into a thin CLI entrypoint that delegates parsing and probe execution to `src/lib/dev/zkillRateLimitProbe.ts`.
 - Added a Step-4 dead-export hygiene gate (`scripts/tests/dogma-pipeline-dead-export-hygiene.test.mjs`) and removed scoped dead export surface by deleting `getDogmaVersion` in `src/lib/dogma/loader.ts`, deleting `getAttr` in `src/lib/dogma/index.ts`, and making `buildPilotSnapshotKey` internal in `src/lib/pipeline/snapshotCache.ts`.
 - Added a Step-3 duplicate-import hygiene gate (`scripts/tests/pipeline-duplicate-import-hygiene.test.mjs`) and consolidated duplicate module imports in `src/lib/usePilotIntelPipelineEffect.ts`, `src/lib/pipeline/executors.ts`, `src/lib/pipeline/derivedInference.ts`, and `src/lib/pipeline/inferenceWindow.ts` without changing behavior.
@@ -46,7 +47,7 @@ All notable changes to this project are documented in this file.
 
 Boundary source:
 - Previous version marker commit `96a7691` (`v0.2.8`) used as lower boundary because no `v0.2.9` tag exists yet.
-- Summarized from history in range `96a7691..ee5a350`.
+- Summarized from history in range `96a7691..156bdb2`.
 
 ## v0.2.8 - 2026-02-18
 - Added a major combat-capability parity workflow: fit corpus data, reference sync scripts, pyfa adapter tooling, and parity reporting artifacts.
