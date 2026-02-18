@@ -1,7 +1,6 @@
 import type { Settings } from "../../types";
-import type { CacheLookup } from "../cache";
 import type { PilotCard } from "../usePilotIntelPipeline";
-import { getCachedStateAsync } from "../cache";
+import { getCachedStateAsync, type CacheLookup } from "../cache";
 import { buildDerivedInferenceKey, isDerivedInferenceUsable } from "./pure";
 import { recomputeDerivedInference, type DerivedInference } from "./executors";
 import type { DebugLogger } from "./types";

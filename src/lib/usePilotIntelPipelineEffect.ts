@@ -1,5 +1,4 @@
-import { useEffect, useRef } from "react";
-import type { Dispatch, SetStateAction } from "react";
+import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import type { ParsedPilotInput, Settings } from "../types";
 import type { DogmaIndex } from "./dogma/index";
 import type { PilotCard } from "./usePilotIntelPipeline";

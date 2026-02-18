@@ -13,8 +13,7 @@ import {
 import type { PilotCard } from "../usePilotIntelPipeline";
 import { estimateShipCynoChance, evaluateCynoRisk, type CynoRisk } from "../cyno";
 import { deriveShipRolePills } from "../roles";
-import { TOP_SHIP_CANDIDATES } from "./constants";
-import { DEV_FIT_DUMP_ENABLED } from "./constants";
+import { DEV_FIT_DUMP_ENABLED, TOP_SHIP_CANDIDATES } from "./constants";
 import type { DebugLogger, PipelineSignal, RetryBuilder } from "./types";
 
 export type DerivedInference = {

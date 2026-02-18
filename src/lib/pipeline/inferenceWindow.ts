@@ -1,5 +1,4 @@
-import type { CharacterPublic } from "../api/esi";
-import { fetchCharacterPublic } from "../api/esi";
+import { fetchCharacterPublic, type CharacterPublic } from "../api/esi";
 import {
   fetchCharacterStats,
   fetchLatestKills,
