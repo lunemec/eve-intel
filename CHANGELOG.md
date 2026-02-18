@@ -4,6 +4,7 @@ All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
 - Added deterministic new-fit scope helpers for scoped Dogma parity workflows, including scope-file loading and manual fit-id normalization with regression tests.
+- Added scoped Dogma parity comparison helpers that evaluate only selected new-fit IDs, with deterministic ordering and explicit missing-corpus/reference reporting tests.
 - Added an end-to-end zKill fit-fetch CLI (`npm run zkill:fits:fetch`) with strict argument validation and default `--max-records 200`.
 - Added deterministic ship-type pagination/merge ordering, strict `--before-killmail-id` cutoff behavior, and max-record short-circuiting.
 - Added header-aware retry/backoff (`Retry-After` and rate-limit headers first, exponential fallback second) with timeout-aware retry handling.
