@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { estimateShipCynoChance, evaluateCynoRisk } from "./cyno";
+import { deriveShipCynoBaitEvidence, estimateShipCynoChance, evaluateCynoRisk } from "./cyno";
 import type { ZkillKillmail } from "./api/zkill";
+import type { FitCandidate, ShipPrediction } from "./intel";
 
 describe("evaluateCynoRisk", () => {
   it("does not flag potential cyno with hull-only signal and no module evidence", () => {
@@ -319,5 +320,104 @@ describe("estimateShipCynoChance", () => {
     });
 
     expect(result.get("Drake")).toEqual({ cynoCapable: false, cynoChance: 0 });
+  });
+});
+
+function inferredShip(partial: Partial<ShipPrediction>): ShipPrediction {
+  return {
+    shipName: "Test Ship",
+    probability: 60,
+    source: "inferred",
+    reason: [],
+    ...partial
+  };
+}
+
+function fit(partial: Partial<FitCandidate>): FitCandidate {
+  return {
+    shipTypeId: 1,
+    fitLabel: "Inferred fit",
+    confidence: 1,
+    alternates: [],
+    ...partial
+  };
+}
+
+describe("deriveShipCynoBaitEvidence", () => {
+  it("returns no cyno/bait evidence for heuristic-only ships without qualifying modules", () => {
+    const evidence = deriveShipCynoBaitEvidence({
+      predictedShips: [
+        inferredShip({
+          shipName: "Onyx",
+          shipTypeId: 700,
+          cynoCapable: true,
+          cynoChance: 100
+        })
+      ],
+      fitCandidates: [fit({ shipTypeId: 700, fitLabel: "No modules" })],
+      losses: [],
+      characterId: 10,
+      namesByTypeId: new Map([[700, "Onyx"]])
+    });
+
+    expect(evidence.get("Onyx")?.Cyno).toBeUndefined();
+    expect(evidence.get("Onyx")?.Bait).toBeUndefined();
+  });
+
+  it("selects the most recent valid cyno and bait evidence per ship", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 40,
+        killmail_time: "2026-02-10T11:00:00Z",
+        victim: { character_id: 10, ship_type_id: 700, items: [{ item_type_id: 5000 }] },
+        attackers: [],
+        zkb: {}
+      },
+      {
+        killmail_id: 41,
+        killmail_time: "2026-02-13T11:00:00Z",
+        victim: { character_id: 10, ship_type_id: 700, items: [{ item_type_id: 5000 }] },
+        attackers: [],
+        zkb: {}
+      },
+      {
+        killmail_id: 42,
+        killmail_time: "2026-02-14T11:00:00Z",
+        victim: { character_id: 10, ship_type_id: 700, items: [{ item_type_id: 5002 }] },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const evidence = deriveShipCynoBaitEvidence({
+      predictedShips: [inferredShip({ shipName: "Devoter", shipTypeId: 700 })],
+      fitCandidates: [fit({ shipTypeId: 700, fitLabel: "Heavy tackle fit" })],
+      losses,
+      characterId: 10,
+      namesByTypeId: new Map([
+        [700, "Devoter"],
+        [5000, "Cynosural Field Generator I"],
+        [5002, "Damage Control II"]
+      ])
+    });
+
+    expect(evidence.get("Devoter")).toEqual({
+      Cyno: {
+        pillName: "Cyno",
+        causingModule: "Cynosural Field Generator I",
+        fitId: "700:Heavy tackle fit",
+        killmailId: 41,
+        url: "https://zkillboard.com/kill/41/",
+        timestamp: "2026-02-13T11:00:00.000Z"
+      },
+      Bait: {
+        pillName: "Bait",
+        causingModule: "Damage Control II",
+        fitId: "700:Heavy tackle fit",
+        killmailId: 42,
+        url: "https://zkillboard.com/kill/42/",
+        timestamp: "2026-02-14T11:00:00.000Z"
+      }
+    });
   });
 });

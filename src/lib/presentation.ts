@@ -130,13 +130,17 @@ function isLikelyBaitHullName(name: string): boolean {
 export function getShipRiskFlags(ship: ShipPrediction, cynoRisk?: CynoRisk): ShipRiskFlags {
   const normalized = ship.shipName.toLowerCase();
   const isPod = normalized.includes("capsule") || normalized.includes("pod");
-  const hardCyno = Boolean(ship.cynoCapable) && (ship.cynoChance ?? 0) >= 100;
+  const hardCyno =
+    Boolean(ship.cynoCapable) &&
+    (ship.cynoChance ?? 0) >= 100 &&
+    Boolean(ship.pillEvidence?.Cyno);
   const softCyno = false;
   const bait =
     !isPod &&
     ship.probability >= 20 &&
     Boolean(cynoRisk?.jumpAssociation) &&
-    (Boolean(ship.cynoCapable) || isLikelyBaitHullName(ship.shipName));
+    (Boolean(ship.cynoCapable) || isLikelyBaitHullName(ship.shipName)) &&
+    Boolean(ship.pillEvidence?.Bait);
 
   return { hardCyno, softCyno, bait };
 }

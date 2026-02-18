@@ -86,11 +86,41 @@ describe("presentation helpers", () => {
         ship({ shipName: "Onyx", cynoCapable: true, cynoChance: 60, probability: 70 }),
         cynoRisk
       )
-    ).toEqual({ hardCyno: false, softCyno: false, bait: true });
+    ).toEqual({ hardCyno: false, softCyno: false, bait: false });
 
     expect(
       getShipRiskFlags(
         ship({ shipName: "Onyx", cynoCapable: true, cynoChance: 100, probability: 70 }),
+        cynoRisk
+      )
+    ).toEqual({ hardCyno: false, softCyno: false, bait: false });
+
+    expect(
+      getShipRiskFlags(
+        ship({
+          shipName: "Onyx",
+          cynoCapable: true,
+          cynoChance: 100,
+          probability: 70,
+          pillEvidence: {
+            Cyno: {
+              pillName: "Cyno",
+              causingModule: "Cynosural Field Generator I",
+              fitId: "700:Heavy tackle fit",
+              killmailId: 41,
+              url: "https://zkillboard.com/kill/41/",
+              timestamp: "2026-02-13T11:00:00.000Z"
+            },
+            Bait: {
+              pillName: "Bait",
+              causingModule: "Damage Control II",
+              fitId: "700:Heavy tackle fit",
+              killmailId: 42,
+              url: "https://zkillboard.com/kill/42/",
+              timestamp: "2026-02-14T11:00:00.000Z"
+            }
+          }
+        }),
         cynoRisk
       )
     ).toEqual({ hardCyno: true, softCyno: false, bait: true });

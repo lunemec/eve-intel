@@ -39,21 +39,91 @@ describe("ui helpers", () => {
     expect(screen.getByText("100%")).toBeTruthy();
   });
 
-  it("renders ship pills in text mode", () => {
+  it("suppresses cyno and bait pills when heuristic signals exist but evidence is missing", () => {
     const cynoRisk: CynoRisk = { potentialCyno: false, jumpAssociation: true, reasons: [] };
-    render(<>{renderShipPills(ship({ shipName: "Onyx", cynoCapable: true, cynoChance: 65, rolePills: ["Web"] }), cynoRisk, "pill")}</>);
+    render(
+      <>
+        {renderShipPills(
+          ship({ shipName: "Onyx", cynoCapable: true, cynoChance: 100, rolePills: ["Web"] }),
+          cynoRisk,
+          "pill"
+        )}
+      </>
+    );
 
     expect(screen.queryByText("Cyno")).toBeNull();
-    const bait = screen.getByText("Bait");
+    expect(screen.queryByText("Bait")).toBeNull();
     const web = screen.getByText("Web");
-    expect(bait).toBeTruthy();
     expect(web).toBeTruthy();
-    expect(bait.getAttribute("title")?.length).toBeGreaterThan(10);
     expect(web.getAttribute("title")?.length).toBeGreaterThan(10);
   });
 
+  it("renders cyno and bait pills when selected evidence exists", () => {
+    const cynoRisk: CynoRisk = { potentialCyno: false, jumpAssociation: true, reasons: [] };
+    render(
+      <>
+        {renderShipPills(
+          ship({
+            shipName: "Onyx",
+            cynoCapable: true,
+            cynoChance: 100,
+            rolePills: ["Web"],
+            pillEvidence: {
+              Cyno: {
+                pillName: "Cyno",
+                causingModule: "Cynosural Field Generator I",
+                fitId: "700:Heavy tackle fit",
+                killmailId: 41,
+                url: "https://zkillboard.com/kill/41/",
+                timestamp: "2026-02-13T11:00:00.000Z"
+              },
+              Bait: {
+                pillName: "Bait",
+                causingModule: "Damage Control II",
+                fitId: "700:Heavy tackle fit",
+                killmailId: 42,
+                url: "https://zkillboard.com/kill/42/",
+                timestamp: "2026-02-14T11:00:00.000Z"
+              }
+            }
+          }),
+          cynoRisk,
+          "pill"
+        )}
+      </>
+    );
+
+    const bait = screen.getByText("Bait");
+    const cyno = screen.getByText("Cyno");
+    expect(bait).toBeTruthy();
+    expect(cyno).toBeTruthy();
+    expect(screen.getAllByText("Web").length).toBeGreaterThan(0);
+  });
+
   it("renders icon-mode pills with image assets", () => {
-    render(<>{renderShipPills(ship({ cynoCapable: true, cynoChance: 100, rolePills: ["Web"] }), undefined, "icon")}</>);
+    render(
+      <>
+        {renderShipPills(
+          ship({
+            cynoCapable: true,
+            cynoChance: 100,
+            rolePills: ["Web"],
+            pillEvidence: {
+              Cyno: {
+                pillName: "Cyno",
+                causingModule: "Cynosural Field Generator I",
+                fitId: "700:Heavy tackle fit",
+                killmailId: 41,
+                url: "https://zkillboard.com/kill/41/",
+                timestamp: "2026-02-13T11:00:00.000Z"
+              }
+            }
+          }),
+          undefined,
+          "icon"
+        )}
+      </>
+    );
 
     expect(screen.getAllByRole("img").length).toBeGreaterThan(0);
     const cyno = screen.getByLabelText("Cyno");

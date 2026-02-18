@@ -1,5 +1,11 @@
-import type { ShipPrediction } from "./intel";
+import type { FitCandidate, ShipPrediction } from "./intel";
 import type { ZkillKillmail } from "./api/zkill";
+import { killmailZkillUrl } from "./links";
+import {
+  selectMostRecentPillEvidence,
+  type PillEvidenceByName,
+  type PillEvidenceCandidate
+} from "./pillEvidence";
 
 export type CynoRisk = {
   potentialCyno: boolean;
@@ -11,6 +17,38 @@ export type ShipCynoChance = {
   cynoCapable: boolean;
   cynoChance: number;
 };
+
+export function deriveShipCynoBaitEvidence(params: {
+  predictedShips: ShipPrediction[];
+  fitCandidates: FitCandidate[];
+  losses: ZkillKillmail[];
+  characterId: number;
+  namesByTypeId: Map<number, string>;
+}): Map<string, PillEvidenceByName> {
+  const out = new Map<string, PillEvidenceByName>();
+
+  for (const ship of params.predictedShips) {
+    const fitId = resolveFitId(ship, params.fitCandidates);
+    const candidatesByPill = collectShipCynoBaitCandidates(ship, fitId, params);
+    const selectedCyno = selectMostRecentPillEvidence(candidatesByPill.cyno);
+    const selectedBait = selectMostRecentPillEvidence(candidatesByPill.bait);
+
+    if (!selectedCyno && !selectedBait) {
+      continue;
+    }
+
+    const evidence: PillEvidenceByName = {};
+    if (selectedCyno) {
+      evidence.Cyno = selectedCyno;
+    }
+    if (selectedBait) {
+      evidence.Bait = selectedBait;
+    }
+    out.set(ship.shipName, evidence);
+  }
+
+  return out;
+}
 
 const COVERT_OR_CYNO_SHIPS = new Set<string>([
   // Force Recon
@@ -290,6 +328,61 @@ function estimateBaitScore(
   return best;
 }
 
+function collectShipCynoBaitCandidates(
+  ship: ShipPrediction,
+  fitId: string,
+  params: {
+    losses: ZkillKillmail[];
+    characterId: number;
+    namesByTypeId: Map<number, string>;
+  }
+): { cyno: PillEvidenceCandidate[]; bait: PillEvidenceCandidate[] } {
+  const cyno: PillEvidenceCandidate[] = [];
+  const bait: PillEvidenceCandidate[] = [];
+
+  if (!ship.shipTypeId) {
+    return { cyno, bait };
+  }
+
+  for (const loss of params.losses) {
+    if (loss.victim.character_id !== params.characterId) {
+      continue;
+    }
+    if (loss.victim.ship_type_id !== ship.shipTypeId) {
+      continue;
+    }
+    for (const item of loss.victim.items ?? []) {
+      if (!isFittedItemFlag(item.flag)) {
+        continue;
+      }
+      const moduleName = params.namesByTypeId.get(item.item_type_id);
+      if (!moduleName) {
+        continue;
+      }
+      const candidate = toPillEvidenceCandidate({
+        causingModule: moduleName,
+        fitId,
+        killmailId: loss.killmail_id,
+        timestamp: loss.killmail_time
+      });
+      if (isCynoModuleName(moduleName)) {
+        cyno.push({
+          ...candidate,
+          pillName: "Cyno"
+        });
+      }
+      if (isBaitEvidenceModuleName(moduleName)) {
+        bait.push({
+          ...candidate,
+          pillName: "Bait"
+        });
+      }
+    }
+  }
+
+  return { cyno, bait };
+}
+
 function hasCynoModuleInLoss(loss: ZkillKillmail, namesByTypeId: Map<number, string>): boolean {
   for (const item of loss.victim.items ?? []) {
     const moduleName = namesByTypeId.get(item.item_type_id);
@@ -356,6 +449,47 @@ function isBaitHull(name: string): boolean {
     name === "Raven" ||
     name === "Hyperion" ||
     name === "Maelstrom"
+  );
+}
+
+function isBaitEvidenceModuleName(name: string): boolean {
+  return isCynoModuleName(name) || isTackleModuleName(name) || isTankModuleName(name);
+}
+
+function resolveFitId(ship: ShipPrediction, fitCandidates: FitCandidate[]): string {
+  if (!ship.shipTypeId) {
+    return `${ship.shipName}:unknown-fit`;
+  }
+  const fit = fitCandidates.find((entry) => entry.shipTypeId === ship.shipTypeId);
+  if (!fit) {
+    return `${ship.shipName}:unknown-fit`;
+  }
+  return `${fit.shipTypeId}:${fit.fitLabel}`;
+}
+
+function toPillEvidenceCandidate(params: {
+  causingModule: string;
+  fitId: string;
+  killmailId: number;
+  timestamp: string;
+}): Omit<PillEvidenceCandidate, "pillName"> {
+  return {
+    causingModule: params.causingModule,
+    fitId: params.fitId,
+    killmailId: params.killmailId,
+    url: killmailZkillUrl(params.killmailId),
+    timestamp: params.timestamp
+  };
+}
+
+function isFittedItemFlag(flag?: number): boolean {
+  if (flag === undefined) {
+    return true;
+  }
+  return (
+    (flag >= 11 && flag <= 34) || // low/mid/high
+    (flag >= 92 && flag <= 99) || // rigs
+    (flag >= 125 && flag <= 132) // subsystems
   );
 }
 
