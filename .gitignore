@@ -44,4 +44,5 @@ public/data/dogma-manifest.json
 pyfa/
 svcfitstat/
 .venv/
+scripts/__pycache__/
 scripts/tests/__pycache__/
