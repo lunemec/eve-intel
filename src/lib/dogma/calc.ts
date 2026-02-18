@@ -17,7 +17,9 @@ import {
   shieldHpBonusMultiplier,
   hullHpBonusMultiplier,
   hullResonanceMultiplier,
-  hasTacticalDestroyerDefenseProfile
+  hasTacticalDestroyerArmorDefenseBonus,
+  hasTacticalDestroyerHullDefenseBonus,
+  hasTacticalDestroyerShieldDefenseBonus
 } from "./rules/shipEffects";
 import type { CombatMetrics, DamageProfile, DogmaTypeEntry, FitResolvedModule, FitResolvedSlots, LayerResists } from "./types";
 
@@ -1227,16 +1229,41 @@ function applyDefenseModifiers(
     resonance.shield.em *= 1.11;
     assumptions.push("Applied Vargur shield EM resist parity correction.");
   }
-  if (hasTacticalDestroyerDefenseProfile(ship)) {
+  const hasTacticalArmorDefenseBonus = hasTacticalDestroyerArmorDefenseBonus(ship);
+  const hasTacticalShieldDefenseBonus = hasTacticalDestroyerShieldDefenseBonus(ship);
+  const hasTacticalHullDefenseBonus = hasTacticalDestroyerHullDefenseBonus(ship);
+  if (hasTacticalArmorDefenseBonus) {
     resonance.armor.em *= 2 / 3;
     resonance.armor.therm *= 2 / 3;
     resonance.armor.kin *= 2 / 3;
     resonance.armor.exp *= 2 / 3;
+  }
+  if (hasTacticalShieldDefenseBonus) {
+    resonance.shield.em *= 2 / 3;
+    resonance.shield.therm *= 2 / 3;
+    resonance.shield.kin *= 2 / 3;
+    resonance.shield.exp *= 2 / 3;
+  }
+  if (hasTacticalHullDefenseBonus) {
     resonance.hull.em *= 2 / 3;
     resonance.hull.therm *= 2 / 3;
     resonance.hull.kin *= 2 / 3;
     resonance.hull.exp *= 2 / 3;
-    assumptions.push("Applied tactical destroyer defensive profile assumption (armor/hull resists).");
+  }
+  if (
+    hasTacticalArmorDefenseBonus ||
+    hasTacticalShieldDefenseBonus ||
+    hasTacticalHullDefenseBonus
+  ) {
+    assumptions.push(
+      `Applied tactical destroyer defensive profile assumption (${[
+        hasTacticalArmorDefenseBonus ? "armor" : null,
+        hasTacticalShieldDefenseBonus ? "shield" : null,
+        hasTacticalHullDefenseBonus ? "hull" : null
+      ]
+        .filter(Boolean)
+        .join("+")} resists).`
+    );
   }
   const hullResMultiplier = hullResonanceMultiplier(ship);
   if (hullResMultiplier !== 1) {

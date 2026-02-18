@@ -3,6 +3,7 @@
 All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
+- Completed T3 destroyer follow-up gate closure by adding 58 curated zKill destroyer corpus/reference fits (Hecate/Jackdaw/Confessor/Svipul at 15 each), introducing destroyer coverage + strict gate regression tests, and aligning tactical destroyer defensive resist assumptions by hull family so all destroyer hulls now meet `>=10` passing fits under the follow-up `10%` surfaced-metric rule.
 - Aligned Reactive Armor Hardener parity with pyfa equilibrium behavior (cycle-based redistribution + deterministic average profile), and closed residual Legion/Proteus T3 cruiser gate deficits to `10/10` passing fits each under follow-up `10%` surfaced-metric rules.
 - Added T3 cruiser mechanic-cluster parity fixes for polarized resistance-killer effects, civilian turret skill scaling, Caldari defensive subsystem shield-HP bonuses, and Reactive Armor Hardener profile handling, with new cruiser regression tests for strict 10% surfaced-metric checks.
 - Expanded T3 cruiser parity coverage with 35 curated zKill-based Loki/Legion/Proteus/Tengu fits, synced pyfa reference rows for each new fit, and added a regression coverage test enforcing `>=10` corpus+reference fits per cruiser hull.

@@ -128,8 +128,26 @@ export function hasAfterburnerSpeedFactorBonus(ship: DogmaTypeEntry | undefined)
   return hasByPattern(ship, /afterburnerspeedfactor/i);
 }
 
+export function hasTacticalDestroyerArmorDefenseBonus(ship: DogmaTypeEntry | undefined): boolean {
+  const family = tacticalDestroyerFamily(ship);
+  return family === "gallente" || family === "amarr" || family === "minmatar";
+}
+
+export function hasTacticalDestroyerShieldDefenseBonus(ship: DogmaTypeEntry | undefined): boolean {
+  const family = tacticalDestroyerFamily(ship);
+  return family === "caldari" || family === "minmatar";
+}
+
+export function hasTacticalDestroyerHullDefenseBonus(ship: DogmaTypeEntry | undefined): boolean {
+  return tacticalDestroyerFamily(ship) === "gallente";
+}
+
 export function hasTacticalDestroyerDefenseProfile(ship: DogmaTypeEntry | undefined): boolean {
-  return hasByPattern(ship, /tacticaldestroyer/i);
+  return (
+    hasTacticalDestroyerArmorDefenseBonus(ship) ||
+    hasTacticalDestroyerShieldDefenseBonus(ship) ||
+    hasTacticalDestroyerHullDefenseBonus(ship)
+  );
 }
 
 export function hasBattleshipPlateExtenderRoleBonus(ship: DogmaTypeEntry | undefined): boolean {
@@ -141,4 +159,22 @@ export function hasBattleshipPlateExtenderRoleBonus(ship: DogmaTypeEntry | undef
 
 export function hasMarauderShieldBonus(ship: DogmaTypeEntry | undefined): boolean {
   return hasByPattern(ship, /maraudershieldbonus/i);
+}
+
+function tacticalDestroyerFamily(
+  ship: DogmaTypeEntry | undefined
+): "gallente" | "caldari" | "amarr" | "minmatar" | null {
+  if (hasByPattern(ship, /gallentetacticaldestroyer/i)) {
+    return "gallente";
+  }
+  if (hasByPattern(ship, /caldaritacticaldestroyer/i)) {
+    return "caldari";
+  }
+  if (hasByPattern(ship, /amarrtacticaldestroyer/i)) {
+    return "amarr";
+  }
+  if (hasByPattern(ship, /minmatartacticaldestroyer/i)) {
+    return "minmatar";
+  }
+  return null;
 }

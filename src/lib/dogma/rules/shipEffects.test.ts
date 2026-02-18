@@ -13,6 +13,9 @@ import {
   hasRookieDroneDamageBonus,
   hasShieldResistBonus,
   shieldHpBonusMultiplier,
+  hasTacticalDestroyerArmorDefenseBonus,
+  hasTacticalDestroyerHullDefenseBonus,
+  hasTacticalDestroyerShieldDefenseBonus,
   hasTacticalDestroyerDefenseProfile,
   hasBattleshipPlateExtenderRoleBonus,
   hasMarauderShieldBonus
@@ -95,9 +98,34 @@ describe("shipEffects rules", () => {
     expect(hasArmorResistBonus(ship)).toBe(true);
   });
 
-  it("detects tactical destroyer defense profile family", () => {
-    const ship = mk(["shipHeatDamageGallenteTacticalDestroyer3"]);
-    expect(hasTacticalDestroyerDefenseProfile(ship)).toBe(true);
+  it("detects tactical destroyer defense profile layers by family", () => {
+    const confessor = mk(["shipHeatDamageAmarrTacticalDestroyer3"]);
+    const jackdaw = mk(["shipHeatDamageCaldariTacticalDestroyer3"]);
+    const svipul = mk(["shipHeatDamageMinmatarTacticalDestroyer3"]);
+    const hecate = mk(["shipHeatDamageGallenteTacticalDestroyer3"]);
+    const nonTactical = mk(["shipBonusArmorResistAB"]);
+
+    expect(hasTacticalDestroyerArmorDefenseBonus(confessor)).toBe(true);
+    expect(hasTacticalDestroyerShieldDefenseBonus(confessor)).toBe(false);
+    expect(hasTacticalDestroyerHullDefenseBonus(confessor)).toBe(false);
+
+    expect(hasTacticalDestroyerArmorDefenseBonus(jackdaw)).toBe(false);
+    expect(hasTacticalDestroyerShieldDefenseBonus(jackdaw)).toBe(true);
+    expect(hasTacticalDestroyerHullDefenseBonus(jackdaw)).toBe(false);
+
+    expect(hasTacticalDestroyerArmorDefenseBonus(svipul)).toBe(true);
+    expect(hasTacticalDestroyerShieldDefenseBonus(svipul)).toBe(true);
+    expect(hasTacticalDestroyerHullDefenseBonus(svipul)).toBe(false);
+
+    expect(hasTacticalDestroyerArmorDefenseBonus(hecate)).toBe(true);
+    expect(hasTacticalDestroyerShieldDefenseBonus(hecate)).toBe(false);
+    expect(hasTacticalDestroyerHullDefenseBonus(hecate)).toBe(true);
+
+    expect(hasTacticalDestroyerDefenseProfile(confessor)).toBe(true);
+    expect(hasTacticalDestroyerDefenseProfile(jackdaw)).toBe(true);
+    expect(hasTacticalDestroyerDefenseProfile(svipul)).toBe(true);
+    expect(hasTacticalDestroyerDefenseProfile(hecate)).toBe(true);
+    expect(hasTacticalDestroyerDefenseProfile(nonTactical)).toBe(false);
   });
 
   it("detects battleship plate/extender role bonus family", () => {
