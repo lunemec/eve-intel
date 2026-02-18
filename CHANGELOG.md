@@ -22,7 +22,7 @@ All notable changes to this project are documented in this file.
 
 Boundary source:
 - Previous version marker commit `96a7691` (`v0.2.8`) used as lower boundary because no `v0.2.9` tag exists yet.
-- Summarized from history in range `96a7691..41d5f0a`.
+- Summarized from history in range `96a7691..9a85483`.
 
 ## v0.2.8 - 2026-02-18
 - Added a major combat-capability parity workflow: fit corpus data, reference sync scripts, pyfa adapter tooling, and parity reporting artifacts.
