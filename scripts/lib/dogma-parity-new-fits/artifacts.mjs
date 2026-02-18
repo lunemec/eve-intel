@@ -160,6 +160,7 @@ export function buildDogmaParityNewFitDiagnosticsEvents({
 
   const errors = normalizeDiagnosticsErrors({
     syncResult,
+    compareResult,
     report
   });
   for (const error of errors) {
@@ -194,7 +195,7 @@ function serializeJsonl(rows) {
   return `${rows.map((row) => JSON.stringify(row)).join("\n")}\n`;
 }
 
-function normalizeDiagnosticsErrors({ syncResult, report }) {
+function normalizeDiagnosticsErrors({ syncResult, compareResult, report }) {
   const rows = [];
   const syncFailures = Array.isArray(syncResult?.failed) ? syncResult.failed : [];
   for (const failure of syncFailures) {
@@ -205,6 +206,20 @@ function normalizeDiagnosticsErrors({ syncResult, report }) {
     rows.push({
       fitId,
       reason: normalizeOptionalString(failure?.reason) ?? "unknown",
+      stage: normalizeOptionalString(failure?.stage) ?? undefined,
+      stderrTail: normalizeOptionalString(failure?.stderrTail) ?? undefined
+    });
+  }
+
+  const compareFailures = Array.isArray(compareResult?.failed) ? compareResult.failed : [];
+  for (const failure of compareFailures) {
+    const fitId = normalizeOptionalString(failure?.fitId);
+    if (!fitId) {
+      continue;
+    }
+    rows.push({
+      fitId,
+      reason: normalizeOptionalString(failure?.reason) ?? "dogma_compute_failed",
       stage: normalizeOptionalString(failure?.stage) ?? undefined,
       stderrTail: normalizeOptionalString(failure?.stderrTail) ?? undefined
     });

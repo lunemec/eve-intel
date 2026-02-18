@@ -90,6 +90,45 @@ describe("compareDogmaParityForScope", () => {
     expect(result.mismatches).toEqual([]);
   });
 
+  it("records per-fit dogma compute failures and continues comparing remaining fits", async () => {
+    const calledFitIds = [];
+    const computeError = new Error("eft parse failed");
+    computeError.details = {
+      stage: "eft_parse",
+      stderrTail: "line 3: invalid slot"
+    };
+
+    const result = await compareDogmaParityForScope({
+      newFitIds: ["fit-c", "fit-b", "fit-a"],
+      corpusEntries: [createCorpusEntry("fit-a"), createCorpusEntry("fit-b"), createCorpusEntry("fit-c")],
+      referenceFits: [
+        createMetricResult({ fitId: "fit-a" }),
+        createMetricResult({ fitId: "fit-b" }),
+        createMetricResult({ fitId: "fit-c" })
+      ],
+      computeActualForFit: async ({ fitId }) => {
+        calledFitIds.push(fitId);
+        if (fitId === "fit-b") {
+          throw computeError;
+        }
+        return createMetricResult({ fitId, source: "app" });
+      }
+    });
+
+    expect(calledFitIds).toEqual(["fit-a", "fit-b", "fit-c"]);
+    expect(result.comparedFitIds).toEqual(["fit-a", "fit-c"]);
+    expect(result.mismatches).toEqual([]);
+    expect(result.failed).toEqual([
+      {
+        fitId: "fit-b",
+        reason: "dogma_compute_failed",
+        error: "eft parse failed",
+        stage: "eft_parse",
+        stderrTail: "line 3: invalid slot"
+      }
+    ]);
+  });
+
   it("uses ci thresholds when mode is ci", async () => {
     const params = {
       newFitIds: ["fit-a"],

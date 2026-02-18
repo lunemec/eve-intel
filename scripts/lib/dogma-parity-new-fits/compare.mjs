@@ -42,6 +42,7 @@ export async function compareDogmaParityForScope(
   const missingCorpusFitIds = [];
   const missingReferenceFitIds = [];
   const comparisons = [];
+  const failed = [];
 
   for (const fitId of scopedFitIds) {
     const corpusEntry = corpusByFitId.get(fitId);
@@ -56,16 +57,19 @@ export async function compareDogmaParityForScope(
       continue;
     }
 
-    const actual = await computeActualForFit({ fitId, corpusEntry, expected });
-    comparedFitIds.push(fitId);
-
-    comparisons.push(
-      compareFn({
-        expected,
-        actual,
-        thresholds
-      })
-    );
+    try {
+      const actual = await computeActualForFit({ fitId, corpusEntry, expected });
+      comparedFitIds.push(fitId);
+      comparisons.push(
+        compareFn({
+          expected,
+          actual,
+          thresholds
+        })
+      );
+    } catch (error) {
+      failed.push(toDogmaComputeFailure({ fitId, error }));
+    }
   }
 
   const mismatches = comparisons.filter((comparison) => !comparison.pass);
@@ -80,6 +84,7 @@ export async function compareDogmaParityForScope(
     missingCorpusFitIds,
     missingReferenceFitIds,
     comparisons,
+    failed,
     mismatches,
     mismatchCount: mismatches.length
   };
@@ -181,6 +186,37 @@ function normalizeOptionalString(value) {
 
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : null;
+}
+
+function toDogmaComputeFailure({ fitId, error }) {
+  const details = normalizeErrorDetails(error);
+  return {
+    fitId,
+    reason: "dogma_compute_failed",
+    error: formatErrorMessage(error),
+    ...(normalizeOptionalString(details.stage)
+      ? { stage: normalizeOptionalString(details.stage) }
+      : {}),
+    ...(normalizeOptionalString(details.stderrTail)
+      ? { stderrTail: normalizeOptionalString(details.stderrTail) }
+      : {})
+  };
+}
+
+function normalizeErrorDetails(error) {
+  if (!error || typeof error !== "object" || Array.isArray(error)) {
+    return {};
+  }
+  const details = error.details;
+  if (!details || typeof details !== "object" || Array.isArray(details)) {
+    return {};
+  }
+  return details;
+}
+
+function formatErrorMessage(error) {
+  const message = normalizeOptionalString(error?.message);
+  return message ?? String(error ?? "Unknown error");
 }
 
 function compareStrings(left, right) {

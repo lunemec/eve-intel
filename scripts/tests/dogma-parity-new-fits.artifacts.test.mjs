@@ -59,6 +59,7 @@ function createCompareResult(overrides = {}) {
         deltas: [{ metric: "alpha", actual: 110, expected: 100, absDelta: 10, relDelta: 0.1, pass: true }]
       }
     ],
+    failed: [],
     mismatchCount: 2,
     ...overrides
   };
@@ -174,5 +175,47 @@ describe("writeDogmaParityNewFitArtifacts", () => {
     expect(reportFromDisk.exitCode).toBe(0);
     expect(result.diagnosticsEventsWritten).toBe(0);
     expect(existsSync(diagnosticsPath)).toBe(false);
+  });
+
+  it("emits structured diagnostics errors for compare-stage parse/compute failures", async () => {
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "dogma-new-fit-artifacts-"));
+    const reportPath = path.join(tempDir, "reports", "dogma-parity-new-fits-report.json");
+    const diagnosticsPath = path.join(tempDir, "reports", "dogma-parity-new-fits-diagnostics.jsonl");
+
+    const result = await writeDogmaParityNewFitArtifacts({
+      scope: createScope({ newFitIds: ["fit-a", "fit-b"] }),
+      syncResult: createSyncResult({ failed: [], pyfaFailureCount: 0, missingCorpusFitIds: [] }),
+      compareResult: createCompareResult({
+        missingCorpusFitIds: [],
+        missingReferenceFitIds: [],
+        comparisons: [{ fitId: "fit-a", pass: true }],
+        mismatches: [],
+        mismatchCount: 0,
+        failed: [
+          {
+            fitId: "fit-b",
+            reason: "dogma_compute_failed",
+            error: "eft parse failed",
+            stage: "eft_parse",
+            stderrTail: "line 3: invalid slot"
+          }
+        ]
+      }),
+      exitCode: 0,
+      reportPath,
+      diagnosticsPath
+    });
+
+    const diagnosticsRows = await readJsonl(diagnosticsPath);
+    expect(result.diagnosticsEventsWritten).toBe(diagnosticsRows.length);
+    expect(diagnosticsRows).toContainEqual({
+      at: "2026-02-18T13:10:00.000Z",
+      event: "error",
+      runId: "run-42",
+      fitId: "fit-b",
+      reason: "dogma_compute_failed",
+      stage: "eft_parse",
+      stderrTail: "line 3: invalid slot"
+    });
   });
 });
