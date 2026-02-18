@@ -8,11 +8,14 @@ export type FitMetricResult =
   | { status: "ready"; key: string; value: CombatMetrics }
   | { status: "unavailable"; key: string; reason: string };
 
+type CharacterCacheKey = number | "unknown";
+
 export function createFitMetricsResolver(params: {
   dogmaIndex: DogmaIndex | null;
   logDebug: (message: string, data?: unknown) => void;
 }): (pilot: PilotCard, fit: FitCandidate | undefined) => FitMetricResult {
   const cache = new Map<string, FitMetricResult>();
+  const fitKeyCache = new WeakMap<FitCandidate, Map<CharacterCacheKey, string>>();
   const loggedKeys = new Set<string>();
 
   return (pilot: PilotCard, fit: FitCandidate | undefined): FitMetricResult => {
@@ -20,7 +23,9 @@ export function createFitMetricsResolver(params: {
       return { status: "unavailable", key: "none", reason: "No resolved fit modules available." };
     }
 
-    const key = buildFitMetricKey(pilot.characterId, fit);
+    const characterCacheKey = normalizeCharacterCacheKey(pilot.characterId);
+    // Fit candidates are treated as immutable snapshots across resolver calls.
+    const key = getCachedFitMetricKey(characterCacheKey, fit, fitKeyCache);
     const cached = cache.get(key);
     if (cached) {
       return cached;
@@ -87,6 +92,29 @@ export function createFitMetricsResolver(params: {
   };
 }
 
+function normalizeCharacterCacheKey(characterId: number | undefined): CharacterCacheKey {
+  return typeof characterId === "number" ? characterId : "unknown";
+}
+
+function getCachedFitMetricKey(
+  characterCacheKey: CharacterCacheKey,
+  fit: FitCandidate,
+  fitKeyCache: WeakMap<FitCandidate, Map<CharacterCacheKey, string>>
+): string {
+  let byCharacter = fitKeyCache.get(fit);
+  if (!byCharacter) {
+    byCharacter = new Map<CharacterCacheKey, string>();
+    fitKeyCache.set(fit, byCharacter);
+  }
+  const cached = byCharacter.get(characterCacheKey);
+  if (cached) {
+    return cached;
+  }
+  const key = buildFitMetricKey(characterCacheKey, fit);
+  byCharacter.set(characterCacheKey, key);
+  return key;
+}
+
 function extractErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {
     return error.message;
@@ -94,7 +122,7 @@ function extractErrorMessage(error: unknown): string {
   return String(error);
 }
 
-function buildFitMetricKey(characterId: number | undefined, fit: FitCandidate): string {
+function buildFitMetricKey(characterCacheKey: CharacterCacheKey, fit: FitCandidate): string {
   const modules = fit.modulesBySlot
     ? [
         ...fit.modulesBySlot.high,
@@ -107,7 +135,7 @@ function buildFitMetricKey(characterId: number | undefined, fit: FitCandidate): 
         .sort((a, b) => a - b)
         .join(",")
     : "none";
-  return [characterId ?? "unknown", fit.shipTypeId, fit.fitLabel, modules].join("|");
+  return [characterCacheKey, fit.shipTypeId, fit.fitLabel, modules].join("|");
 }
 
 function countFitModules(slots: NonNullable<FitCandidate["modulesBySlot"]>): number {

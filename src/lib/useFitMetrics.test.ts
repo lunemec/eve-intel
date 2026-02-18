@@ -132,4 +132,38 @@ describe("createFitMetricsResolver", () => {
     expect(second).toEqual(first);
     expect(vi.mocked(calculateShipCombatMetrics)).toHaveBeenCalledTimes(1);
   });
+
+  it("reuses computed fit key for repeated lookups of the same fit object", () => {
+    vi.mocked(calculateShipCombatMetrics).mockReturnValue({
+      dpsTotal: 100,
+      alpha: 200,
+      damageSplit: { em: 0.25, therm: 0.25, kin: 0.25, exp: 0.25 },
+      engagementRange: { optimal: 1000, falloff: 2000, missileMax: 0, effectiveBand: 3000 },
+      speed: { base: 100, propOn: 500, propOnHeated: 600 },
+      signature: { base: 80, propOn: 120 },
+      ehp: 30000,
+      resists: {
+        shield: { em: 0.2, therm: 0.3, kin: 0.4, exp: 0.5 },
+        armor: { em: 0.2, therm: 0.3, kin: 0.4, exp: 0.5 },
+        hull: { em: 0.2, therm: 0.3, kin: 0.4, exp: 0.5 }
+      },
+      confidence: 88,
+      assumptions: []
+    });
+
+    const getFitMetrics = createFitMetricsResolver({
+      dogmaIndex: {} as never,
+      logDebug: vi.fn()
+    });
+    const pilot = makePilot();
+    const fit = makeFit();
+    const sortSpy = vi.spyOn(Array.prototype, "sort");
+
+    getFitMetrics(pilot, fit);
+    getFitMetrics(pilot, fit);
+
+    expect(sortSpy).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(calculateShipCombatMetrics)).toHaveBeenCalledTimes(1);
+    sortSpy.mockRestore();
+  });
 });
