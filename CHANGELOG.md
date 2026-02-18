@@ -3,6 +3,9 @@
 All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
+- Added initial `zKill` fit-fetch CLI contract scaffolding with strict argument validation (`--ship-type-ids`, `--output`) and default `--max-records=200`.
+- Added parser regression coverage for required flags, numeric ship type parsing, cursor parsing, and invalid max-record rejection.
+- Extended `vitest` include patterns to run script-level `.test.mjs` coverage under `scripts/`.
 - Updated zKill list caching to support conditional revalidation metadata (`ETag`/`Last-Modified`) and optional forced network refresh for page-1 checks.
 - Added background pilot refresh improvements: 30s revalidation cadence, explicit-ship mismatch detection against inferred top ship, and redraw only when page-1 kill/loss heads change.
 - Fixed explicit-ship paste updates to rerun pipeline immediately even when zKill page-1 is unchanged (`304`), so explicit ships (for example `Freya Rage (Viator)`) reliably become `100%` predictions.
