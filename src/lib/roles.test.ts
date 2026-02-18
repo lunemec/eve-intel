@@ -39,6 +39,7 @@ describe("deriveShipRolePills", () => {
         shipTypeId: 22456,
         fitLabel: "example",
         confidence: 100,
+        sourceLossKillmailId: 1,
         eftSections: {
           high: ["Heavy Energy Neutralizer II", "Covert Ops Cloaking Device II"],
           mid: ["Warp Disruptor II", "Stasis Webifier II"],
@@ -54,7 +55,14 @@ describe("deriveShipRolePills", () => {
     const rolesByShip = deriveShipRolePills({
       predictedShips,
       fitCandidates,
-      losses: [],
+      losses: [
+        makeLoss({
+          killmailId: 1,
+          characterId,
+          shipTypeId: 22456,
+          itemTypeIds: []
+        })
+      ],
       characterId,
       namesByTypeId: new Map()
     });
@@ -124,7 +132,23 @@ describe("deriveShipRolePills", () => {
         reason: []
       }
     ];
-    const fitCandidates: FitCandidate[] = [];
+    const fitCandidatesWithEvidence: FitCandidate[] = [
+      {
+        shipTypeId: 12013,
+        fitLabel: "example",
+        confidence: 100,
+        sourceLossKillmailId: 1,
+        eftSections: {
+          high: [],
+          mid: [],
+          low: [],
+          rig: [],
+          cargo: [],
+          other: []
+        },
+        alternates: []
+      }
+    ];
     const losses: ZkillKillmail[] = [
       makeLoss({
         killmailId: 1,
@@ -137,7 +161,7 @@ describe("deriveShipRolePills", () => {
 
     const rolesByShip = deriveShipRolePills({
       predictedShips,
-      fitCandidates,
+      fitCandidates: fitCandidatesWithEvidence,
       losses,
       characterId,
       namesByTypeId
@@ -147,7 +171,7 @@ describe("deriveShipRolePills", () => {
     expect(rolesByShip.get("Devoter")).not.toEqual(expect.arrayContaining(["Bubble"]));
   });
 
-  it("shows Bubble on interdictor hull", () => {
+  it("suppresses Bubble on interdictor hull without evidence", () => {
     const predictedShips: ShipPrediction[] = [
       {
         shipTypeId: 22464,
@@ -166,7 +190,7 @@ describe("deriveShipRolePills", () => {
       namesByTypeId: new Map()
     });
 
-    expect(rolesByShip.get("Sabre")).toEqual(expect.arrayContaining(["Bubble"]));
+    expect(rolesByShip.get("Sabre")).not.toEqual(expect.arrayContaining(["Bubble"]));
   });
 
   it("keeps Bubble when present without Dictor/HIC", () => {
@@ -218,7 +242,7 @@ describe("deriveShipRolePills", () => {
     expect(rolesByShip.get("Lachesis")).toEqual(expect.arrayContaining(["Bubble"]));
   });
 
-  it("detects Boosh on command destroyer hull", () => {
+  it("suppresses Boosh on command destroyer hull without evidence", () => {
     const predictedShips: ShipPrediction[] = [
       {
         shipTypeId: 37453,
@@ -237,7 +261,7 @@ describe("deriveShipRolePills", () => {
       namesByTypeId: new Map()
     });
 
-    expect(rolesByShip.get("Stork")).toEqual(expect.arrayContaining(["Boosh"]));
+    expect(rolesByShip.get("Stork")).not.toEqual(expect.arrayContaining(["Boosh"]));
   });
 
   it("detects Armor Logi from remote armor modules", () => {
@@ -260,10 +284,27 @@ describe("deriveShipRolePills", () => {
       })
     ];
     const namesByTypeId = new Map<number, string>([[201, "Large Remote Armor Repairer II"]]);
+    const fitCandidates: FitCandidate[] = [
+      {
+        shipTypeId: 11985,
+        fitLabel: "example",
+        confidence: 100,
+        sourceLossKillmailId: 2,
+        eftSections: {
+          high: [],
+          mid: [],
+          low: [],
+          rig: [],
+          cargo: [],
+          other: []
+        },
+        alternates: []
+      }
+    ];
 
     const rolesByShip = deriveShipRolePills({
       predictedShips,
-      fitCandidates: [],
+      fitCandidates,
       losses,
       characterId,
       namesByTypeId
@@ -293,10 +334,27 @@ describe("deriveShipRolePills", () => {
       })
     ];
     const namesByTypeId = new Map<number, string>([[202, "Large Remote Shield Booster II"]]);
+    const fitCandidates: FitCandidate[] = [
+      {
+        shipTypeId: 11987,
+        fitLabel: "example",
+        confidence: 100,
+        sourceLossKillmailId: 5,
+        eftSections: {
+          high: [],
+          mid: [],
+          low: [],
+          rig: [],
+          cargo: [],
+          other: []
+        },
+        alternates: []
+      }
+    ];
 
     const rolesByShip = deriveShipRolePills({
       predictedShips,
-      fitCandidates: [],
+      fitCandidates,
       losses,
       characterId,
       namesByTypeId
@@ -412,7 +470,7 @@ describe("deriveShipRolePills", () => {
     expect(rolesByShip.get("Viator")).not.toEqual(expect.arrayContaining(["Armor Logi"]));
   });
 
-  it("keeps hull-only long point on Orthrus even when fit is unknown", () => {
+  it("suppresses hull-only long point on Orthrus when fit evidence is unavailable", () => {
     const predictedShips: ShipPrediction[] = [
       {
         shipTypeId: 33818,
@@ -431,10 +489,10 @@ describe("deriveShipRolePills", () => {
       namesByTypeId: new Map()
     });
 
-    expect(rolesByShip.get("Orthrus")).toEqual(expect.arrayContaining(["Long Point"]));
+    expect(rolesByShip.get("Orthrus")).not.toEqual(expect.arrayContaining(["Long Point"]));
   });
 
-  it("keeps hull-only logistics roles when fit is unknown", () => {
+  it("suppresses hull-only logistics roles when fit evidence is unavailable", () => {
     const predictedShips: ShipPrediction[] = [
       {
         shipTypeId: 11985,
@@ -460,8 +518,84 @@ describe("deriveShipRolePills", () => {
       namesByTypeId: new Map()
     });
 
-    expect(rolesByShip.get("Guardian")).toEqual(expect.arrayContaining(["Armor Logi"]));
-    expect(rolesByShip.get("Basilisk")).toEqual(expect.arrayContaining(["Shield Logi"]));
+    expect(rolesByShip.get("Guardian")).not.toEqual(expect.arrayContaining(["Armor Logi"]));
+    expect(rolesByShip.get("Basilisk")).not.toEqual(expect.arrayContaining(["Shield Logi"]));
+  });
+
+  it("keeps evidence-backed roles and emits selected evidence fields", () => {
+    const characterId = 9017;
+    const predictedShips: ShipPrediction[] = [
+      {
+        shipTypeId: 22456,
+        shipName: "Lachesis",
+        probability: 64,
+        source: "inferred",
+        reason: []
+      }
+    ];
+    const fitCandidates: FitCandidate[] = [
+      {
+        shipTypeId: 22456,
+        fitLabel: "example",
+        confidence: 100,
+        sourceLossKillmailId: 11,
+        eftSections: {
+          high: [],
+          mid: ["Warp Disruptor II"],
+          low: [],
+          rig: [],
+          cargo: [],
+          other: []
+        },
+        alternates: []
+      }
+    ];
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 10,
+        killmail_time: "2026-02-10T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 22456,
+          items: [{ item_type_id: 3017 }]
+        },
+        attackers: [],
+        zkb: {}
+      },
+      {
+        killmail_id: 11,
+        killmail_time: "2026-02-11T00:00:00Z",
+        victim: {
+          character_id: characterId,
+          ship_type_id: 22456,
+          items: [{ item_type_id: 3017 }]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+    const namesByTypeId = new Map<number, string>([[3017, "Warp Disruptor II"]]);
+    let capturedEvidence: unknown[] = [];
+
+    const rolesByShip = deriveShipRolePills({
+      predictedShips,
+      fitCandidates,
+      losses,
+      characterId,
+      namesByTypeId,
+      onEvidence: (_shipName, evidence) => {
+        capturedEvidence = evidence as unknown[];
+      }
+    });
+
+    expect(rolesByShip.get("Lachesis")).toEqual(expect.arrayContaining(["Long Point"]));
+    expect(capturedEvidence).toHaveLength(1);
+    expect((capturedEvidence[0] as Record<string, unknown>).pillName).toBe("Long Point");
+    expect((capturedEvidence[0] as Record<string, unknown>).causingModule).toBe("Warp Disruptor II");
+    expect((capturedEvidence[0] as Record<string, unknown>).fitId).toBe("22456:example");
+    expect((capturedEvidence[0] as Record<string, unknown>).killmailId).toBe(11);
+    expect((capturedEvidence[0] as Record<string, unknown>).url).toBe("https://zkillboard.com/kill/11/");
+    expect((capturedEvidence[0] as Record<string, unknown>).timestamp).toBe("2026-02-11T00:00:00.000Z");
   });
 
   it("does not pull loss-module role evidence when ship type is unresolved", () => {

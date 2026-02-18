@@ -1,75 +1,24 @@
 import type { ZkillKillmail } from "./api/zkill";
 import type { FitCandidate, ShipPrediction } from "./intel";
+import { killmailZkillUrl } from "./links";
+import {
+  selectMostRecentPillEvidence,
+  type PillEvidenceCandidate,
+  type RolePillName
+} from "./pillEvidence";
 
-export type RolePill =
-  | "Long Point"
-  | "Web"
-  | "HIC"
-  | "Bubble"
-  | "Boosh"
-  | "Neut"
-  | "Cloaky"
-  | "Shield Logi"
-  | "Armor Logi";
+export type RolePill = RolePillName;
 
 export type RolePillEvidence = {
-  role: RolePill;
-  source: "hull" | "fit-module" | "loss-module";
-  details: string;
-  killmailId?: number;
+  pillName: RolePill;
+  causingModule: string;
+  fitId: string;
+  killmailId: number;
+  url: string;
+  timestamp: string;
 };
 
 const HIC_HULLS = new Set(["Devoter", "Onyx", "Broadsword", "Phobos"]);
-const DICTOR_HULLS = new Set(["Sabre", "Flycatcher", "Heretic", "Eris"]);
-const BOOSH_HULLS = new Set(["Stork", "Bifrost", "Pontifex", "Magus"]);
-// Derived from dogma effect names matching tackle range bonuses (scramb/disrupt + range).
-const LONG_POINT_BONUS_HULLS = new Set([
-  "Adrestia",
-  "Arazu",
-  "Ares",
-  "Barghest",
-  "Broadsword",
-  "Crow",
-  "Cybele",
-  "Devoter",
-  "Enforcer",
-  "Fiend",
-  "Garmur",
-  "Imp",
-  "Keres",
-  "Lachesis",
-  "Laelaps",
-  "Malediction",
-  "Marshal",
-  "Maulus Navy Issue",
-  "Moros Navy Issue",
-  "Onyx",
-  "Orthrus",
-  "Phobos",
-  "Python",
-  "Raiju",
-  "Shapash",
-  "Stiletto",
-  "Utu",
-  "Whiptail"
-]);
-const SHIELD_LOGI_HULLS = new Set([
-  "Basilisk",
-  "Scimitar",
-  "Scalpel",
-  "Kirin",
-  "Minokawa"
-]);
-const ARMOR_LOGI_HULLS = new Set([
-  "Guardian",
-  "Oneiros",
-  "Deacon",
-  "Thalia",
-  "Nestor",
-  "Lif",
-  "Apostle",
-  "Ninazu"
-]);
 
 const PILL_ORDER: RolePill[] = [
   "Long Point",
@@ -83,6 +32,14 @@ const PILL_ORDER: RolePill[] = [
   "Armor Logi"
 ];
 
+type ModuleEvidence = {
+  moduleName: string;
+  moduleNameLower: string;
+  source: "fit" | "loss";
+  killmailId?: number;
+  timestamp?: string;
+};
+
 export function deriveShipRolePills(params: {
   predictedShips: ShipPrediction[];
   fitCandidates: FitCandidate[];
@@ -94,99 +51,65 @@ export function deriveShipRolePills(params: {
   const out = new Map<string, RolePill[]>();
 
   for (const ship of params.predictedShips) {
-    const pills = new Set<RolePill>();
-    const evidence: RolePillEvidence[] = [];
     const moduleEvidence = collectShipModuleEvidence(ship, params);
-    const disruptorEvidence = moduleEvidence.allModules.find((entry) => isDisruptorModule(entry.moduleNameLower));
-    const webEvidence = moduleEvidence.allModules.find((entry) => entry.moduleNameLower.includes("stasis webifier"));
-    const bubbleEvidence = moduleEvidence.allModules.find((entry) => isBubbleModule(entry.moduleNameLower));
-    const booshEvidence = moduleEvidence.allModules.find((entry) =>
-      entry.moduleNameLower.includes("micro jump field generator")
+    const selectedByRole = new Map<RolePill, RolePillEvidence>();
+
+    const disruptorMatches = moduleEvidence.allModules.filter((entry) => isDisruptorModule(entry.moduleNameLower));
+    const bubbleMatches = moduleEvidence.allModules.filter((entry) => isBubbleModule(entry.moduleNameLower));
+
+    upsertSelectedRoleEvidence(selectedByRole, "Long Point", disruptorMatches, moduleEvidence.fitId);
+    upsertSelectedRoleEvidence(
+      selectedByRole,
+      "Web",
+      moduleEvidence.allModules.filter((entry) => entry.moduleNameLower.includes("stasis webifier")),
+      moduleEvidence.fitId
     );
-    const neutEvidence = moduleEvidence.allModules.find((entry) =>
-      entry.moduleNameLower.includes("energy neutralizer")
+    upsertSelectedRoleEvidence(
+      selectedByRole,
+      "HIC",
+      HIC_HULLS.has(ship.shipName)
+        ? [...bubbleMatches, ...disruptorMatches.filter((entry) => isFocusedPointModule(entry.moduleNameLower))]
+        : [],
+      moduleEvidence.fitId
     );
-    const cloakEvidence = moduleEvidence.fitModules.find((entry) => entry.moduleNameLower.includes("cloaking device"));
-    const shieldLogiEvidence = moduleEvidence.allModules.find((entry) =>
-      isShieldLogiModule(entry.moduleNameLower)
+    upsertSelectedRoleEvidence(selectedByRole, "Bubble", bubbleMatches, moduleEvidence.fitId);
+    upsertSelectedRoleEvidence(
+      selectedByRole,
+      "Boosh",
+      moduleEvidence.allModules.filter((entry) => entry.moduleNameLower.includes("micro jump field generator")),
+      moduleEvidence.fitId
     );
-    const armorLogiEvidence = moduleEvidence.allModules.find((entry) =>
-      isArmorLogiModule(entry.moduleNameLower)
+    upsertSelectedRoleEvidence(
+      selectedByRole,
+      "Neut",
+      moduleEvidence.allModules.filter((entry) => entry.moduleNameLower.includes("energy neutralizer")),
+      moduleEvidence.fitId
+    );
+    upsertSelectedRoleEvidence(
+      selectedByRole,
+      "Cloaky",
+      moduleEvidence.fitModules.filter((entry) => entry.moduleNameLower.includes("cloaking device")),
+      moduleEvidence.fitId
+    );
+    upsertSelectedRoleEvidence(
+      selectedByRole,
+      "Shield Logi",
+      moduleEvidence.allModules.filter((entry) => isShieldLogiModule(entry.moduleNameLower)),
+      moduleEvidence.fitId
+    );
+    upsertSelectedRoleEvidence(
+      selectedByRole,
+      "Armor Logi",
+      moduleEvidence.allModules.filter((entry) => isArmorLogiModule(entry.moduleNameLower)),
+      moduleEvidence.fitId
     );
 
-    if (disruptorEvidence || LONG_POINT_BONUS_HULLS.has(ship.shipName)) {
-      pills.add("Long Point");
-      evidence.push(
-        disruptorEvidence
-          ? moduleEvidenceToRoleEvidence("Long Point", disruptorEvidence)
-          : { role: "Long Point", source: "hull", details: `Hull bonus: ${ship.shipName}` }
-      );
-    }
-    if (webEvidence) {
-      pills.add("Web");
-      evidence.push(moduleEvidenceToRoleEvidence("Web", webEvidence));
-    }
-    if (HIC_HULLS.has(ship.shipName)) {
-      pills.add("HIC");
-      evidence.push({ role: "HIC", source: "hull", details: `HIC hull: ${ship.shipName}` });
-    }
-    if (DICTOR_HULLS.has(ship.shipName)) {
-      pills.add("Bubble");
-      evidence.push({ role: "Bubble", source: "hull", details: `Dictor hull: ${ship.shipName}` });
-    }
-    if (bubbleEvidence || HIC_HULLS.has(ship.shipName)) {
-      pills.add("Bubble");
-      evidence.push(
-        bubbleEvidence
-          ? moduleEvidenceToRoleEvidence("Bubble", bubbleEvidence)
-          : { role: "Bubble", source: "hull", details: `HIC hull: ${ship.shipName}` }
-      );
-    }
-    if (booshEvidence || BOOSH_HULLS.has(ship.shipName)) {
-      pills.add("Boosh");
-      evidence.push(
-        booshEvidence
-          ? moduleEvidenceToRoleEvidence("Boosh", booshEvidence)
-          : { role: "Boosh", source: "hull", details: `Boosh hull: ${ship.shipName}` }
-      );
-    }
-    if (neutEvidence) {
-      pills.add("Neut");
-      evidence.push(moduleEvidenceToRoleEvidence("Neut", neutEvidence));
-    }
-    if (cloakEvidence) {
-      pills.add("Cloaky");
-      evidence.push(moduleEvidenceToRoleEvidence("Cloaky", cloakEvidence));
-    }
-    if (shieldLogiEvidence || SHIELD_LOGI_HULLS.has(ship.shipName)) {
-      pills.add("Shield Logi");
-      evidence.push(
-        shieldLogiEvidence
-          ? moduleEvidenceToRoleEvidence("Shield Logi", shieldLogiEvidence)
-          : { role: "Shield Logi", source: "hull", details: `Shield logi hull: ${ship.shipName}` }
-      );
-    }
-    if (armorLogiEvidence || ARMOR_LOGI_HULLS.has(ship.shipName)) {
-      pills.add("Armor Logi");
-      evidence.push(
-        armorLogiEvidence
-          ? moduleEvidenceToRoleEvidence("Armor Logi", armorLogiEvidence)
-          : { role: "Armor Logi", source: "hull", details: `Armor logi hull: ${ship.shipName}` }
-      );
-    }
-
-    const normalized = normalizeRolePills(PILL_ORDER.filter((pill) => pills.has(pill)));
+    const normalized = normalizeRolePills(PILL_ORDER.filter((pill) => selectedByRole.has(pill)));
     out.set(ship.shipName, normalized);
-    params.onEvidence?.(
-      ship.shipName,
-      evidence.filter((entry, index) => normalized.includes(entry.role) && evidence.findIndex(
-        (candidate) =>
-          candidate.role === entry.role &&
-          candidate.source === entry.source &&
-          candidate.details === entry.details &&
-          candidate.killmailId === entry.killmailId
-      ) === index)
-    );
+    params.onEvidence?.(ship.shipName, normalized.flatMap((pill) => {
+      const evidence = selectedByRole.get(pill);
+      return evidence ? [evidence] : [];
+    }));
   }
 
   return out;
@@ -201,16 +124,48 @@ function collectShipModuleEvidence(
     namesByTypeId: Map<number, string>;
   }
 ): {
-  allModules: Array<{ moduleName: string; moduleNameLower: string; source: "fit" | "loss"; killmailId?: number }>;
-  fitModules: Array<{ moduleName: string; moduleNameLower: string; source: "fit" | "loss"; killmailId?: number }>;
+  allModules: ModuleEvidence[];
+  fitModules: ModuleEvidence[];
+  fitId?: string;
 } {
-  const allModules: Array<{ moduleName: string; moduleNameLower: string; source: "fit" | "loss"; killmailId?: number }> = [];
-  const fitModules: Array<{ moduleName: string; moduleNameLower: string; source: "fit" | "loss"; killmailId?: number }> = [];
+  const allModules: ModuleEvidence[] = [];
+  const fitModules: ModuleEvidence[] = [];
   const fit = resolveShipFitCandidate(ship, params.fitCandidates);
   if (!ship.shipTypeId || !fit) {
     return { allModules, fitModules };
   }
-  if (fit?.eftSections) {
+
+  const lossesByKillmailId = new Map<number, ZkillKillmail>();
+  for (const loss of params.losses) {
+    if (loss.victim.character_id !== params.characterId) {
+      continue;
+    }
+    if (loss.victim.ship_type_id !== ship.shipTypeId) {
+      continue;
+    }
+
+    lossesByKillmailId.set(loss.killmail_id, loss);
+    for (const item of loss.victim.items ?? []) {
+      if (!isFittedItemFlag(item.flag)) {
+        continue;
+      }
+      const itemName = params.namesByTypeId.get(item.item_type_id);
+      if (!itemName) {
+        continue;
+      }
+      allModules.push({
+        moduleName: itemName,
+        moduleNameLower: itemName.toLowerCase(),
+        source: "loss",
+        killmailId: loss.killmail_id,
+        timestamp: loss.killmail_time
+      });
+    }
+  }
+
+  const fitSourceKillmailId = fit.sourceLossKillmailId;
+  const fitSourceTimestamp = fitSourceKillmailId ? lossesByKillmailId.get(fitSourceKillmailId)?.killmail_time : undefined;
+  if (fit.eftSections) {
     const fitList = [
       ...fit.eftSections.high,
       ...fit.eftSections.mid,
@@ -219,36 +174,19 @@ function collectShipModuleEvidence(
       ...fit.eftSections.other
     ];
     for (const moduleName of fitList) {
-      const entry = { moduleName, moduleNameLower: moduleName.toLowerCase(), source: "fit" as const };
+      const entry: ModuleEvidence = {
+        moduleName,
+        moduleNameLower: moduleName.toLowerCase(),
+        source: "fit",
+        killmailId: fitSourceKillmailId,
+        timestamp: fitSourceTimestamp
+      };
       fitModules.push(entry);
       allModules.push(entry);
     }
   }
 
-  for (const loss of params.losses) {
-    if (loss.victim.character_id !== params.characterId) {
-      continue;
-    }
-    if (loss.victim.ship_type_id !== ship.shipTypeId) {
-      continue;
-    }
-    for (const item of loss.victim.items ?? []) {
-      if (!isFittedItemFlag(item.flag)) {
-        continue;
-      }
-      const itemName = params.namesByTypeId.get(item.item_type_id);
-      if (itemName) {
-        allModules.push({
-          moduleName: itemName,
-          moduleNameLower: itemName.toLowerCase(),
-          source: "loss",
-          killmailId: loss.killmail_id
-        });
-      }
-    }
-  }
-
-  return { allModules, fitModules };
+  return { allModules, fitModules, fitId: formatFitId(fit) };
 }
 
 function resolveShipFitCandidate(ship: ShipPrediction, fitCandidates: FitCandidate[]): FitCandidate | undefined {
@@ -258,23 +196,43 @@ function resolveShipFitCandidate(ship: ShipPrediction, fitCandidates: FitCandida
   return fitCandidates.find((entry) => entry.shipTypeId === ship.shipTypeId);
 }
 
-function moduleEvidenceToRoleEvidence(
+function upsertSelectedRoleEvidence(
+  selectedByRole: Map<RolePill, RolePillEvidence>,
   role: RolePill,
-  entry: { moduleName: string; source: "fit" | "loss"; killmailId?: number }
-): RolePillEvidence {
-  if (entry.source === "loss") {
-    return {
-      role,
-      source: "loss-module",
-      details: entry.moduleName,
-      killmailId: entry.killmailId
-    };
+  modules: ModuleEvidence[],
+  fitId: string | undefined
+): void {
+  const selected = selectMostRecentPillEvidence(modules.map((entry) => toPillEvidenceCandidate(role, entry, fitId)));
+  if (!selected) {
+    return;
   }
+  selectedByRole.set(role, {
+    pillName: role,
+    causingModule: selected.causingModule,
+    fitId: selected.fitId,
+    killmailId: selected.killmailId,
+    url: selected.url,
+    timestamp: selected.timestamp
+  });
+}
+
+function toPillEvidenceCandidate(
+  role: RolePill,
+  entry: ModuleEvidence,
+  fitId: string | undefined
+): PillEvidenceCandidate {
   return {
-    role,
-    source: "fit-module",
-    details: entry.moduleName
+    pillName: role,
+    causingModule: entry.moduleName,
+    fitId: fitId ?? "",
+    killmailId: entry.killmailId,
+    url: entry.killmailId ? killmailZkillUrl(entry.killmailId) : undefined,
+    timestamp: entry.timestamp
   };
+}
+
+function formatFitId(fit: FitCandidate): string {
+  return `${fit.shipTypeId}:${fit.fitLabel}`;
 }
 
 function isFittedItemFlag(flag?: number): boolean {
@@ -294,6 +252,10 @@ function isDisruptorModule(name: string): boolean {
     name.includes("focused warp disruption") ||
     name.includes("infinite point")
   );
+}
+
+function isFocusedPointModule(name: string): boolean {
+  return name.includes("focused warp disruption") || name.includes("infinite point");
 }
 
 function isBubbleModule(name: string): boolean {

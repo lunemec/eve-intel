@@ -151,10 +151,12 @@ export async function recomputeDerivedInference(params: {
         pilot: params.row.parsedEntry.pilotName,
         ship: shipName,
         evidence: evidence.map((row) => ({
-          role: row.role,
-          source: row.source,
-          moduleOrReason: row.details,
-          killmailId: row.killmailId
+          pillName: row.pillName,
+          causingModule: row.causingModule,
+          fitId: row.fitId,
+          killmailId: row.killmailId,
+          zkillUrl: row.url,
+          timestamp: row.timestamp
         }))
       });
     }
