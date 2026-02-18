@@ -2,6 +2,10 @@
 
 ## Patterns
 
+### mem-1771416900-5fd7
+> zKill CLI orchestration is now isolated in scripts/lib/zkill-fit-fetch-cli/cli.mjs via runFetchZkillFitsCli with injectable parse/pipeline/log deps, while scripts/fetch-zkill-fits.mjs is import-safe main-wrapper wiring.
+<!-- tags: cli, zkill, testing | created: 2026-02-18 -->
+
 ### mem-1771416267-8f12
 > zKill CLI orchestration now lives in scripts/lib/zkill-fit-fetch-cli/pipeline.mjs via runFetchZkillFitPipeline, composing pagination->ESI hydration->normalization->dedupe->artifact writing with structured skip-and-log errors; npm alias is zkill:fits:fetch.
 <!-- tags: cli, zkill, testing, error-handling | created: 2026-02-18 -->
@@ -33,6 +37,14 @@
 ## Decisions
 
 ## Fixes
+
+### mem-1771416806-f3bf
+> failure: cmd=npx vitest run scripts/tests/fetch-zkill-fits.cli.test.mjs, exit=1, error=missing ../lib/zkill-fit-fetch-cli/cli.mjs (expected red gate), next=implement dedicated CLI orchestration module and wire import-safe script entrypoint
+<!-- tags: testing, error-handling, cli, zkill | created: 2026-02-18 -->
+
+### mem-1771416673-f4c8
+> failure: cmd=cat .ralph/agent/scratchpad.md, exit=1, error=No such file or directory, next=create .ralph/agent/scratchpad.md before reading
+<!-- tags: tooling, error-handling | created: 2026-02-18 -->
 
 ### mem-1771416282-4a08
 > failure: cmd=cat >> .ralph/agent/scratchpad.md <<EOF ... (with backticks), exit=127, error=backticks in unquoted heredoc triggered shell command substitution, next=use quoted heredoc (<<'EOF') or avoid backticks when appending scratchpad
@@ -83,6 +95,10 @@
 <!-- tags: tooling, error-handling | created: 2026-02-18 -->
 
 ## Context
+
+### mem-1771417042-fa55
+> v0.2.9 changelog boundary was finalized to git range 96a7691..41d5f0a after final zKill CLI orchestration coverage landed.
+<!-- tags: changelog, release, cli | created: 2026-02-18 -->
 
 ### mem-1771416444-e8ea
 > v0.2.9 changelog boundary now anchored to git history range 96a7691..0dac499 (v0.2.8 marker to zKill CLI integration head) with concise user-facing summaries.
