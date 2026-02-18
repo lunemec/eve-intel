@@ -9,6 +9,7 @@ All notable changes to this project are documented in this file.
 - Added fit normalization that includes both destroyed and dropped fitted modules with deterministic slot-family mapping.
 - Added deterministic dedupe by primary `killmailId` and secondary canonical `fitHash`, preserving keep-first stream order.
 - Added deterministic artifact outputs: fit-record JSONL, structured-error JSONL, and manifest JSON with counts and `nextBeforeKillmailId`.
+- Added a dedicated zKill CLI orchestration module plus import-safe script entrypoint wiring, with regression coverage for help/usage/success/fatal exit behavior.
 - Added unit and integration regression coverage across args, pagination, retry, normalization, dedupe, artifacts, and full pipeline orchestration.
 - Improved zKill cache refresh/revalidation behavior and UI reliability (explicit-ship refresh correctness, reduced background flicker, and unknown-fit role-pill handling fixes).
 

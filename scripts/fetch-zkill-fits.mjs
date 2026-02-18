@@ -1,56 +1,19 @@
 #!/usr/bin/env node
-import {
-  FetchZkillFitsCliUsageError,
-  formatFetchZkillFitsUsage,
-  parseFetchZkillFitsArgs
-} from "./lib/zkill-fit-fetch-cli/args.mjs";
-import { runFetchZkillFitPipeline } from "./lib/zkill-fit-fetch-cli/pipeline.mjs";
+import { pathToFileURL } from "node:url";
+import { runFetchZkillFitsCli } from "./lib/zkill-fit-fetch-cli/cli.mjs";
 
-export async function runFetchZkillFitsCli(argv) {
-  let parsed;
-  try {
-    parsed = parseFetchZkillFitsArgs(argv);
-  } catch (error) {
-    if (error instanceof FetchZkillFitsCliUsageError) {
-      console.error(error.message);
-      console.error("");
-      console.error(formatFetchZkillFitsUsage());
-      return 2;
-    }
-    throw error;
-  }
+export { runFetchZkillFitsCli };
 
-  if (parsed.help) {
-    console.log(formatFetchZkillFitsUsage());
-    return 0;
-  }
-
-  try {
-    const result = await runFetchZkillFitPipeline(parsed);
-    console.log(
-      `[fetch-zkill-fits] records=${result.manifest.output.recordsWritten} duplicates=${result.manifest.output.duplicatesSkipped} errors=${result.manifest.output.errorsLogged}`
-    );
-    return 0;
-  } catch (error) {
-    console.error(`[fetch-zkill-fits] fatal: ${formatRuntimeError(error)}`);
-    return 1;
+if (isMainModule(import.meta.url, process.argv[1])) {
+  const exitCode = await runFetchZkillFitsCli(process.argv.slice(2));
+  if (exitCode !== 0) {
+    process.exit(exitCode);
   }
 }
 
-function formatRuntimeError(error) {
-  if (!error || typeof error !== "object") {
-    return "Unknown error";
+function isMainModule(moduleUrl, entryPath) {
+  if (!entryPath || typeof entryPath !== "string") {
+    return false;
   }
-
-  const message = typeof error.message === "string" && error.message.trim() ? error.message : "";
-  if (!message) {
-    return "Unknown error";
-  }
-
-  return message;
-}
-
-const exitCode = await runFetchZkillFitsCli(process.argv.slice(2));
-if (exitCode !== 0) {
-  process.exit(exitCode);
+  return moduleUrl === pathToFileURL(entryPath).href;
 }
