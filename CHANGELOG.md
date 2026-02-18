@@ -4,6 +4,7 @@ All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
 - Added a repository artifact-hygiene gate (`scripts/tests/repository-artifact-hygiene.test.mjs`), removed tracked `scripts/__pycache__/*.pyc` bytecode artifacts, and added a narrow `.gitignore` rule for `scripts/__pycache__/`.
+- Added a Dogma engine type-export hygiene gate (`scripts/tests/dogma-engine-type-export-hygiene.test.mjs`) and removed unused exported types (`EngineContext`, `OffenseStageInput`, `DefenseStageInput`) from `src/lib/dogma/engine/types.ts`, retaining only the actively consumed `EngineTrace` export.
 - Switched Triglavian disintegrator offense modeling to always use module maximum spool multipliers for displayed DPS (instead of base-cycle disintegrator DPS), and added regression coverage for synthetic disintegrator max-spool math plus updated Nergal envelope assertions.
 - Completed full T3 cruiser subsystem parity coverage by adding pyfa-referenced manual fits for previously uncovered Legion/Loki/Proteus/Tengu subsystem variants, adding a strict coverage test that requires every category-32 T3 subsystem to appear in referenced corpus fits, and fixing missing Amarr/Gallente defensive armor-HP subsystem multiplier handling that caused EHP underreporting on augmented-plating profiles.
 - Fixed Tengu offensive-subsystem kinetic missile parity by handling `subsystemBonusCaldariOffensive2MissileLauncherKineticDamage` in Dogma, and closed the regression coverage gap by adding a pyfa-referenced kinetic HAM Tengu fit (`manual-tengu-paomo1-kinetic-ham-1`) to corpus, golden IDs, and strict cruiser follow-up checks.
@@ -41,7 +42,7 @@ All notable changes to this project are documented in this file.
 
 Boundary source:
 - Previous version marker commit `96a7691` (`v0.2.8`) used as lower boundary because no `v0.2.9` tag exists yet.
-- Summarized from history in range `96a7691..bfdf636`.
+- Summarized from history in range `96a7691..ace57b7`.
 
 ## v0.2.8 - 2026-02-18
 - Added a major combat-capability parity workflow: fit corpus data, reference sync scripts, pyfa adapter tooling, and parity reporting artifacts.
