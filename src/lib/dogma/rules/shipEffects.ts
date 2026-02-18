@@ -87,6 +87,9 @@ export function armorHpBonusMultiplier(ship: DogmaTypeEntry | undefined): number
 }
 
 export function shieldHpBonusMultiplier(ship: DogmaTypeEntry | undefined): number {
+  if (hasByExact(ship, "subsystemBonusCaldariDefensiveShieldHP")) {
+    return 1.5;
+  }
   if (hasByExact(ship, "shipBonusShieldHpCF2")) {
     return 1.375;
   }

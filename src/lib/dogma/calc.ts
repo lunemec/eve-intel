@@ -139,14 +139,10 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
   dps *= heatFactor;
   alpha *= heatFactor;
 
-  const bastionHigh = high.filter((mod) =>
-    hasAnyEffect(index, getType(index, mod.typeId), "moduleBonusBastionModule")
-  );
-  const commandBurstHigh = high.filter((mod) => /command burst/i.test(mod.name));
   const defense = applyDefenseModifiers(
     index,
     effectiveShip,
-    [...bastionHigh, ...commandBurstHigh, ...mid, ...low, ...rig],
+    [...high, ...mid, ...low, ...rig],
     assumptions
   );
   const speedAndSig = estimateSpeedAndSignature(index, effectiveShip, mid, low, rig, assumptions);
@@ -281,7 +277,7 @@ function estimateWeapon(
   const disintegratorSpoolMultiplier = estimateDisintegratorSpoolMultiplier(index, type, ship, module.name, assumptions);
   const cycleWithSkills =
     cycleSeconds *
-    getWeaponRofSkillMultiplier(kind, family, isSmartbomb) *
+    getWeaponRofSkillMultiplier(kind, family, isSmartbomb, module.name) *
     shipBonus.rofMultiplier *
     launcherClass.rofMultiplier *
     getTargetedWeaponRofAdjustment(ship, family, module.name, module.chargeName) *
@@ -815,6 +811,9 @@ function getWeaponDamageSkillMultiplier(
   if (isSmartbomb) {
     return 1;
   }
+  if (kind === "turret" && name.toLowerCase().includes("civilian")) {
+    return SURGICAL_STRIKE_DAMAGE_MULTIPLIER;
+  }
   if (kind !== "turret") {
     return kind === "missile" ? MISSILE_DAMAGE_SKILL_MULTIPLIER : 1;
   }
@@ -828,13 +827,17 @@ function getWeaponDamageSkillMultiplier(
 function getWeaponRofSkillMultiplier(
   kind: "turret" | "missile" | "other",
   family: WeaponFamily,
-  isSmartbomb?: boolean
+  isSmartbomb?: boolean,
+  moduleName?: string
 ): number {
   if (isSmartbomb) {
     return 0.75;
   }
   if (kind === "missile") {
     return MISSILE_ROF_MULTIPLIER;
+  }
+  if (kind === "turret" && typeof moduleName === "string" && moduleName.toLowerCase().includes("civilian")) {
+    return GUNNERY_ROF_MULTIPLIER;
   }
   if (family === "projectile" || family === "disintegrator") {
     return GUNNERY_ROF_MULTIPLIER;
@@ -1057,12 +1060,19 @@ function applyDefenseModifiers(
       : 1.5
     : 1;
   let hasReactiveArmorHardener = false;
+  let hasPolarizedResistanceKiller = false;
   let myrmidonDamageControlCount = 0;
 
   for (const mod of modules) {
     const type = getType(index, mod.typeId);
     if (!type) {
       continue;
+    }
+    if (
+      hasAnyEffect(index, type, "resistanceKillerHullAll", "resistanceKillerShieldArmorAll") ||
+      (getAttrResolved(index, type, "Global Resistance Reduction") ?? 0) >= 100
+    ) {
+      hasPolarizedResistanceKiller = true;
     }
     applyCommandBurstDefenseBonus(index, mod, hp, resonance, assumptions);
     if (Number(type.categoryId ?? 0) === 32 || hasAnyEffect(index, type, "subSystem")) {
@@ -1266,14 +1276,12 @@ function applyDefenseModifiers(
     }
   }
   if (hasReactiveArmorHardener) {
-    const reactiveProfile = ship?.typeId === 24700
-      ? { em: 0.15, therm: 0.15, kin: 0.15, exp: 0.15 }
-      : distributeReactiveArmorProfile(resonance.armor);
+    const reactiveProfile = buildReactiveArmorProfile(resonance.armor);
     resonance.armor.em *= 1 - reactiveProfile.em;
     resonance.armor.therm *= 1 - reactiveProfile.therm;
     resonance.armor.kin *= 1 - reactiveProfile.kin;
     resonance.armor.exp *= 1 - reactiveProfile.exp;
-    assumptions.push("Applied adaptive Reactive Armor Hardener profile assumption.");
+    assumptions.push("Applied baseline Reactive Armor Hardener profile with weak-type bias.");
     if (ship?.typeId === 24700) {
       resonance.armor.em = 0.31875;
       resonance.armor.therm = 0.3765601328353627;
@@ -1281,6 +1289,21 @@ function applyDefenseModifiers(
       resonance.armor.exp = 0.3668760012149748;
       assumptions.push("Applied Myrmidon reactive armor resonance parity profile.");
     }
+  }
+  if (hasPolarizedResistanceKiller) {
+    resonance.shield.em = 1;
+    resonance.shield.therm = 1;
+    resonance.shield.kin = 1;
+    resonance.shield.exp = 1;
+    resonance.armor.em = 1;
+    resonance.armor.therm = 1;
+    resonance.armor.kin = 1;
+    resonance.armor.exp = 1;
+    resonance.hull.em = 1;
+    resonance.hull.therm = 1;
+    resonance.hull.kin = 1;
+    resonance.hull.exp = 1;
+    assumptions.push("Applied polarized resistance-killer profile (all-layer resists set to zero).");
   }
   if (ship?.typeId === 24700 && hasReactiveArmorHardener) {
     hp.shield *= 0.88;
@@ -1390,54 +1413,27 @@ function isArmorPlateBonusModifier(effectTags: string): boolean {
   return effectTags.includes("armorhpbonusadd");
 }
 
-function distributeReactiveArmorProfile(armor: { em: number; therm: number; kin: number; exp: number }): DamageProfile {
-  const values = { ...armor };
+function buildReactiveArmorProfile(armorResonance: {
+  em: number;
+  therm: number;
+  kin: number;
+  exp: number;
+}): DamageProfile {
+  const profile: DamageProfile = { em: 0.15, therm: 0.15, kin: 0.15, exp: 0.15 };
   const keys: Array<keyof DamageProfile> = ["em", "therm", "kin", "exp"];
-  const totalBudget = 0.6;
-  const capPerType = 0.6;
-  const maxValue = Math.max(...keys.map((key) => values[key]));
-  if (!Number.isFinite(maxValue) || maxValue <= 0) {
-    return { ...DEFAULT_DAMAGE };
+  const sortedByWeakness = [...keys]
+    .sort((left, right) => {
+      const delta = armorResonance[right] - armorResonance[left];
+      return delta !== 0 ? delta : keys.indexOf(left) - keys.indexOf(right);
+    });
+
+  const resonanceSpread = armorResonance[sortedByWeakness[0]] - armorResonance[sortedByWeakness[sortedByWeakness.length - 1]];
+  if (resonanceSpread < 0.6) {
+    return profile;
   }
 
-  let lo = 0;
-  let hi = maxValue;
-  for (let i = 0; i < 48; i += 1) {
-    const mid = (lo + hi) / 2;
-    const spent = keys.reduce((sum, key) => {
-      const v = values[key];
-      if (!Number.isFinite(v) || v <= 0) {
-        return sum;
-      }
-      const raw = 1 - mid / v;
-      const clamped = Math.max(0, Math.min(capPerType, raw));
-      return sum + clamped;
-    }, 0);
-    if (spent > totalBudget) {
-      lo = mid;
-    } else {
-      hi = mid;
-    }
-  }
-
-  const target = (lo + hi) / 2;
-  const profile: DamageProfile = { ...DEFAULT_DAMAGE };
-  for (const key of keys) {
-    const v = values[key];
-    if (!Number.isFinite(v) || v <= 0) {
-      profile[key] = 0;
-      continue;
-    }
-    const raw = 1 - target / v;
-    profile[key] = Math.max(0, Math.min(capPerType, raw));
-  }
-
-  const total = keys.reduce((sum, key) => sum + profile[key], 0);
-  if (total > 0 && total > totalBudget) {
-    const scale = totalBudget / total;
-    for (const key of keys) {
-      profile[key] *= scale;
-    }
+  for (const key of sortedByWeakness.slice(0, 2)) {
+    profile[key] = Math.min(0.6, profile[key] + 0.12);
   }
 
   return profile;

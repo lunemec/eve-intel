@@ -689,8 +689,167 @@ describe("dogma calc", () => {
       }
     });
 
-    expect(withReactive.resists.armor.em).toBeLessThanOrEqual(membraneOnly.resists.armor.em + 0.02);
-    expect(withReactive.resists.armor.exp).toBeGreaterThan(membraneOnly.resists.armor.exp + 0.18);
+    const armorKeys: Array<keyof typeof withReactive.resists.armor> = ["em", "therm", "kin", "exp"];
+    const resonance = {
+      em: 1 - membraneOnly.resists.armor.em,
+      therm: 1 - membraneOnly.resists.armor.therm,
+      kin: 1 - membraneOnly.resists.armor.kin,
+      exp: 1 - membraneOnly.resists.armor.exp
+    };
+    const profile: Record<keyof typeof withReactive.resists.armor, number> = {
+      em: 0.15,
+      therm: 0.15,
+      kin: 0.15,
+      exp: 0.15
+    };
+    const weakest = [...armorKeys]
+      .sort((left, right) => {
+        const delta = resonance[right] - resonance[left];
+        return delta !== 0 ? delta : armorKeys.indexOf(left) - armorKeys.indexOf(right);
+      });
+    const spread = resonance[weakest[0]] - resonance[weakest[weakest.length - 1]];
+    if (spread >= 0.6) {
+      for (const key of weakest.slice(0, 2)) {
+        profile[key] += 0.12;
+      }
+    }
+
+    for (const key of armorKeys) {
+      const expected = 1 - (1 - membraneOnly.resists.armor[key]) * (1 - profile[key]);
+      expect(withReactive.resists.armor[key]).toBeCloseTo(expected, 6);
+    }
+  });
+
+  it("applies polarized resistance-killer effects across shield, armor, and hull", () => {
+    const pack: DogmaPack = {
+      ...basePack,
+      types: [
+        ...basePack.types,
+        {
+          typeId: 7201,
+          groupId: 1,
+          categoryId: 1,
+          name: "Polarized Test Ship",
+          attrs: {
+            shieldCapacity: 3000,
+            armorHP: 2500,
+            structureHP: 2200,
+            shieldEmDamageResonance: 1,
+            shieldThermalDamageResonance: 0.8,
+            shieldKineticDamageResonance: 0.6,
+            shieldExplosiveDamageResonance: 0.5,
+            armorEmDamageResonance: 0.5,
+            armorThermalDamageResonance: 0.65,
+            armorKineticDamageResonance: 0.75,
+            armorExplosiveDamageResonance: 0.9,
+            emDamageResonance: 0.67,
+            thermalDamageResonance: 0.67,
+            kineticDamageResonance: 0.67,
+            explosiveDamageResonance: 0.67
+          },
+          effects: []
+        },
+        {
+          typeId: 7202,
+          groupId: 771,
+          categoryId: 7,
+          name: "Polarized Test Launcher",
+          attrs: {
+            "Global Resistance Reduction": 100
+          },
+          effects: ["hiPower", "resistanceKillerHullAll", "resistanceKillerShieldArmorAll"]
+        }
+      ],
+      typeCount: basePack.types.length + 2
+    };
+    const index = buildDogmaIndex(pack);
+    const metrics = calculateShipCombatMetrics(index, {
+      shipTypeId: 7201,
+      slots: {
+        ...emptySlots,
+        high: [{ typeId: 7202, name: "Polarized Test Launcher" }]
+      }
+    });
+
+    expect(metrics.resists.shield.em).toBeCloseTo(0, 6);
+    expect(metrics.resists.shield.therm).toBeCloseTo(0, 6);
+    expect(metrics.resists.shield.kin).toBeCloseTo(0, 6);
+    expect(metrics.resists.shield.exp).toBeCloseTo(0, 6);
+    expect(metrics.resists.armor.em).toBeCloseTo(0, 6);
+    expect(metrics.resists.armor.therm).toBeCloseTo(0, 6);
+    expect(metrics.resists.armor.kin).toBeCloseTo(0, 6);
+    expect(metrics.resists.armor.exp).toBeCloseTo(0, 6);
+    expect(metrics.resists.hull.em).toBeCloseTo(0, 6);
+    expect(metrics.resists.hull.therm).toBeCloseTo(0, 6);
+    expect(metrics.resists.hull.kin).toBeCloseTo(0, 6);
+    expect(metrics.resists.hull.exp).toBeCloseTo(0, 6);
+  });
+
+  it("does not apply non-surgical weapon skill multipliers to civilian turrets", () => {
+    const pack: DogmaPack = {
+      ...basePack,
+      types: [
+        ...basePack.types,
+        {
+          typeId: 7203,
+          groupId: 53,
+          categoryId: 7,
+          name: "Civilian Gatling Railgun",
+          attrs: {
+            "Damage Modifier": 1.25,
+            "Rate of fire": 2000,
+            "EM damage": 0,
+            "Thermal damage": 2,
+            "Kinetic damage": 3,
+            "Explosive damage": 0
+          },
+          effects: ["targetAttack", "hiPower", "online", "turretFitted"]
+        }
+      ],
+      typeCount: basePack.types.length + 1
+    };
+    const index = buildDogmaIndex(pack);
+    const metrics = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: {
+        ...emptySlots,
+        high: [{ typeId: 7203, name: "Civilian Gatling Railgun" }]
+      }
+    });
+
+    expect(metrics.alpha).toBeCloseTo(7.2, 1);
+  });
+
+  it("applies Caldari defensive subsystem shield HP effect to fit defense profile", () => {
+    const pack: DogmaPack = {
+      ...basePack,
+      types: [
+        ...basePack.types,
+        {
+          typeId: 7204,
+          groupId: 954,
+          categoryId: 32,
+          name: "Tengu Defensive - Supplemental Screening",
+          attrs: {},
+          effects: ["subSystem", "subsystemBonusCaldariDefensiveShieldHP"]
+        }
+      ],
+      typeCount: basePack.types.length + 1
+    };
+    const index = buildDogmaIndex(pack);
+    const base = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: { ...emptySlots }
+    });
+    const withSubsystem = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: {
+        ...emptySlots,
+        other: [{ typeId: 7204, name: "Tengu Defensive - Supplemental Screening" }]
+      }
+    });
+
+    expect(withSubsystem.ehp).toBeGreaterThan(base.ehp * 1.12);
   });
 
   it("applies marauder shield bonus as EM-only shield resist", () => {
