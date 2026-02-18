@@ -3,35 +3,18 @@
 All notable changes to this project are documented in this file.
 
 ## v0.2.9 - 2026-02-18
-- Added initial `zKill` fit-fetch CLI contract scaffolding with strict argument validation (`--ship-type-ids`, `--output`) and default `--max-records=200`.
-- Added deterministic ship-type pagination candidate collection for the zKill fit-fetch CLI, including newest-to-oldest global ordering, strict `--before-killmail-id` filtering, and max-record stop behavior.
-- Added a reusable zKill fit-fetch retry utility with header-first backoff (`Retry-After`/rate-limit reset headers), exponential fallback delays, and request-timeout-aware retry caps.
-- Added zKill fit normalization for fitted items that maps slot flags (high/mid/low/rig/subsystem), includes both dropped+destroyed module quantities, and skips malformed/non-fitted rows safely.
-- Added deterministic zKill fit dedupe utilities that keep first-seen records in stream order while skipping duplicates by `killmailId` and canonicalized `fitHash`.
-- Added zKill fit artifact writers for JSONL fit records, optional structured-error JSONL output, and run manifest JSON with deterministic counts plus `nextBeforeKillmailId` cursor derivation.
-- Added end-to-end zKill fit-fetch pipeline orchestration that composes ship-type pagination, retry-backed zKill/ESI hydration, slot normalization, deterministic dedupe, and artifact emission in one deterministic flow.
-- Wired `scripts/fetch-zkill-fits.mjs` to execute the integrated pipeline with structured fatal exit handling and machine-readable success summaries.
-- Added npm CLI wiring via `npm run zkill:fits:fetch` for agent-friendly invocation of the fit-fetch pipeline.
-- Added regression tests for zKill pagination ordering, cursor enforcement, deterministic tie handling, and no-extra-page fetch behavior at max-record cutoff.
-- Added retry/backoff regression coverage for header-precedence delays, fallback progression, max-attempt termination, and timeout-abort handling.
-- Added normalization regression coverage for mixed dropped/destroyed fitted-module aggregation and subsystem slot extraction behavior.
-- Added dedupe regression coverage for duplicate killmail IDs, equivalent canonical-fit collisions, and stable keep-first output ordering.
-- Added artifact regression coverage for record/error schema serialization, deterministic JSONL record ordering, and manifest count/cursor correctness.
-- Added integration regression coverage for full mocked run behavior (`args -> pagination -> hydration -> normalize -> dedupe -> artifacts`) and npm-script wiring.
-- Added parser regression coverage for required flags, numeric ship type parsing, cursor parsing, and invalid max-record rejection.
-- Extended `vitest` include patterns to run script-level `.test.mjs` coverage under `scripts/`.
-- Updated zKill list caching to support conditional revalidation metadata (`ETag`/`Last-Modified`) and optional forced network refresh for page-1 checks.
-- Added background pilot refresh improvements: 30s revalidation cadence, explicit-ship mismatch detection against inferred top ship, and redraw only when page-1 kill/loss heads change.
-- Fixed explicit-ship paste updates to rerun pipeline immediately even when zKill page-1 is unchanged (`304`), so explicit ships (for example `Freya Rage (Viator)`) reliably become `100%` predictions.
-- Expanded cache/pipeline coverage with regression tests for forced network fetch and explicit-mismatch-triggered refresh behavior.
-- Added debug observability for all page-1 zKill refresh checks (request/response validator metadata, status, and 304 signal), and a debug-panel copy control for quick clipboard export of current logs.
-- Fixed background refresh flicker by keeping existing pilot card content visible during background reruns until terminal `ready`/`error` updates arrive.
-- Fixed role pill inference on `[Unknown Fit]` ships to suppress module-derived pills until a fit is known, while keeping hull-derived roles and preventing unresolved-ship evidence leakage.
-- Expanded hull-based `Long Point` role coverage to include all tackle-range bonused hulls (including `Orthrus`) with new role regression tests.
+- Added an end-to-end zKill fit-fetch CLI (`npm run zkill:fits:fetch`) with strict argument validation and default `--max-records 200`.
+- Added deterministic ship-type pagination/merge ordering, strict `--before-killmail-id` cutoff behavior, and max-record short-circuiting.
+- Added header-aware retry/backoff (`Retry-After` and rate-limit headers first, exponential fallback second) with timeout-aware retry handling.
+- Added fit normalization that includes both destroyed and dropped fitted modules with deterministic slot-family mapping.
+- Added deterministic dedupe by primary `killmailId` and secondary canonical `fitHash`, preserving keep-first stream order.
+- Added deterministic artifact outputs: fit-record JSONL, structured-error JSONL, and manifest JSON with counts and `nextBeforeKillmailId`.
+- Added unit and integration regression coverage across args, pagination, retry, normalization, dedupe, artifacts, and full pipeline orchestration.
+- Improved zKill cache refresh/revalidation behavior and UI reliability (explicit-ship refresh correctness, reduced background flicker, and unknown-fit role-pill handling fixes).
 
 Boundary source:
-- Version marker commit `55f7c4c` (`Cache`) used as release boundary.
-- Summarized from history in range `96a7691..55f7c4c`.
+- Previous version marker commit `96a7691` (`v0.2.8`) used as lower boundary because no `v0.2.9` tag exists yet.
+- Summarized from history in range `96a7691..0dac499`.
 
 ## v0.2.8 - 2026-02-18
 - Added a major combat-capability parity workflow: fit corpus data, reference sync scripts, pyfa adapter tooling, and parity reporting artifacts.
