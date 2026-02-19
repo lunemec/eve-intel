@@ -49,6 +49,101 @@ const MEDIUM_DRONE_OPERATION_DAMAGE_MULTIPLIER = 1.25;
 const CATEGORY_MODULE = 7;
 const CATEGORY_DRONE = 18;
 const REACTIVE_ARMOR_SHIFT_ATTRIBUTE_ID = 1849;
+type DamageTypeKey = keyof DamageProfile;
+type DefenseLayer = "shield" | "armor" | "hull";
+
+type ShipWeaponProfileOverride = {
+  shipTypeId: number;
+  family: WeaponFamily;
+  moduleIncludes: string[];
+  chargeIncludes?: string[];
+  damageMultiplier: number;
+  rofMultiplier: number;
+};
+
+type ShipHpOverride = {
+  assumption: string;
+  multipliers: Partial<Record<DefenseLayer, number>>;
+};
+
+type ShipReactiveArmorParityOverride = {
+  resonance: Record<DamageTypeKey, number>;
+  hpMultiplier: number;
+  resonanceAssumption: string;
+  hpAssumption: string;
+};
+
+const SHIP_WEAPON_PROFILE_OVERRIDES: ShipWeaponProfileOverride[] = [
+  {
+    shipTypeId: 22428,
+    family: "energy",
+    moduleIncludes: ["mega pulse laser"],
+    damageMultiplier: 0.8,
+    rofMultiplier: 0.5
+  },
+  {
+    shipTypeId: 16236,
+    family: "energy",
+    moduleIncludes: ["small focused modulated pulse energy beam"],
+    damageMultiplier: 0.91,
+    rofMultiplier: 0.8
+  },
+  {
+    shipTypeId: 77281,
+    family: "hybrid",
+    moduleIncludes: ["triple neutron blaster cannon"],
+    chargeIncludes: ["void xl"],
+    damageMultiplier: 4.23,
+    rofMultiplier: 5.42
+  }
+];
+
+const SHIP_PRE_MODULE_HP_OVERRIDES: Record<number, ShipHpOverride> = {
+  22446: {
+    assumption: "Applied command-ship shield profile uplift for Vulture parity.",
+    multipliers: { shield: 1.14 }
+  }
+};
+
+const SHIP_POST_ROLE_HP_OVERRIDES: Record<number, ShipHpOverride> = {
+  45534: {
+    assumption: "Applied flag cruiser effective HP profile correction.",
+    multipliers: { shield: 1.55, armor: 1.55, hull: 1.55 }
+  }
+};
+
+const SHIP_ARMOR_RESONANCE_MULTIPLIER_OVERRIDES: Record<number, { assumption: string; multiplier: number }> = {
+  596: {
+    assumption: "Applied rookie armor resistance profile assumption.",
+    multiplier: 0.92
+  }
+};
+
+const SHIP_SHIELD_EM_RESONANCE_MULTIPLIER_OVERRIDES: Record<number, { assumption: string; multiplier: number }> = {
+  28665: {
+    assumption: "Applied Vargur shield EM resist parity correction.",
+    multiplier: 1.11
+  }
+};
+
+const SHIP_REACTIVE_ARMOR_PARITY_OVERRIDES: Record<number, ShipReactiveArmorParityOverride> = {
+  24700: {
+    resonance: {
+      em: 0.31875,
+      therm: 0.3765601328353627,
+      kin: 0.3711580089547002,
+      exp: 0.3668760012149748
+    },
+    hpMultiplier: 0.88,
+    resonanceAssumption: "Applied Myrmidon reactive armor resonance parity profile.",
+    hpAssumption: "Applied Myrmidon reactive-defense HP parity scale."
+  }
+};
+
+const normalizedAttrMapCache = new WeakMap<Record<string, number>, Map<string, number>>();
+const normalizedEffectSetCache = new WeakMap<DogmaTypeEntry, Set<string>>();
+const effectIdSetCache = new WeakMap<DogmaTypeEntry, Set<number>>();
+const normalizedNameCache = new Map<string, string>();
 
 export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCombatMetricsInput): CombatMetrics {
   const assumptions: string[] = [];
@@ -406,26 +501,25 @@ function getShipSpecificWeaponProfileAdjustment(
   if (!ship) {
     return { damageMultiplier: 1, rofMultiplier: 1 };
   }
-  const moduleLower = moduleName.toLowerCase();
-  const chargeLower = (chargeName ?? "").toLowerCase();
-  if (ship.typeId === 22428 && family === "energy" && moduleLower.includes("mega pulse laser")) {
-    // Redeemer parity: pyfa profile shows lower volley but significantly faster cycle.
-    return { damageMultiplier: 0.8, rofMultiplier: 0.5 };
-  }
-  if (
-    ship.typeId === 16236 &&
-    family === "energy" &&
-    moduleLower.includes("small focused modulated pulse energy beam")
-  ) {
-    return { damageMultiplier: 0.91, rofMultiplier: 0.8 };
-  }
-  if (
-    ship.typeId === 77281 &&
-    family === "hybrid" &&
-    moduleLower.includes("triple neutron blaster cannon") &&
-    chargeLower.includes("void xl")
-  ) {
-    return { damageMultiplier: 4.23, rofMultiplier: 5.42 };
+  const override = SHIP_WEAPON_PROFILE_OVERRIDES.find((row) => {
+    if (row.shipTypeId !== ship.typeId || row.family !== family) {
+      return false;
+    }
+    const moduleLower = moduleName.toLowerCase();
+    if (!row.moduleIncludes.every((token) => moduleLower.includes(token))) {
+      return false;
+    }
+    if (!row.chargeIncludes || row.chargeIncludes.length === 0) {
+      return true;
+    }
+    const chargeLower = (chargeName ?? "").toLowerCase();
+    return row.chargeIncludes.every((token) => chargeLower.includes(token));
+  });
+  if (override) {
+    return {
+      damageMultiplier: override.damageMultiplier,
+      rofMultiplier: override.rofMultiplier
+    };
   }
   return { damageMultiplier: 1, rofMultiplier: 1 };
 }
@@ -1022,10 +1116,7 @@ function applyDefenseModifiers(
     armor: getAttrResolved(index, ship, "Armor Hitpoints", "armorHP") ?? 1800,
     hull: getAttrResolved(index, ship, "Structure Hitpoints", "structureHP", "hp") ?? 1600
   };
-  if (ship?.typeId === 22446) {
-    hp.shield *= 1.14;
-    assumptions.push("Applied command-ship shield profile uplift for Vulture parity.");
-  }
+  applyShipHpOverride(ship, hp, assumptions, SHIP_PRE_MODULE_HP_OVERRIDES);
   const resonance = {
     shield: {
       em: getAttrResolved(index, ship, "Shield EM Damage Resistance", "shieldEmDamageResonance") ?? 1,
@@ -1206,12 +1297,10 @@ function applyDefenseModifiers(
     }
   }
 
-  if (ship?.typeId === 596) {
-    resonance.armor.em *= 0.92;
-    resonance.armor.therm *= 0.92;
-    resonance.armor.kin *= 0.92;
-    resonance.armor.exp *= 0.92;
-    assumptions.push("Applied rookie armor resistance profile assumption.");
+  const armorResonanceOverride = getShipArmorResonanceMultiplierOverride(ship);
+  if (armorResonanceOverride) {
+    multiplyLayerResonance(resonance.armor, armorResonanceOverride.multiplier);
+    assumptions.push(armorResonanceOverride.assumption);
   } else if (hasArmorResistBonus(ship)) {
     resonance.armor.em *= 0.8;
     resonance.armor.therm *= 0.8;
@@ -1230,9 +1319,10 @@ function applyDefenseModifiers(
     resonance.shield.em *= 0.85;
     assumptions.push("Applied marauder shield EM resist bonus assumption (all-V pilot).");
   }
-  if (ship?.typeId === 28665) {
-    resonance.shield.em *= 1.11;
-    assumptions.push("Applied Vargur shield EM resist parity correction.");
+  const shieldEmOverride = getShipShieldEmResonanceMultiplierOverride(ship);
+  if (shieldEmOverride) {
+    resonance.shield.em *= shieldEmOverride.multiplier;
+    assumptions.push(shieldEmOverride.assumption);
   }
   const hasTacticalArmorDefenseBonus = hasTacticalDestroyerArmorDefenseBonus(ship);
   const hasTacticalShieldDefenseBonus = hasTacticalDestroyerShieldDefenseBonus(ship);
@@ -1308,12 +1398,7 @@ function applyDefenseModifiers(
     hp.hull *= 1.55;
     assumptions.push("Applied supercapital role-2 plate/extender HP profile correction.");
   }
-  if (ship?.typeId === 45534) {
-    hp.shield *= 1.55;
-    hp.armor *= 1.55;
-    hp.hull *= 1.55;
-    assumptions.push("Applied flag cruiser effective HP profile correction.");
-  }
+  applyShipHpOverride(ship, hp, assumptions, SHIP_POST_ROLE_HP_OVERRIDES);
   for (const layer of ["shield", "armor", "hull"] as const) {
     for (const dtype of ["em", "therm", "kin", "exp"] as const) {
       resonance[layer][dtype] *= applyPenaltySeries(resistBuckets[layer][dtype]);
@@ -1338,13 +1423,7 @@ function applyDefenseModifiers(
       resonance.armor.exp *= equilibrium.exp;
     }
     assumptions.push("Applied Reactive Armor Hardener equilibrium profile (pyfa parity, uniform damage pattern).");
-    if (ship?.typeId === 24700) {
-      resonance.armor.em = 0.31875;
-      resonance.armor.therm = 0.3765601328353627;
-      resonance.armor.kin = 0.3711580089547002;
-      resonance.armor.exp = 0.3668760012149748;
-      assumptions.push("Applied Myrmidon reactive armor resonance parity profile.");
-    }
+    applyReactiveArmorParityOverride(ship, resonance.armor, assumptions);
   }
   if (hasPolarizedResistanceKiller) {
     resonance.shield.em = 1;
@@ -1361,11 +1440,8 @@ function applyDefenseModifiers(
     resonance.hull.exp = 1;
     assumptions.push("Applied polarized resistance-killer profile (all-layer resists set to zero).");
   }
-  if (ship?.typeId === 24700 && reactiveArmorHardeners.length > 0) {
-    hp.shield *= 0.88;
-    hp.armor *= 0.88;
-    hp.hull *= 0.88;
-    assumptions.push("Applied Myrmidon reactive-defense HP parity scale.");
+  if (reactiveArmorHardeners.length > 0) {
+    applyReactiveArmorHpParityOverride(ship, hp, assumptions);
   }
 
   hp.shield *= 1 + 0.05 * 5;
@@ -1373,6 +1449,93 @@ function applyDefenseModifiers(
   hp.hull *= 1 + 0.05 * 5;
   assumptions.push("Applied baseline defense skills (all-V): +25% shield/armor/hull HP.");
   return { hp, resonance };
+}
+
+function applyShipHpOverride(
+  ship: DogmaTypeEntry | undefined,
+  hp: { shield: number; armor: number; hull: number },
+  assumptions: string[],
+  overrides: Record<number, ShipHpOverride>
+): void {
+  if (!ship) {
+    return;
+  }
+  const override = overrides[ship.typeId];
+  if (!override) {
+    return;
+  }
+  for (const layer of ["shield", "armor", "hull"] as const) {
+    const multiplier = override.multipliers[layer];
+    if (!multiplier || !Number.isFinite(multiplier) || multiplier === 1) {
+      continue;
+    }
+    hp[layer] *= multiplier;
+  }
+  assumptions.push(override.assumption);
+}
+
+function getShipArmorResonanceMultiplierOverride(
+  ship: DogmaTypeEntry | undefined
+): { assumption: string; multiplier: number } | undefined {
+  if (!ship) {
+    return undefined;
+  }
+  return SHIP_ARMOR_RESONANCE_MULTIPLIER_OVERRIDES[ship.typeId];
+}
+
+function getShipShieldEmResonanceMultiplierOverride(
+  ship: DogmaTypeEntry | undefined
+): { assumption: string; multiplier: number } | undefined {
+  if (!ship) {
+    return undefined;
+  }
+  return SHIP_SHIELD_EM_RESONANCE_MULTIPLIER_OVERRIDES[ship.typeId];
+}
+
+function multiplyLayerResonance(
+  layer: { em: number; therm: number; kin: number; exp: number },
+  multiplier: number
+): void {
+  for (const dtype of ["em", "therm", "kin", "exp"] as const) {
+    layer[dtype] *= multiplier;
+  }
+}
+
+function applyReactiveArmorParityOverride(
+  ship: DogmaTypeEntry | undefined,
+  armorResonance: { em: number; therm: number; kin: number; exp: number },
+  assumptions: string[]
+): void {
+  if (!ship) {
+    return;
+  }
+  const override = SHIP_REACTIVE_ARMOR_PARITY_OVERRIDES[ship.typeId];
+  if (!override) {
+    return;
+  }
+  armorResonance.em = override.resonance.em;
+  armorResonance.therm = override.resonance.therm;
+  armorResonance.kin = override.resonance.kin;
+  armorResonance.exp = override.resonance.exp;
+  assumptions.push(override.resonanceAssumption);
+}
+
+function applyReactiveArmorHpParityOverride(
+  ship: DogmaTypeEntry | undefined,
+  hp: { shield: number; armor: number; hull: number },
+  assumptions: string[]
+): void {
+  if (!ship) {
+    return;
+  }
+  const override = SHIP_REACTIVE_ARMOR_PARITY_OVERRIDES[ship.typeId];
+  if (!override) {
+    return;
+  }
+  hp.shield *= override.hpMultiplier;
+  hp.armor *= override.hpMultiplier;
+  hp.hull *= override.hpMultiplier;
+  assumptions.push(override.hpAssumption);
 }
 
 function hasRole2SupercapitalPlateExtenderBonus(ship: DogmaTypeEntry | undefined): boolean {
@@ -1962,8 +2125,8 @@ function hasAnyEffect(index: DogmaIndex, type: DogmaTypeEntry | undefined, ...ef
   if (!type || effectNames.length === 0) {
     return false;
   }
-  const normalizedEffects = new Set((type.effects ?? []).map((effect) => normalizeAttrName(effect)));
-  const effectIds = new Set(type.effectsById ?? []);
+  const normalizedEffects = getNormalizedEffectSet(type);
+  const effectIds = getEffectIdSet(type);
   for (const effectName of effectNames) {
     const normalized = normalizeAttrName(effectName);
     if (normalizedEffects.has(normalized)) {
@@ -1978,13 +2141,7 @@ function hasAnyEffect(index: DogmaIndex, type: DogmaTypeEntry | undefined, ...ef
 }
 
 function getAttrLoose(attrs: Record<string, number>, ...names: string[]): number | undefined {
-  const normalized = new Map<string, number>();
-  for (const [key, value] of Object.entries(attrs)) {
-    if (typeof value !== "number" || !Number.isFinite(value)) {
-      continue;
-    }
-    normalized.set(normalizeAttrName(key), value);
-  }
+  const normalized = getNormalizedAttrMap(attrs);
   for (const name of names) {
     const value = normalized.get(normalizeAttrName(name));
     if (value !== undefined) {
@@ -1995,5 +2152,47 @@ function getAttrLoose(attrs: Record<string, number>, ...names: string[]): number
 }
 
 function normalizeAttrName(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const cached = normalizedNameCache.get(name);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const normalized = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  normalizedNameCache.set(name, normalized);
+  return normalized;
+}
+
+function getNormalizedAttrMap(attrs: Record<string, number>): Map<string, number> {
+  const cached = normalizedAttrMapCache.get(attrs);
+  if (cached) {
+    return cached;
+  }
+  const normalized = new Map<string, number>();
+  for (const [key, value] of Object.entries(attrs)) {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      continue;
+    }
+    normalized.set(normalizeAttrName(key), value);
+  }
+  normalizedAttrMapCache.set(attrs, normalized);
+  return normalized;
+}
+
+function getNormalizedEffectSet(type: DogmaTypeEntry): Set<string> {
+  const cached = normalizedEffectSetCache.get(type);
+  if (cached) {
+    return cached;
+  }
+  const normalized = new Set((type.effects ?? []).map((effect) => normalizeAttrName(effect)));
+  normalizedEffectSetCache.set(type, normalized);
+  return normalized;
+}
+
+function getEffectIdSet(type: DogmaTypeEntry): Set<number> {
+  const cached = effectIdSetCache.get(type);
+  if (cached) {
+    return cached;
+  }
+  const ids = new Set(type.effectsById ?? []);
+  effectIdSetCache.set(type, ids);
+  return ids;
 }

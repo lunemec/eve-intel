@@ -11,6 +11,8 @@ const KILLMAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
 const MAX_HYDRATE = 50;
 const HYDRATE_CONCURRENCY = 5;
 const zkillRefreshInFlight = new Map<string, Promise<ZkillKillmail[]>>();
+const signalIdByAbortSignal = new WeakMap<AbortSignal, number>();
+let nextAbortSignalId = 1;
 
 export type ZkillCacheEvent = {
   forceNetwork: boolean;
@@ -293,7 +295,7 @@ function refreshZkillListDeduped(
     onCacheEvent?: (event: ZkillCacheEvent) => void;
   }
 ): Promise<ZkillKillmail[]> {
-  const inFlightKey = `${cacheKey}|${signal ? "fg" : "bg"}`;
+  const inFlightKey = `${cacheKey}|${resolveRefreshScopeKey(signal)}`;
   const existing = zkillRefreshInFlight.get(inFlightKey);
   if (existing) {
     return existing;
@@ -305,6 +307,19 @@ function refreshZkillListDeduped(
     });
   zkillRefreshInFlight.set(inFlightKey, request);
   return request;
+}
+
+function resolveRefreshScopeKey(signal?: AbortSignal): string {
+  if (!signal) {
+    return "bg";
+  }
+  let signalId = signalIdByAbortSignal.get(signal);
+  if (!signalId) {
+    signalId = nextAbortSignalId;
+    nextAbortSignalId += 1;
+    signalIdByAbortSignal.set(signal, signalId);
+  }
+  return `fg:${signalId}`;
 }
 
 async function refreshZkillList(

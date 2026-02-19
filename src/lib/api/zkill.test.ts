@@ -205,6 +205,62 @@ describe("latest endpoint", () => {
       globalThis.fetch = originalFetch;
     }
   });
+
+  it("does not dedupe foreground page refreshes across different abort signals", async () => {
+    vi.useFakeTimers();
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+      return new Promise<Response>((resolve, reject) => {
+        const signal = init?.signal as AbortSignal | undefined;
+        if (signal?.aborted) {
+          reject(new DOMException("Aborted", "AbortError"));
+          return;
+        }
+        signal?.addEventListener("abort", () => {
+          reject(new DOMException("Aborted", "AbortError"));
+        });
+        setTimeout(() => {
+          resolve(jsonResponse([]));
+        }, 25);
+      });
+    });
+    globalThis.fetch = fetchMock;
+
+    try {
+      const firstController = new AbortController();
+      const secondController = new AbortController();
+
+      const first = fetchLatestKillsPage(
+        777777,
+        1,
+        firstController.signal,
+        undefined,
+        { forceNetwork: true }
+      );
+      const firstHandled = first.then(
+        () => null,
+        (error) => error
+      );
+      const second = fetchLatestKillsPage(
+        777777,
+        1,
+        secondController.signal,
+        undefined,
+        { forceNetwork: true }
+      );
+
+      firstController.abort();
+      await vi.advanceTimersByTimeAsync(30);
+
+      const firstError = await firstHandled;
+      expect(firstError).toMatchObject({ name: "AbortError" });
+      await expect(second).resolves.toEqual([]);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      globalThis.fetch = originalFetch;
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe("character stats endpoint", () => {

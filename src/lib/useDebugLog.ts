@@ -10,10 +10,15 @@ export function useDebugLog(params: {
   const [debugLines, setDebugLines] = useState<string[]>([]);
   const pendingRef = useRef<string[]>([]);
   const flushTimerRef = useRef<number | null>(null);
+  const mountedRef = useRef<boolean>(true);
 
   const flushPending = useCallback(() => {
     flushTimerRef.current = null;
     if (pendingRef.current.length === 0) {
+      return;
+    }
+    if (!mountedRef.current || typeof window === "undefined") {
+      pendingRef.current = [];
       return;
     }
 
@@ -26,14 +31,20 @@ export function useDebugLog(params: {
     if (flushTimerRef.current !== null) {
       return;
     }
-    flushTimerRef.current = window.setTimeout(flushPending, 16);
+    flushTimerRef.current = globalThis.setTimeout(flushPending, 16) as unknown as number;
   }, [flushPending]);
 
   useEffect(
-    () => () => {
-      if (flushTimerRef.current !== null) {
-        window.clearTimeout(flushTimerRef.current);
-      }
+    () => {
+      mountedRef.current = true;
+      return () => {
+        mountedRef.current = false;
+        pendingRef.current = [];
+        if (flushTimerRef.current !== null) {
+          globalThis.clearTimeout(flushTimerRef.current);
+          flushTimerRef.current = null;
+        }
+      };
     },
     []
   );

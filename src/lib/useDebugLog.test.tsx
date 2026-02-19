@@ -90,4 +90,31 @@ describe("useDebugLog", () => {
     expect(result.current.debugLines.length).toBe(3);
     expect(result.current.debugLines[0]).toContain("c");
   });
+
+  it("does not throw when a queued flush fires after window teardown", () => {
+    const { result } = renderHook(() => useDebugLog({ debugEnabled: false }));
+
+    act(() => {
+      result.current.logDebug("pending");
+    });
+
+    const originalWindow = globalThis.window;
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      writable: true,
+      value: undefined
+    });
+
+    try {
+      expect(() => {
+        vi.advanceTimersByTime(20);
+      }).not.toThrow();
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        writable: true,
+        value: originalWindow
+      });
+    }
+  });
 });

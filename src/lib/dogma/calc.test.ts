@@ -290,6 +290,138 @@ describe("dogma calc", () => {
     expect(metrics.engagementRange.effectiveBand).toBeGreaterThan(0);
   });
 
+  it("applies pre-module ship HP parity override profiles from table data", () => {
+    const pack: DogmaPack = {
+      ...basePack,
+      types: [
+        ...basePack.types,
+        {
+          typeId: 22446,
+          groupId: 1,
+          categoryId: 1,
+          name: "Vulture",
+          attrs: { ...basePack.types[0].attrs },
+          effects: []
+        }
+      ],
+      typeCount: basePack.typeCount + 1
+    };
+    const index = buildDogmaIndex(pack);
+    const baseline = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: { ...emptySlots }
+    });
+    const vulture = calculateShipCombatMetrics(index, {
+      shipTypeId: 22446,
+      slots: { ...emptySlots }
+    });
+
+    expect(vulture.ehp).toBeGreaterThan(baseline.ehp * 1.04);
+    expect(vulture.assumptions).toContain("Applied command-ship shield profile uplift for Vulture parity.");
+  });
+
+  it("applies post-role ship HP parity override profiles from table data", () => {
+    const pack: DogmaPack = {
+      ...basePack,
+      types: [
+        ...basePack.types,
+        {
+          typeId: 45534,
+          groupId: 1,
+          categoryId: 1,
+          name: "Flag Cruiser",
+          attrs: { ...basePack.types[0].attrs },
+          effects: []
+        }
+      ],
+      typeCount: basePack.typeCount + 1
+    };
+    const index = buildDogmaIndex(pack);
+    const baseline = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: { ...emptySlots }
+    });
+    const flagged = calculateShipCombatMetrics(index, {
+      shipTypeId: 45534,
+      slots: { ...emptySlots }
+    });
+
+    expect(flagged.ehp).toBeGreaterThan(baseline.ehp * 1.5);
+    expect(flagged.assumptions).toContain("Applied flag cruiser effective HP profile correction.");
+  });
+
+  it("applies ship-specific weapon profile overrides from table data", () => {
+    const pack: DogmaPack = {
+      ...basePack,
+      types: [
+        ...basePack.types,
+        {
+          typeId: 22428,
+          groupId: 1,
+          categoryId: 1,
+          name: "Redeemer",
+          attrs: { ...basePack.types[0].attrs },
+          effects: []
+        },
+        {
+          typeId: 99999,
+          groupId: 1,
+          categoryId: 1,
+          name: "Control Hull",
+          attrs: { ...basePack.types[0].attrs },
+          effects: []
+        },
+        {
+          typeId: 9000,
+          groupId: 2,
+          categoryId: 7,
+          name: "Mega Pulse Laser II",
+          attrs: {
+            damageMultiplier: 2.2,
+            speed: 4000,
+            maxRange: 18000,
+            falloff: 5000
+          },
+          effects: ["projectileFired"]
+        },
+        {
+          typeId: 9001,
+          groupId: 2,
+          categoryId: 8,
+          name: "Conflagration L",
+          attrs: {
+            "EM damage": 16,
+            "Thermal damage": 8,
+            "Kinetic damage": 0,
+            "Explosive damage": 0,
+            "Range bonus": 1
+          },
+          effects: []
+        }
+      ],
+      typeCount: basePack.typeCount + 4
+    };
+    const index = buildDogmaIndex(pack);
+    const control = calculateShipCombatMetrics(index, {
+      shipTypeId: 99999,
+      slots: {
+        ...emptySlots,
+        high: [{ typeId: 9000, name: "Mega Pulse Laser II", chargeTypeId: 9001, chargeName: "Conflagration L" }]
+      }
+    });
+    const redeemer = calculateShipCombatMetrics(index, {
+      shipTypeId: 22428,
+      slots: {
+        ...emptySlots,
+        high: [{ typeId: 9000, name: "Mega Pulse Laser II", chargeTypeId: 9001, chargeName: "Conflagration L" }]
+      }
+    });
+
+    expect(redeemer.dpsTotal).toBeGreaterThan(control.dpsTotal * 1.5);
+    expect(redeemer.alpha).toBeLessThan(control.alpha);
+    expect(redeemer.assumptions).toContain("Applied ship-specific weapon parity profile adjustment.");
+  });
+
   it("does not apply turret specialization alpha multipliers to missiles", () => {
     const index = buildDogmaIndex(basePack);
     const metrics = calculateShipCombatMetrics(index, {

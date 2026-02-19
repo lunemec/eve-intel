@@ -68,7 +68,6 @@ describe("usePilotIntelPipelineEffect", () => {
         {
           createLoadingCard,
           createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
-          createProcessPilot: vi.fn(() => vi.fn()),
           runPilotPipeline,
           fetchLatestKillsPage: vi.fn(async () => []),
           fetchLatestLossesPage: vi.fn(async () => [])
@@ -126,7 +125,6 @@ describe("usePilotIntelPipelineEffect", () => {
           {
             createLoadingCard,
             createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
-            createProcessPilot: vi.fn(() => vi.fn()),
             runPilotPipeline,
             fetchLatestKillsPage: vi.fn(async () => []),
             fetchLatestLossesPage: vi.fn(async () => [])
@@ -251,7 +249,6 @@ describe("usePilotIntelPipelineEffect", () => {
         {
           createLoadingCard,
           createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
-          createProcessPilot: vi.fn(() => vi.fn()),
           runPilotPipeline,
           fetchLatestKillsPage,
           fetchLatestLossesPage
@@ -279,6 +276,76 @@ describe("usePilotIntelPipelineEffect", () => {
     await Promise.resolve();
     expect(runPilotPipeline).toHaveBeenCalledTimes(2);
   }, 80_000);
+
+  it("logs background refresh errors with pilot context", async () => {
+    vi.useFakeTimers();
+    const logDebug = vi.fn();
+    const logError = vi.fn();
+    const setNetworkNotice = vi.fn();
+    const setPilotCards = vi.fn();
+    const createLoadingCard = vi.fn((entry: ParsedPilotInput): PilotCard => ({
+      parsedEntry: entry,
+      status: "loading",
+      predictedShips: [],
+      fitCandidates: [],
+      kills: [],
+      losses: [],
+      inferenceKills: [],
+      inferenceLosses: []
+    }));
+
+    const fetchLatestKillsPage = vi.fn(async () => {
+      throw new Error("kills endpoint timeout");
+    });
+    const fetchLatestLossesPage = vi.fn(async () => {
+      throw new Error("losses endpoint timeout");
+    });
+    const runPilotPipeline = vi.fn(async ({ entries, updatePilotCard }: {
+      entries: ParsedPilotInput[];
+      updatePilotCard: (pilotName: string, patch: Partial<PilotCard>) => void;
+    }) => {
+      updatePilotCard(entries[0].pilotName, {
+        characterId: 9001,
+        inferenceKills: [{ killmail_id: 101, killmail_time: "2026-02-18T00:00:00Z", victim: {}, attackers: [] }],
+        inferenceLosses: [{ killmail_id: 301, killmail_time: "2026-02-18T00:00:00Z", victim: {}, attackers: [] }]
+      });
+    });
+
+    renderHook(() =>
+      usePilotIntelPipelineEffect(
+        {
+          entries: [ENTRY],
+          settings: SETTINGS,
+          dogmaIndex: null,
+          logDebugRef: { current: logDebug },
+          setPilotCards,
+          setNetworkNotice
+        },
+        {
+          createLoadingCard,
+          createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
+          runPilotPipeline,
+          fetchLatestKillsPage,
+          fetchLatestLossesPage
+        }
+      )
+    );
+
+    await vi.advanceTimersByTimeAsync(0);
+    expect(runPilotPipeline).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(31_000);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(logDebug).toHaveBeenCalledWith(
+      "zKill page-1 refresh failed",
+      expect.objectContaining({
+        pilot: "Pilot A",
+        error: "kills endpoint timeout"
+      })
+    );
+  });
 
   it("keeps visible card data stable during background rerun until ready patch arrives", async () => {
     vi.useFakeTimers();
@@ -358,7 +425,6 @@ describe("usePilotIntelPipelineEffect", () => {
         {
           createLoadingCard,
           createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
-          createProcessPilot: vi.fn(() => vi.fn()),
           runPilotPipeline,
           fetchLatestKillsPage,
           fetchLatestLossesPage
@@ -468,7 +534,6 @@ describe("usePilotIntelPipelineEffect", () => {
           {
             createLoadingCard,
             createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
-            createProcessPilot: vi.fn(() => vi.fn()),
             runPilotPipeline,
             fetchLatestKillsPage,
             fetchLatestLossesPage
@@ -577,7 +642,6 @@ describe("usePilotIntelPipelineEffect", () => {
           {
             createLoadingCard,
             createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
-            createProcessPilot: vi.fn(() => vi.fn()),
             runPilotPipeline,
             fetchLatestKillsPage,
             fetchLatestLossesPage

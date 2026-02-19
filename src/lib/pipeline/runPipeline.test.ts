@@ -35,7 +35,6 @@ describe("pipeline/runPipeline", () => {
   it("resolves ids, marks unresolved pilots, runs resolved tasks, and logs completion", async () => {
     const setNetworkNotice = vi.fn();
     const updatePilotCard = vi.fn();
-    const processPilot = vi.fn(async () => undefined);
     const runBreadthPilotPipeline = vi.fn(async () => undefined);
     const onRetry = vi.fn((_scope: string) => (_info: { status: number; attempt: number; delayMs: number }) => undefined);
     const logDebug = vi.fn();
@@ -50,7 +49,6 @@ describe("pipeline/runPipeline", () => {
         logDebug,
         setNetworkNotice,
         updatePilotCard,
-        processPilot,
         logError: vi.fn()
       },
       {
@@ -95,7 +93,6 @@ describe("pipeline/runPipeline", () => {
         logDebug: vi.fn(),
         setNetworkNotice,
         updatePilotCard,
-        processPilot: vi.fn(async () => undefined),
         logError: vi.fn()
       },
       {
@@ -121,7 +118,6 @@ describe("pipeline/runPipeline", () => {
   });
 
   it("returns early on abort during id resolution", async () => {
-    const processPilot = vi.fn();
     const updatePilotCard = vi.fn();
 
     await runPilotPipeline(
@@ -134,7 +130,6 @@ describe("pipeline/runPipeline", () => {
         logDebug: vi.fn(),
         setNetworkNotice: vi.fn(),
         updatePilotCard,
-        processPilot,
         logError: vi.fn()
       },
       {
@@ -153,6 +148,5 @@ describe("pipeline/runPipeline", () => {
     );
 
     expect(updatePilotCard).not.toHaveBeenCalled();
-    expect(processPilot).not.toHaveBeenCalled();
   });
 });

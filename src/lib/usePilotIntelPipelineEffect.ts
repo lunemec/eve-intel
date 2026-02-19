@@ -4,7 +4,6 @@ import type { DogmaIndex } from "./dogma/index";
 import type { PilotCard } from "./usePilotIntelPipeline";
 import { createLoadingCard } from "./pipeline/stateTransitions";
 import { createPipelineLoggers } from "./pipeline/hookLogging";
-import { createProcessPilot } from "./pipeline/processPilotFactory";
 import { runPilotPipeline } from "./pipeline/runPipeline";
 import { DEEP_HISTORY_MAX_PAGES, TOP_SHIP_CANDIDATES } from "./pipeline/constants";
 import type { DebugLoggerRef } from "./pipeline/types";
@@ -16,7 +15,6 @@ const BACKGROUND_REVALIDATE_INTERVAL_MS = 30_000;
 type EffectDeps = {
   createLoadingCard: typeof createLoadingCard;
   createPipelineLoggers: typeof createPipelineLoggers;
-  createProcessPilot: typeof createProcessPilot;
   runPilotPipeline: typeof runPilotPipeline;
   fetchLatestKillsPage: typeof fetchLatestKillsPage;
   fetchLatestLossesPage: typeof fetchLatestLossesPage;
@@ -25,7 +23,6 @@ type EffectDeps = {
 const DEFAULT_DEPS: EffectDeps = {
   createLoadingCard,
   createPipelineLoggers,
-  createProcessPilot,
   runPilotPipeline,
   fetchLatestKillsPage,
   fetchLatestLossesPage
@@ -236,18 +233,6 @@ export function usePilotIntelPipelineEffect(
         abortController.abort();
       };
 
-      const processPilot = deps.createProcessPilot({
-        settings: params.settings,
-        dogmaIndex: params.dogmaIndex,
-        signal: abortController.signal,
-        isCancelled: () => cancelled,
-        updatePilotCard,
-        logDebug,
-        logError,
-        topShips: TOP_SHIP_CANDIDATES,
-        deepHistoryMaxPages: DEEP_HISTORY_MAX_PAGES
-      });
-
       const activeRun: ActivePilotRun = {
         pilotKey,
         entry,
@@ -266,7 +251,6 @@ export function usePilotIntelPipelineEffect(
         logDebug,
         setNetworkNotice: params.setNetworkNotice,
         updatePilotCard,
-        processPilot,
         logError,
         maxPages: DEEP_HISTORY_MAX_PAGES
       }).finally(() => {
@@ -353,8 +337,13 @@ export function usePilotIntelPipelineEffect(
             continue;
           }
           startPilotRun(entry, "background");
-        } catch {
-          // Keep stale card data when background refresh fails.
+        } catch (error) {
+          // Keep stale card data when background refresh fails, but emit telemetry.
+          logDebug("zKill page-1 refresh failed", {
+            pilot: entry.pilotName,
+            forceNetwork,
+            error: error instanceof Error ? error.message : String(error)
+          });
         } finally {
           forceRefreshByPilotKeyRef.current.delete(pilotKey);
           refreshInFlightByPilotKeyRef.current.delete(pilotKey);

@@ -13,7 +13,6 @@ import type {
   DebugLogger,
   ErrorLogger,
   PipelineSignal,
-  ProcessPilotFn,
   PilotCardUpdater
 } from "./types";
 
@@ -51,7 +50,6 @@ export async function runPilotPipeline(
     logDebug: DebugLogger;
     setNetworkNotice: Dispatch<SetStateAction<string>>;
     updatePilotCard: PilotCardUpdater;
-    processPilot: ProcessPilotFn;
     logError: ErrorLogger;
     maxPages?: number;
   },
