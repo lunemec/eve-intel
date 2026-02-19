@@ -165,6 +165,32 @@ describe("FleetSummary", () => {
     expect(screen.queryByText("—")).toBeNull();
   });
 
+  it("adds explicit corporation and alliance column class hooks", () => {
+    const { container } = render(
+      <FleetSummary
+        pilotCards={[
+          pilot({
+            characterId: 123,
+            characterName: "Pilot",
+            corporationId: 98000001,
+            corporationName: "Corp Prime",
+            allianceId: 99000001,
+            allianceName: "Alliance Prime",
+            predictedShips: [{ shipTypeId: 456, shipName: "Onyx", probability: 82, source: "inferred", reason: [] }]
+          })
+        ]}
+        copyableFleetCount={1}
+        setNetworkNotice={vi.fn()}
+        logDebug={vi.fn()}
+      />
+    );
+
+    const corporationColumn = container.querySelector(".fleet-col-corporation");
+    const allianceColumn = container.querySelector(".fleet-col-alliance");
+    expect(corporationColumn?.textContent).toContain("Corp Prime");
+    expect(allianceColumn?.textContent).toContain("Alliance Prime");
+  });
+
   it("renders fleet threat score/class from pilot danger metric", () => {
     const { container } = render(
       <FleetSummary

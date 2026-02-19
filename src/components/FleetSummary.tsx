@@ -137,7 +137,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
                   <span className="fleet-summary-name">{pilot.characterName ?? pilot.parsedEntry.pilotName}</span>
                 )}
               </span>
-              <span className="fleet-col">
+              <span className="fleet-col fleet-col-corporation">
                 {pilot.corporationId ? (
                   <a
                     href={corporationZkillUrl(pilot.corporationId)}
@@ -151,7 +151,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
                   <span className="fleet-summary-muted">No corp</span>
                 )}
               </span>
-              <span className="fleet-col">
+              <span className="fleet-col fleet-col-alliance">
                 {pilot.allianceId ? (
                   <a
                     href={allianceZkillUrl(pilot.allianceId)}

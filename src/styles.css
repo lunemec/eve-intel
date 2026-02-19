@@ -1538,8 +1538,71 @@ body {
   background: #3a4960;
 }
 
+@media (max-width: 1060px) {
+  .ship-metrics {
+    display: none;
+  }
 
-@media (max-width: 800px) {
+  .ship-fit-and-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stat-label {
+    white-space: normal;
+  }
+
+  .fleet-col-ship-secondary {
+    display: none;
+  }
+
+  .fleet-summary-grid {
+    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.68fr) minmax(0, 1.3fr);
+  }
+}
+
+@media (max-width: 860px) {
+  .fleet-col-alliance {
+    display: none;
+  }
+
+  .fleet-summary-grid {
+    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr) minmax(0, 1.68fr) minmax(0, 1.3fr);
+  }
+}
+
+@media (max-width: 770px) {
+  .pilot-card {
+    grid-template-columns: 1fr;
+  }
+
+  .player-card {
+    max-width: none;
+    justify-self: stretch;
+  }
+
+  .ship-column {
+    display: none;
+  }
+
+  .ship-fit-and-metrics {
+    display: none;
+  }
+
+  .fit-copy-button {
+    display: none;
+  }
+
+  .fleet-col-corporation {
+    display: none;
+  }
+
+  .fleet-summary-grid {
+    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1.68fr) minmax(0, 1.3fr);
+  }
+}
+
+
+@media (max-width: 700px) {
   .pilot-card {
     grid-template-columns: 1fr;
   }
@@ -1558,12 +1621,6 @@ body {
     align-items: flex-start;
   }
 
-  .fleet-summary-grid,
-  .fleet-summary-line {
-    grid-template-columns: 1fr;
-    row-gap: 4px;
-  }
-
   .ship-fit-and-metrics {
     grid-template-columns: 1fr;
   }
@@ -1578,5 +1635,13 @@ body {
 
   .player-threat-stack {
     align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .fleet-summary-grid,
+  .fleet-summary-line {
+    grid-template-columns: 1fr;
+    row-gap: 4px;
   }
 }

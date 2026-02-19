@@ -6,6 +6,8 @@
 > Artificial Intelligence model. While efforts have been made to ensure functionality and
 > safety, it should be reviewed before use in production environments. Use at your own risk.
 
+[![EVE Intel screenshot](./screen.png)](./screen.png)
+
 Browser-first EVE Online intel app inspired by EVE Squadron / EVEOS workflows, with an optional Electron desktop wrapper for better clipboard automation.
 
 **Like the app?** Donate ISK to [Lukas Nemec](https://zkillboard.com/character/93227004/).
