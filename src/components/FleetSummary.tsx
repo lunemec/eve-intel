@@ -13,6 +13,17 @@ import {
 } from "../lib/links";
 
 const DEFAULT_SCROLL_DURATION_MS = 120;
+const FLEET_SUMMARY_ALLOWED_ROLE_PILLS = new Set(["HIC", "Bubble", "Dictor"]);
+const BOTH_SHIPS_PILL_PROBABILITY_MIN = 45;
+const BOTH_SHIPS_PILL_PROBABILITY_MAX = 55;
+
+function isBothShipPillProbabilityRange(probability: number): boolean {
+  return (
+    Number.isFinite(probability) &&
+    probability >= BOTH_SHIPS_PILL_PROBABILITY_MIN &&
+    probability <= BOTH_SHIPS_PILL_PROBABILITY_MAX
+  );
+}
 
 export const FleetSummary = memo(function FleetSummary(props: {
   pilotCards: PilotCard[];
@@ -53,11 +64,28 @@ export const FleetSummary = memo(function FleetSummary(props: {
         {props.pilotCards.map((pilot) => {
           const detailAnchorId = pilotDetailAnchorId(pilot);
           const topShip = pilot.predictedShips[0];
+          const secondShip = pilot.predictedShips[1];
           const topFit = topShip?.shipTypeId
             ? pilot.fitCandidates.find((entry) => entry.shipTypeId === topShip.shipTypeId)
             : undefined;
-          const shipHref = topFit?.sourceLossKillmailId ? killmailZkillUrl(topFit.sourceLossKillmailId) : undefined;
+          const secondFit = secondShip?.shipTypeId
+            ? pilot.fitCandidates.find((entry) => entry.shipTypeId === secondShip.shipTypeId)
+            : undefined;
+          const topShipHref = topFit?.sourceLossKillmailId ? killmailZkillUrl(topFit.sourceLossKillmailId) : undefined;
+          const secondShipHref = secondFit?.sourceLossKillmailId ? killmailZkillUrl(secondFit.sourceLossKillmailId) : undefined;
           const topShipCyno = topShip ? shipHasPotentialCyno(topShip) : false;
+          const includeSecondShipPills = Boolean(
+            topShip &&
+            secondShip &&
+            isBothShipPillProbabilityRange(topShip.probability) &&
+            isBothShipPillProbabilityRange(secondShip.probability)
+          );
+          const fleetSummaryPillShips = (includeSecondShipPills ? [topShip, secondShip] : [topShip])
+            .filter((ship): ship is NonNullable<typeof ship> => Boolean(ship))
+            .map((ship) => ({
+              ...ship,
+              rolePills: (ship.rolePills ?? []).filter((pill) => FLEET_SUMMARY_ALLOWED_ROLE_PILLS.has(pill))
+            }));
           const engagementStyle = engagementStyleFromSoloRatio(pilot.stats?.soloRatio);
           return (
             <li
@@ -137,7 +165,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
                   <span className="fleet-summary-muted">No alliance</span>
                 )}
               </span>
-              <span className="fleet-col fleet-col-ship">
+              <span className="fleet-col fleet-col-ship fleet-col-ship-primary">
                 {topShip ? (
                   <>
                     <span className="fleet-summary-probability">{topShip.probability}%</span>
@@ -147,8 +175,8 @@ export const FleetSummary = memo(function FleetSummary(props: {
                       className="ship-icon"
                       loading="lazy"
                     />
-                    {shipHref ? (
-                      <a href={shipHref} target="_blank" rel="noreferrer" className="fleet-summary-ship">
+                    {topShipHref ? (
+                      <a href={topShipHref} target="_blank" rel="noreferrer" className="fleet-summary-ship">
                         {topShip.shipName}
                       </a>
                     ) : (
@@ -158,6 +186,26 @@ export const FleetSummary = memo(function FleetSummary(props: {
                 ) : (
                   <span className="fleet-summary-muted">No inferred ship</span>
                 )}
+              </span>
+              <span className="fleet-col fleet-col-ship fleet-col-ship-secondary">
+                {secondShip ? (
+                  <>
+                    <span className="fleet-summary-probability">{secondShip.probability}%</span>
+                    <img
+                      src={shipIconUrl(secondShip.shipTypeId)}
+                      alt={secondShip.shipName}
+                      className="ship-icon"
+                      loading="lazy"
+                    />
+                    {secondShipHref ? (
+                      <a href={secondShipHref} target="_blank" rel="noreferrer" className="fleet-summary-ship">
+                        {secondShip.shipName}
+                      </a>
+                    ) : (
+                      <span className="fleet-summary-ship">{secondShip.shipName}</span>
+                    )}
+                  </>
+                ) : null}
               </span>
               <span className="fleet-col fleet-col-alerts">
                 {engagementStyle ? (
@@ -169,7 +217,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
                     {engagementStyle}
                   </span>
                 ) : null}
-                {topShip ? renderShipPills(topShip, pilot.cynoRisk, "icon-link") : null}
+                {fleetSummaryPillShips.flatMap((ship) => renderShipPills(ship, pilot.cynoRisk, "icon-link"))}
               </span>
             </li>
           );

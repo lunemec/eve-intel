@@ -21,6 +21,7 @@ export type ShipCynoChance = {
 export function deriveShipCynoBaitEvidence(params: {
   predictedShips: ShipPrediction[];
   fitCandidates: FitCandidate[];
+  kills: ZkillKillmail[];
   losses: ZkillKillmail[];
   characterId: number;
   namesByTypeId: Map<number, string>;
@@ -138,6 +139,38 @@ const JUMP_CAPABLE_SHIPS = new Set<string>([
   "Redeemer",
   "Panther",
   "Marshal"
+]);
+
+const POD_SHIP_TYPE_IDS = new Set<number>([670, 33328]);
+
+const CYNO_CAPABLE_NON_COMBAT_BAIT_SHIPS = new Set<string>([
+  // Tech I haulers / industrials
+  "Badger",
+  "Bestower",
+  "Hoarder",
+  "Mammoth",
+  "Nereus",
+  "Sigil",
+  "Tayra",
+  "Wreathe",
+  "Iteron Mark V",
+  "Epithal",
+  "Kryos",
+  "Miasmos",
+  // Blockade runners
+  "Prowler",
+  "Prorator",
+  "Crane",
+  "Viator",
+  // Deep space transports
+  "Bustard",
+  "Impel",
+  "Mastodon",
+  "Occator",
+  // Expedition / industrial cyno hulls
+  "Venture",
+  "Prospect",
+  "Deluge"
 ]);
 
 export function evaluateCynoRisk(params: {
@@ -332,6 +365,7 @@ function collectShipCynoBaitCandidates(
   ship: ShipPrediction,
   fitId: string,
   params: {
+    kills: ZkillKillmail[];
     losses: ZkillKillmail[];
     characterId: number;
     namesByTypeId: Map<number, string>;
@@ -371,16 +405,71 @@ function collectShipCynoBaitCandidates(
           pillName: "Cyno"
         });
       }
-      if (isBaitEvidenceModuleName(moduleName)) {
-        bait.push({
-          ...candidate,
-          pillName: "Bait"
-        });
-      }
     }
   }
 
+  for (const kill of params.kills) {
+    if (!isBaitEligibleKillmail(kill, ship.shipName, ship.shipTypeId, params.characterId, params.namesByTypeId)) {
+      continue;
+    }
+    bait.push({
+      ...toPillEvidenceCandidate({
+        causingModule: "Matched attacker ship on killmail",
+        fitId,
+        killmailId: kill.killmail_id,
+        timestamp: kill.killmail_time
+      }),
+      pillName: "Bait"
+    });
+  }
+
   return { cyno, bait };
+}
+
+function isBaitEligibleKillmail(
+  kill: ZkillKillmail,
+  shipName: string,
+  shipTypeId: number,
+  characterId: number,
+  namesByTypeId: Map<number, string>
+): boolean {
+  if (!isCynoCapableNonCombatBaitShip(shipName)) {
+    return false;
+  }
+  if (kill.zkb?.solo === true) {
+    return false;
+  }
+  const attackers = kill.attackers ?? [];
+  const characterAttackers = attackers.filter((attacker) => typeof attacker.character_id === "number");
+  if (characterAttackers.length < 2) {
+    return false;
+  }
+  const hasMatchedAttackerShip = characterAttackers.some(
+    (attacker) => attacker.character_id === characterId && attacker.ship_type_id === shipTypeId
+  );
+  if (!hasMatchedAttackerShip) {
+    return false;
+  }
+  return !isPodKillmailVictim(kill, namesByTypeId);
+}
+
+function isCynoCapableNonCombatBaitShip(name: string): boolean {
+  return CYNO_CAPABLE_NON_COMBAT_BAIT_SHIPS.has(name);
+}
+
+function isPodKillmailVictim(kill: ZkillKillmail, namesByTypeId: Map<number, string>): boolean {
+  const victimShipTypeId = kill.victim.ship_type_id;
+  if (typeof victimShipTypeId !== "number") {
+    return false;
+  }
+  if (POD_SHIP_TYPE_IDS.has(victimShipTypeId)) {
+    return true;
+  }
+  const victimShipName = namesByTypeId.get(victimShipTypeId)?.trim().toLowerCase();
+  if (!victimShipName) {
+    return false;
+  }
+  return victimShipName === "pod" || victimShipName.includes("capsule");
 }
 
 function hasCynoModuleInLoss(loss: ZkillKillmail, namesByTypeId: Map<number, string>): boolean {
@@ -450,10 +539,6 @@ function isBaitHull(name: string): boolean {
     name === "Hyperion" ||
     name === "Maelstrom"
   );
-}
-
-function isBaitEvidenceModuleName(name: string): boolean {
-  return isCynoModuleName(name) || isTackleModuleName(name) || isTankModuleName(name);
 }
 
 function resolveFitId(ship: ShipPrediction, fitCandidates: FitCandidate[]): string {

@@ -433,8 +433,8 @@ body {
 
 .fleet-summary-grid {
   display: grid;
-  grid-template-columns: minmax(170px, 1.9fr) minmax(145px, 1.2fr) minmax(145px, 1.2fr) minmax(190px, 1.7fr) minmax(185px, 1.4fr);
-  column-gap: 10px;
+  grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.68fr) minmax(0, 1.68fr) minmax(0, 1.3fr);
+  column-gap: 12px;
 }
 
 .fleet-summary-list {
@@ -481,6 +481,12 @@ body {
 .fleet-col-ship {
   overflow: hidden;
   gap: 6px;
+  align-items: center;
+}
+
+.fleet-col-ship-primary,
+.fleet-col-ship-secondary {
+  min-width: 0;
 }
 
 .fleet-col-alerts {
@@ -570,6 +576,7 @@ body {
 }
 
 .fleet-summary-ship {
+  display: block;
   color: #d8e3f3;
   text-decoration: none;
   font-size: 0.84rem;
@@ -578,7 +585,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  flex: 1 1 auto;
+  max-width: 100%;
+  flex: 1 1 0;
 }
 
 .fleet-summary-probability {
@@ -964,6 +972,12 @@ body {
   grid-template-columns: minmax(0, 350px) minmax(0, 1fr);
   gap: 8px;
   align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.ship-fit-and-metrics > * {
+  min-width: 0;
 }
 
 .ship-probability {
@@ -1012,6 +1026,8 @@ body {
   box-sizing: border-box;
   margin: 4px 0 0;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.86rem;
   color: #d3d8de;
@@ -1032,6 +1048,7 @@ body {
   display: grid;
   gap: 6px;
   min-height: 128px;
+  min-width: 0;
 }
 
 .ship-metrics-low {

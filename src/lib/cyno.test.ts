@@ -355,6 +355,7 @@ describe("deriveShipCynoBaitEvidence", () => {
         })
       ],
       fitCandidates: [fit({ shipTypeId: 700, fitLabel: "No modules" })],
+      kills: [],
       losses: [],
       characterId: 10,
       namesByTypeId: new Map([[700, "Onyx"]])
@@ -364,22 +365,8 @@ describe("deriveShipCynoBaitEvidence", () => {
     expect(evidence.get("Onyx")?.Bait).toBeUndefined();
   });
 
-  it("selects the most recent valid cyno and bait evidence per ship", () => {
+  it("does not derive bait evidence from losses-only module fits", () => {
     const losses: ZkillKillmail[] = [
-      {
-        killmail_id: 40,
-        killmail_time: "2026-02-10T11:00:00Z",
-        victim: { character_id: 10, ship_type_id: 700, items: [{ item_type_id: 5000 }] },
-        attackers: [],
-        zkb: {}
-      },
-      {
-        killmail_id: 41,
-        killmail_time: "2026-02-13T11:00:00Z",
-        victim: { character_id: 10, ship_type_id: 700, items: [{ item_type_id: 5000 }] },
-        attackers: [],
-        zkb: {}
-      },
       {
         killmail_id: 42,
         killmail_time: "2026-02-14T11:00:00Z",
@@ -392,31 +379,227 @@ describe("deriveShipCynoBaitEvidence", () => {
     const evidence = deriveShipCynoBaitEvidence({
       predictedShips: [inferredShip({ shipName: "Devoter", shipTypeId: 700 })],
       fitCandidates: [fit({ shipTypeId: 700, fitLabel: "Heavy tackle fit" })],
+      kills: [],
       losses,
       characterId: 10,
       namesByTypeId: new Map([
         [700, "Devoter"],
+        [5002, "Damage Control II"]
+      ])
+    });
+
+    expect(evidence.get("Devoter")?.Bait).toBeUndefined();
+  });
+
+  it("does not derive bait evidence for combat hulls even with matched non-solo killmail", () => {
+    const kills: ZkillKillmail[] = [
+      {
+        killmail_id: 49,
+        killmail_time: "2026-02-19T13:00:00Z",
+        victim: { ship_type_id: 603 },
+        attackers: [
+          { character_id: 10, ship_type_id: 700 },
+          { character_id: 11, ship_type_id: 602 }
+        ],
+        zkb: {}
+      }
+    ];
+
+    const evidence = deriveShipCynoBaitEvidence({
+      predictedShips: [inferredShip({ shipName: "Devoter", shipTypeId: 700 })],
+      fitCandidates: [fit({ shipTypeId: 700, fitLabel: "Heavy tackle fit" })],
+      kills,
+      losses: [],
+      characterId: 10,
+      namesByTypeId: new Map([
+        [700, "Devoter"],
+        [603, "Merlin"]
+      ])
+    });
+
+    expect(evidence.get("Devoter")?.Bait).toBeUndefined();
+  });
+
+  it("does not derive bait evidence from solo killmails", () => {
+    const kills: ZkillKillmail[] = [
+      {
+        killmail_id: 47,
+        killmail_time: "2026-02-19T11:00:00Z",
+        victim: { ship_type_id: 603 },
+        attackers: [{ character_id: 10, ship_type_id: 700 }],
+        zkb: {}
+      }
+    ];
+
+    const evidence = deriveShipCynoBaitEvidence({
+      predictedShips: [inferredShip({ shipName: "Devoter", shipTypeId: 700 })],
+      fitCandidates: [fit({ shipTypeId: 700, fitLabel: "Heavy tackle fit" })],
+      kills,
+      losses: [],
+      characterId: 10,
+      namesByTypeId: new Map([
+        [700, "Devoter"],
+        [603, "Merlin"]
+      ])
+    });
+
+    expect(evidence.get("Devoter")?.Bait).toBeUndefined();
+  });
+
+  it("does not derive bait evidence when zkill labels kill as solo", () => {
+    const kills: ZkillKillmail[] = [
+      {
+        killmail_id: 50,
+        killmail_time: "2026-02-19T14:00:00Z",
+        victim: { ship_type_id: 603 },
+        attackers: [
+          { character_id: 10, ship_type_id: 701 },
+          { character_id: undefined, ship_type_id: 12198 }
+        ],
+        zkb: { solo: true } as unknown as ZkillKillmail["zkb"]
+      }
+    ];
+
+    const evidence = deriveShipCynoBaitEvidence({
+      predictedShips: [inferredShip({ shipName: "Viator", shipTypeId: 701 })],
+      fitCandidates: [fit({ shipTypeId: 701, fitLabel: "Travel fit" })],
+      kills,
+      losses: [],
+      characterId: 10,
+      namesByTypeId: new Map([
+        [701, "Viator"],
+        [603, "Merlin"]
+      ])
+    });
+
+    expect(evidence.get("Viator")?.Bait).toBeUndefined();
+  });
+
+  it("does not derive bait evidence from pod killmails", () => {
+    const kills: ZkillKillmail[] = [
+      {
+        killmail_id: 48,
+        killmail_time: "2026-02-19T12:00:00Z",
+        victim: { ship_type_id: 670 },
+        attackers: [
+          { character_id: 10, ship_type_id: 700 },
+          { character_id: 11, ship_type_id: 601 }
+        ],
+        zkb: {}
+      }
+    ];
+
+    const evidence = deriveShipCynoBaitEvidence({
+      predictedShips: [inferredShip({ shipName: "Viator", shipTypeId: 701 })],
+      fitCandidates: [fit({ shipTypeId: 701, fitLabel: "Travel fit" })],
+      kills,
+      losses: [],
+      characterId: 10,
+      namesByTypeId: new Map([
+        [701, "Viator"],
+        [670, "Capsule"]
+      ])
+    });
+
+    expect(evidence.get("Viator")?.Bait).toBeUndefined();
+  });
+
+  it("selects the most recent valid cyno and killmail bait evidence per ship", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 40,
+        killmail_time: "2026-02-10T11:00:00Z",
+        victim: { character_id: 10, ship_type_id: 701, items: [{ item_type_id: 5000 }] },
+        attackers: [],
+        zkb: {}
+      },
+      {
+        killmail_id: 41,
+        killmail_time: "2026-02-13T11:00:00Z",
+        victim: { character_id: 10, ship_type_id: 701, items: [{ item_type_id: 5000 }] },
+        attackers: [],
+        zkb: {}
+      },
+      {
+        killmail_id: 42,
+        killmail_time: "2026-02-14T11:00:00Z",
+        victim: { character_id: 10, ship_type_id: 701, items: [{ item_type_id: 5002 }] },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+    const kills: ZkillKillmail[] = [
+      {
+        killmail_id: 43,
+        killmail_time: "2026-02-15T11:00:00Z",
+        victim: { ship_type_id: 603 },
+        attackers: [
+          { character_id: 10, ship_type_id: 701 },
+          { character_id: 12, ship_type_id: 602 }
+        ],
+        zkb: {}
+      },
+      {
+        killmail_id: 44,
+        killmail_time: "2026-02-16T11:00:00Z",
+        victim: { ship_type_id: 603 },
+        attackers: [
+          { character_id: 10, ship_type_id: 999 },
+          { character_id: 12, ship_type_id: 602 }
+        ],
+        zkb: {}
+      },
+      {
+        killmail_id: 45,
+        killmail_time: "2026-02-17T11:00:00Z",
+        victim: { ship_type_id: 603 },
+        attackers: [
+          { character_id: 999, ship_type_id: 701 },
+          { character_id: 12, ship_type_id: 602 }
+        ],
+        zkb: {}
+      },
+      {
+        killmail_id: 46,
+        killmail_time: "2026-02-18T11:00:00Z",
+        victim: { ship_type_id: 603 },
+        attackers: [
+          { character_id: 10, ship_type_id: 701 },
+          { character_id: 12, ship_type_id: 602 }
+        ],
+        zkb: {}
+      }
+    ];
+
+    const evidence = deriveShipCynoBaitEvidence({
+      predictedShips: [inferredShip({ shipName: "Viator", shipTypeId: 701 })],
+      fitCandidates: [fit({ shipTypeId: 701, fitLabel: "Travel fit" })],
+      kills,
+      losses,
+      characterId: 10,
+      namesByTypeId: new Map([
+        [701, "Viator"],
         [5000, "Cynosural Field Generator I"],
         [5002, "Damage Control II"]
       ])
     });
 
-    expect(evidence.get("Devoter")).toEqual({
+    expect(evidence.get("Viator")).toEqual({
       Cyno: {
         pillName: "Cyno",
         causingModule: "Cynosural Field Generator I",
-        fitId: "700:Heavy tackle fit",
+        fitId: "701:Travel fit",
         killmailId: 41,
         url: "https://zkillboard.com/kill/41/",
         timestamp: "2026-02-13T11:00:00.000Z"
       },
       Bait: {
         pillName: "Bait",
-        causingModule: "Damage Control II",
-        fitId: "700:Heavy tackle fit",
-        killmailId: 42,
-        url: "https://zkillboard.com/kill/42/",
-        timestamp: "2026-02-14T11:00:00.000Z"
+        causingModule: "Matched attacker ship on killmail",
+        fitId: "701:Travel fit",
+        killmailId: 46,
+        url: "https://zkillboard.com/kill/46/",
+        timestamp: "2026-02-18T11:00:00.000Z"
       }
     });
   });

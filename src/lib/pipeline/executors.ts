@@ -152,6 +152,7 @@ export async function recomputeDerivedInference(params: {
   const cynoBaitEvidenceByShip = deriveShipCynoBaitEvidence({
     predictedShips,
     fitCandidates,
+    kills: params.row.inferenceKills,
     losses: params.row.inferenceLosses,
     characterId: params.row.characterId!,
     namesByTypeId: params.namesById

@@ -51,6 +51,8 @@ export type ZkillKillmail = {
   zkb?: {
     hash?: string;
     totalValue?: number;
+    solo?: boolean;
+    labels?: string[];
   };
 };
 
@@ -731,6 +733,7 @@ async function hydrateKillmailSummaries(
         const normalized: ZkillKillmail = {
           ...details,
           zkb: {
+            ...(row.zkb ?? {}),
             ...(details.zkb ?? {}),
             hash,
             totalValue: row.zkb?.totalValue ?? details.zkb?.totalValue
