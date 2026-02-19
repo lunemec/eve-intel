@@ -245,16 +245,6 @@ export const PilotCardView = memo(function PilotCardView(props: {
                           <span>{ship.shipName}</span>
                         </>
                       )}
-                      {ship.cynoCapable ? (
-                        <>
-                          <span
-                            className="ship-cyno-pill"
-                            title={`Cyno Capable: ${ship.shipName} can fit a cynosural module, but this does not imply proven recent usage.`}
-                          >
-                            Cyno Capable
-                          </span>
-                        </>
-                      ) : null}
                       {renderShipPills(ship, pilot.cynoRisk)}
                     </span>
                     <div className="ship-fit-and-metrics">

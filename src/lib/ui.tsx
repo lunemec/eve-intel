@@ -165,20 +165,21 @@ function wrapEvidenceLink(
   element: JSX.Element,
   mode: "pill" | "icon" | "icon-link"
 ): JSX.Element {
-  if (mode !== "icon-link") {
+  if (mode === "icon") {
     return element;
   }
   const url = evidenceUrl(ship, pillName);
   if (!url) {
     return element;
   }
+  const linkClass = mode === "pill" ? "risk-badge-link" : "alert-icon-link";
   return (
     <a
       key={`${ship.shipName}-pill-link-${pillName}`}
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="alert-icon-link"
+      className={linkClass}
     >
       {element}
     </a>

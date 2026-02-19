@@ -127,6 +127,50 @@ describe("ui helpers", () => {
     expect(screen.queryByText("Web")).toBeNull();
   });
 
+  it("links evidence-backed pill-mode pills to zKill evidence", () => {
+    const cynoEvidenceUrl = "https://zkillboard.com/kill/41/";
+    const webEvidenceUrl = "https://zkillboard.com/kill/42/";
+    const { container } = render(
+      <>
+        {renderShipPills(
+          ship({
+            cynoCapable: true,
+            cynoChance: 100,
+            rolePills: ["Web"],
+            pillEvidence: {
+              Cyno: {
+                pillName: "Cyno",
+                causingModule: "Cynosural Field Generator I",
+                fitId: "700:Heavy tackle fit",
+                killmailId: 41,
+                url: cynoEvidenceUrl,
+                timestamp: "2026-02-13T11:00:00.000Z"
+              },
+              Web: {
+                pillName: "Web",
+                causingModule: "Stasis Webifier II",
+                fitId: "700:Heavy tackle fit",
+                killmailId: 42,
+                url: webEvidenceUrl,
+                timestamp: "2026-02-14T11:00:00.000Z"
+              }
+            }
+          }),
+          undefined,
+          "pill"
+        )}
+      </>
+    );
+
+    const riskPills = Array.from(container.querySelectorAll(".risk-badge"));
+    const cyno = riskPills.find((pill) => pill.textContent === "Cyno");
+    const web = riskPills.find((pill) => pill.textContent === "Web");
+    expect(cyno).toBeTruthy();
+    expect(web).toBeTruthy();
+    expect(cyno?.closest("a")?.getAttribute("href")).toBe(cynoEvidenceUrl);
+    expect(web?.closest("a")?.getAttribute("href")).toBe(webEvidenceUrl);
+  });
+
   it("renders icon-mode pills with image assets and links evidence-backed icons", () => {
     const cynoEvidenceUrl = "https://zkillboard.com/kill/41/";
     const webEvidenceUrl = "https://zkillboard.com/kill/42/";

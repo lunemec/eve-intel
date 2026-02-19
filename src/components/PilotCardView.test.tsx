@@ -158,8 +158,33 @@ describe("PilotCardView", () => {
     expect(fleetPill?.getAttribute("title")?.length).toBeGreaterThan(10);
   });
 
+  it("does not render Cyno Capable pill in likely ships", () => {
+    const metrics: FitMetricResult = { status: "unavailable", key: "k", reason: "No dogma" };
+    render(
+      <PilotCardView
+        pilot={pilot({
+          status: "ready",
+          predictedShips: [
+            {
+              shipTypeId: 12013,
+              shipName: "Onyx",
+              probability: 70,
+              source: "inferred",
+              reason: [],
+              cynoCapable: true
+            }
+          ]
+        })}
+        getFitMetrics={vi.fn(() => metrics)}
+      />
+    );
+
+    expect(screen.queryByText("Cyno Capable")).toBeNull();
+  });
+
   it("renders only evidence-backed non-Fleet/Solo pills across pilot-card pill surfaces", () => {
     const metrics: FitMetricResult = { status: "unavailable", key: "k", reason: "No dogma" };
+    const longPointEvidenceUrl = "https://zkillboard.com/kill/91001/";
     render(
       <PilotCardView
         pilot={pilot({
@@ -186,7 +211,7 @@ describe("PilotCardView", () => {
                   causingModule: "Warp Disruptor II",
                   fitId: "11963:Rapier fit",
                   killmailId: 91001,
-                  url: "https://zkillboard.com/kill/91001/",
+                  url: longPointEvidenceUrl,
                   timestamp: "2026-02-14T11:00:00.000Z"
                 }
               }
@@ -198,6 +223,10 @@ describe("PilotCardView", () => {
     );
 
     expect(screen.queryAllByText("Web")).toHaveLength(0);
-    expect(screen.getAllByText("Long Point")).toHaveLength(2);
+    const longPointPills = screen.getAllByText("Long Point");
+    expect(longPointPills).toHaveLength(2);
+    for (const pill of longPointPills) {
+      expect(pill.closest("a")?.getAttribute("href")).toBe(longPointEvidenceUrl);
+    }
   });
 });
