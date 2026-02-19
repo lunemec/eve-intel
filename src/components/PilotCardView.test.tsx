@@ -39,6 +39,29 @@ function fit(overrides: Partial<FitCandidate> = {}): FitCandidate {
   };
 }
 
+function readyMetrics(): FitMetricResult {
+  return {
+    status: "ready",
+    key: "ready",
+    value: {
+      dpsTotal: 420,
+      alpha: 900,
+      damageSplit: { em: 0.25, therm: 0.25, kin: 0.25, exp: 0.25 },
+      engagementRange: { optimal: 12000, falloff: 8000, missileMax: 0, effectiveBand: 20000 },
+      speed: { base: 250, propOn: 1200, propOnHeated: 1450 },
+      signature: { base: 80, propOn: 160 },
+      ehp: 65000,
+      resists: {
+        shield: { em: 0.2, therm: 0.3, kin: 0.4, exp: 0.5 },
+        armor: { em: 0.6, therm: 0.7, kin: 0.65, exp: 0.72 },
+        hull: { em: 0.33, therm: 0.33, kin: 0.33, exp: 0.33 }
+      },
+      confidence: 90,
+      assumptions: []
+    }
+  };
+}
+
 describe("PilotCardView", () => {
   it("shows waiting state when no inferred ships are available", () => {
     render(
@@ -68,6 +91,37 @@ describe("PilotCardView", () => {
     expect(screen.getAllByRole("button", { name: "Copy EFT" }).length).toBe(1);
     expect(screen.getAllByText("Onyx").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Capsule").length).toBeGreaterThan(0);
+  });
+
+  it("highlights detected tank row while keeping S/A/H labels in resist table", () => {
+    const p = pilot({
+      status: "ready",
+      predictedShips: [
+        { shipTypeId: 456, shipName: "Onyx", probability: 75, source: "inferred", reason: [] }
+      ],
+      fitCandidates: [
+        fit({
+          shipTypeId: 456,
+          modulesBySlot: {
+            high: [],
+            mid: [],
+            low: [{ typeId: 1, name: "1600mm Steel Plates II" }],
+            rig: [],
+            cargo: [],
+            other: []
+          }
+        })
+      ]
+    });
+
+    const { container } = render(<PilotCardView pilot={p} getFitMetrics={vi.fn(() => readyMetrics())} />);
+
+    const armorRow = container.querySelector(".ship-resist-table tbody tr:nth-child(2)");
+    const armorRowHeader = armorRow?.querySelector("th");
+    expect(armorRow).toBeTruthy();
+    expect(armorRow?.classList.contains("ship-resist-row-warning")).toBe(true);
+    expect(armorRowHeader?.textContent).toBe("A");
+    expect(armorRowHeader?.getAttribute("title")).toContain("Armor tank detected");
   });
 
   it("shows gang profile line with Fleet pill when solo ratio is low", () => {

@@ -14,7 +14,7 @@ import {
   formatRatio,
   formatIsk
 } from "../lib/presentation";
-import { renderResistCell, renderShipPills } from "../lib/ui";
+import { inferTankTypeFromFit, renderResistCell, renderResistRowHeader, renderShipPills } from "../lib/ui";
 import { characterPortraitUrl, characterZkillUrl, corporationLogoUrl, corporationZkillUrl, allianceLogoUrl, allianceZkillUrl, shipIconUrl, killmailZkillUrl } from "../lib/links";
 import { pilotDetailAnchorId } from "../lib/appUtils";
 import type { PilotCard } from "../lib/usePilotIntelPipeline";
@@ -211,6 +211,7 @@ export const PilotCardView = memo(function PilotCardView(props: {
                 ? pilot.fitCandidates.find((entry) => entry.shipTypeId === ship.shipTypeId)
                 : undefined;
               const metrics = props.getFitMetrics(pilot, fit);
+              const tankType = inferTankTypeFromFit(fit);
               const rowCyno = shipHasPotentialCyno(ship);
               const eft = formatFitAsEft(ship.shipName, fit);
               const shipNameLower = ship.shipName.toLowerCase();
@@ -284,22 +285,22 @@ export const PilotCardView = memo(function PilotCardView(props: {
                                 </div>
                                 <table className="ship-resist-table">
                                   <tbody>
-                                    <tr>
-                                      <th scope="row">S</th>
+                                    <tr className={tankType === "shield" ? "ship-resist-row-warning" : undefined}>
+                                      {renderResistRowHeader("shield", tankType)}
                                       {renderResistCell(metrics.value.resists.shield.em, "damage-em")}
                                       {renderResistCell(metrics.value.resists.shield.therm, "damage-th")}
                                       {renderResistCell(metrics.value.resists.shield.kin, "damage-ki")}
                                       {renderResistCell(metrics.value.resists.shield.exp, "damage-ex")}
                                     </tr>
-                                    <tr>
-                                      <th scope="row">A</th>
+                                    <tr className={tankType === "armor" ? "ship-resist-row-warning" : undefined}>
+                                      {renderResistRowHeader("armor", tankType)}
                                       {renderResistCell(metrics.value.resists.armor.em, "damage-em")}
                                       {renderResistCell(metrics.value.resists.armor.therm, "damage-th")}
                                       {renderResistCell(metrics.value.resists.armor.kin, "damage-ki")}
                                       {renderResistCell(metrics.value.resists.armor.exp, "damage-ex")}
                                     </tr>
-                                    <tr>
-                                      <th scope="row">H</th>
+                                    <tr className={tankType === "hull" ? "ship-resist-row-warning" : undefined}>
+                                      {renderResistRowHeader("hull", tankType)}
                                       {renderResistCell(metrics.value.resists.hull.em, "damage-em")}
                                       {renderResistCell(metrics.value.resists.hull.therm, "damage-th")}
                                       {renderResistCell(metrics.value.resists.hull.kin, "damage-ki")}

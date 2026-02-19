@@ -1198,10 +1198,30 @@ body {
 }
 
 .ship-resist-table th {
-  text-align: left;
+  text-align: center;
   color: #8ea4bc;
   font-weight: 600;
-  width: 16px;
+  width: 20px;
+  padding-left: 0;
+  padding-right: 0;
+  vertical-align: middle;
+}
+
+.ship-resist-row-warning {
+  background: #7a2b2b66;
+}
+
+.ship-resist-row-warning th,
+.ship-resist-row-warning td {
+  color: #ffd1d1;
+}
+
+.ship-resist-row-warning th {
+  border-radius: 4px 0 0 4px;
+}
+
+.ship-resist-row-label-warning {
+  color: #ffb3b3;
 }
 
 .damage-em {
