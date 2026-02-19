@@ -65,7 +65,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
               key={`summary-${pilot.parsedEntry.pilotName.toLowerCase()}`}
               onClick={(event) => {
                 const target = event.target as HTMLElement;
-                if (target.closest("a, button")) {
+                if (target.closest("a, button, [data-prevent-row-click='true']")) {
                   return;
                 }
                 const detail = document.getElementById(detailAnchorId);
@@ -164,6 +164,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
                   <span
                     className={`risk-badge ${engagementStyle === "Fleet" ? "risk-style-fleet" : "risk-style-solo"}`}
                     title={engagementStyleTitle(engagementStyle, pilot.stats?.soloRatio)}
+                    data-prevent-row-click="true"
                   >
                     {engagementStyle}
                   </span>

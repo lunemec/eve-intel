@@ -3,6 +3,7 @@
  */
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import * as appUtils from "../lib/appUtils";
 import type { PilotCard } from "../lib/usePilotIntelPipeline";
 import { FleetSummary } from "./FleetSummary";
 
@@ -212,5 +213,42 @@ describe("FleetSummary", () => {
     const webLink = webIcon.closest("a");
     expect(webLink).toBeTruthy();
     expect(webLink?.getAttribute("href")).toBe(evidenceUrl);
+  });
+
+  it("does not trigger row anchor-scroll when Fleet/Solo pills are clicked", () => {
+    const smoothScrollSpy = vi.spyOn(appUtils, "smoothScrollToElement").mockImplementation(() => {});
+    const { container } = render(
+      <FleetSummary
+        pilotCards={[
+          pilot({
+            characterId: 123,
+            characterName: "Fleet Pilot",
+            stats: { soloRatio: 2 } as PilotCard["stats"],
+            predictedShips: [{ shipTypeId: 456, shipName: "Onyx", probability: 82, source: "inferred", reason: [] }]
+          })
+        ]}
+        copyableFleetCount={1}
+        setNetworkNotice={vi.fn()}
+        logDebug={vi.fn()}
+      />
+    );
+
+    const detail = document.createElement("div");
+    detail.id = "pilot-detail-char-123";
+    document.body.append(detail);
+
+    const row = container.querySelector(".fleet-summary-line");
+    expect(row).toBeTruthy();
+    fireEvent.click(row!);
+    expect(smoothScrollSpy).toHaveBeenCalledTimes(1);
+    smoothScrollSpy.mockClear();
+
+    const fleetPill = container.querySelector(".fleet-col-alerts .risk-style-fleet");
+    expect(fleetPill).toBeTruthy();
+    fireEvent.click(fleetPill!);
+    expect(smoothScrollSpy).not.toHaveBeenCalled();
+
+    detail.remove();
+    smoothScrollSpy.mockRestore();
   });
 });
