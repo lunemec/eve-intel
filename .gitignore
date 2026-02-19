@@ -50,3 +50,5 @@ specs/
 .ai/
 .ralph/
 .pytest_cache/
+data/parity/fit-corpus.dev.jsonl
+coordination/
