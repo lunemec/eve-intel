@@ -312,7 +312,7 @@ function isNetworkError(error: unknown): boolean {
 }
 
 function isRetryable(status: number): boolean {
-  return status === 429 || (status >= 500 && status <= 599);
+  return status === 420 || status === 429 || (status >= 500 && status <= 599);
 }
 
 function backoffDelay(attempt: number): number {

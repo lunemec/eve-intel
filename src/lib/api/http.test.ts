@@ -40,6 +40,27 @@ describe("fetchJson", () => {
     expect(onRetry).toHaveBeenCalledWith({ status: 429, attempt: 1, delayMs: 400 });
   });
 
+  it("retries HTTP 420 and succeeds on later attempt", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("rate limited", { status: 420 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        })
+      );
+    vi.stubGlobal("fetch", fetchMock);
+    const onRetry = vi.fn();
+
+    const promise = fetchJson<{ ok: boolean }>("https://example.test", undefined, 250, undefined, onRetry);
+    await vi.runAllTimersAsync();
+    await expect(promise).resolves.toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(onRetry).toHaveBeenCalledWith({ status: 420, attempt: 1, delayMs: 400 });
+  });
+
   it("prefers Retry-After seconds over static backoff", async () => {
     vi.useFakeTimers();
     const fetchMock = vi
