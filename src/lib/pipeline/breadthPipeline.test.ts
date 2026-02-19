@@ -74,6 +74,14 @@ function makePilotState(entry: ParsedPilotInput, characterId: number, danger: nu
   };
 }
 
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((innerResolve) => {
+    resolve = innerResolve;
+  });
+  return { promise, resolve };
+}
+
 describe("pipeline/breadthPipeline", () => {
   it("hydrates base cards and does not block other pilots when one base fetch fails", async () => {
     const updatePilotCard = vi.fn();
@@ -537,6 +545,63 @@ describe("pipeline/breadthPipeline", () => {
     }
     expect(updatePilotCard).toHaveBeenCalledWith("Pilot A", expect.objectContaining({ fetchPhase: "ready" }));
     expect(updatePilotCard).toHaveBeenCalledWith("Pilot B", expect.objectContaining({ fetchPhase: "ready" }));
+  });
+
+  it("applies per-pilot backpressure by waiting for kills page before losses page", async () => {
+    const updatePilotCard = vi.fn();
+    const pilotA = makePilotState(ENTRY_A, 301, 80);
+
+    const killsGate = createDeferred<ZkillKillmail[]>();
+    const fetchLatestKillsPage = vi.fn(async () => killsGate.promise);
+    const fetchLatestLossesPage = vi.fn(async () => []);
+
+    const runPromise = runPagedHistoryRounds(
+      {
+        pilots: [pilotA],
+        lookbackDays: 7,
+        topShips: 5,
+        maxPages: 1,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard,
+        logDebug: vi.fn()
+      },
+      {
+        fetchCharacterPublic: vi.fn(),
+        fetchCharacterStats: vi.fn(),
+        resolveUniverseNames: vi.fn(),
+        derivePilotStats: vi.fn(),
+        mergePilotStats: vi.fn(),
+        buildStageOneRow: vi.fn(),
+        createErrorCard: vi.fn(),
+        fetchLatestKillsPage,
+        fetchLatestLossesPage,
+        mergeKillmailLists: vi.fn((a: ZkillKillmail[], b: ZkillKillmail[]) => [...a, ...b]),
+        collectStageNameResolutionIds: vi.fn(() => []),
+        resolveNamesSafely: vi.fn(async () => new Map<number, string>()),
+        buildStageTwoRow: vi.fn((params: { stageOne: PilotCard; inferenceKills: ZkillKillmail[]; inferenceLosses: ZkillKillmail[] }) => ({
+          ...params.stageOne,
+          inferenceKills: params.inferenceKills,
+          inferenceLosses: params.inferenceLosses
+        })),
+        recomputeDerivedInference: vi.fn(async () => ({
+          predictedShips: [],
+          fitCandidates: [],
+          cynoRisk: { potentialCyno: false, jumpAssociation: false, reasons: [] }
+        })),
+        ensureExplicitShipTypeId: vi.fn(async () => undefined),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    await Promise.resolve();
+    expect(fetchLatestKillsPage).toHaveBeenCalledTimes(1);
+    expect(fetchLatestLossesPage).toHaveBeenCalledTimes(0);
+
+    killsGate.resolve([]);
+    await runPromise;
+    expect(fetchLatestLossesPage).toHaveBeenCalledTimes(1);
   });
 
   it("treats danger 75 as normal and danger >75 as high; NaN is normal", async () => {

@@ -573,24 +573,22 @@ async function runPilotPageFetch(
     return 0;
   }
 
-  const [killRows, lossRows] = await Promise.all([
-    shouldFetchKills
-      ? deps.fetchLatestKillsPage(
-          pilot.characterId,
-          killPage,
-          params.signal,
-          params.onRetry(`zKill kills page ${killPage}`)
-        )
-      : Promise.resolve([] as ZkillKillmail[]),
-    shouldFetchLosses
-      ? deps.fetchLatestLossesPage(
-          pilot.characterId,
-          lossPage,
-          params.signal,
-          params.onRetry(`zKill losses page ${lossPage}`)
-        )
-      : Promise.resolve([] as ZkillKillmail[])
-  ]);
+  const killRows = shouldFetchKills
+    ? await deps.fetchLatestKillsPage(
+        pilot.characterId,
+        killPage,
+        params.signal,
+        params.onRetry(`zKill kills page ${killPage}`)
+      )
+    : [];
+  const lossRows = shouldFetchLosses
+    ? await deps.fetchLatestLossesPage(
+        pilot.characterId,
+        lossPage,
+        params.signal,
+        params.onRetry(`zKill losses page ${lossPage}`)
+      )
+    : [];
 
   if (shouldFetchKills) {
     pilot.nextKillsPage += 1;
