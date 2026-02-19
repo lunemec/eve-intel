@@ -48,6 +48,9 @@ export type FitResolvedModule = {
   chargeTypeId?: number;
   chargeName?: string;
   quantity?: number;
+  groupId?: number;
+  categoryId?: number;
+  effectIds?: number[];
 };
 
 export type FitResolvedSlots = {

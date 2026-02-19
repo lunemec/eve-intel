@@ -1,6 +1,7 @@
 import type { ParsedPilotInput, Settings } from "../../types";
 import { resolveInventoryTypeIdByName } from "../api/esi";
 import { setCachedAsync } from "../cache";
+import type { DogmaIndex } from "../dogma/index";
 import { formatFitAsEft } from "../eft";
 import { persistDevFitRecord } from "../devFitDump";
 import {
@@ -67,6 +68,7 @@ export async function recomputeDerivedInference(params: {
   row: PilotCard;
   settings: Settings;
   namesById: Map<number, string>;
+  dogmaIndex?: DogmaIndex | null;
   cacheKey: string;
   debugLog?: DebugLogger;
 }): Promise<DerivedInference> {
@@ -103,6 +105,7 @@ export async function recomputeDerivedInference(params: {
     losses: params.row.inferenceLosses,
     predictedShips,
     itemNamesByTypeId: params.namesById,
+    dogmaIndex: params.dogmaIndex,
     onFitDebug: (fitDebug) => {
       params.debugLog?.("Fit inference source", {
         pilot: params.row.parsedEntry.pilotName,

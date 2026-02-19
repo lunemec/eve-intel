@@ -85,6 +85,7 @@ export async function fetchAndPrepareStageOne(
     row: stageOneRow,
     settings: params.settings,
     namesById: stageOneNames,
+    dogmaIndex: params.dogmaIndex,
     topShips: params.topShips,
     logDebug: params.logDebug
   });

@@ -1,5 +1,6 @@
 import type { ParsedPilotInput } from "../types";
 import type { ZkillKillmail } from "./api/zkill";
+import type { DogmaIndex } from "./dogma/index";
 import type { FitResolvedSlots } from "./dogma/types";
 import type { PillEvidenceByName } from "./pillEvidence";
 import { collectEvidence } from "./intel/evidence";
@@ -176,6 +177,7 @@ export function deriveFitCandidates(params: {
   losses: ZkillKillmail[];
   predictedShips: ShipPrediction[];
   itemNamesByTypeId: Map<number, string>;
+  dogmaIndex?: DogmaIndex | null;
   onFitDebug?: (entry: {
     shipTypeId: number;
     sourceLossKillmailId: number;

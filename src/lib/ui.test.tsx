@@ -165,6 +165,39 @@ describe("ui helpers", () => {
     expect(result).toBe("hull");
   });
 
+  it("classifies single-module tank indicators for ancillary boosters, repairers, and tank rigs", () => {
+    const scenarios: Array<{ moduleName: string; expected: "shield" | "armor" | "hull" }> = [
+      { moduleName: "X-Large Ancillary Shield Booster", expected: "shield" },
+      { moduleName: "Large Shield Booster II", expected: "shield" },
+      { moduleName: "Large Core Defense Field Extender II", expected: "shield" },
+      { moduleName: "Large Core Defense Operational Solidifier I", expected: "shield" },
+      { moduleName: "Medium Ancillary Armor Repairer", expected: "armor" },
+      { moduleName: "Large Armor Repairer II", expected: "armor" },
+      { moduleName: "Medium Auxiliary Nano Pump I", expected: "armor" },
+      { moduleName: "Medium Nanobot Accelerator I", expected: "armor" },
+      { moduleName: "Medium Hull Repairer II", expected: "hull" },
+      { moduleName: "Small Transverse Bulkhead II", expected: "hull" },
+      { moduleName: "Small Hull Reinforcer II", expected: "hull" }
+    ];
+
+    for (const scenario of scenarios) {
+      const result = inferTankTypeFromFit(
+        fit({
+          modulesBySlot: {
+            high: [],
+            mid: [],
+            low: [],
+            rig: [{ typeId: 9000, name: scenario.moduleName }],
+            cargo: [],
+            other: []
+          }
+        })
+      );
+
+      expect(result, scenario.moduleName).toBe(scenario.expected);
+    }
+  });
+
   it("returns null when tank signals are ambiguous", () => {
     const result = inferTankTypeFromFit(
       fit({
@@ -415,6 +448,128 @@ describe("ui helpers", () => {
     );
 
     expect(result).toBeNull();
+  });
+
+  it("prefers typeId/effectId tank classification over name-regex fallback", () => {
+    const result = inferTankTypeFromFit(
+      fit({
+        modulesBySlot: {
+          high: [],
+          mid: [
+            {
+              typeId: 32780,
+              name: "Large Armor Repairer II",
+              groupId: 1156,
+              categoryId: 7,
+              effectIds: [4936]
+            } as FitModule
+          ],
+          low: [],
+          rig: [],
+          cargo: [],
+          other: []
+        }
+      })
+    );
+
+    expect(result).toBe("shield");
+  });
+
+  it("falls back to regex rules when id metadata is unavailable", () => {
+    const result = inferTankTypeFromFit(
+      fit({
+        modulesBySlot: {
+          high: [],
+          mid: [{ typeId: 1, name: "Large Shield Extender II" }],
+          low: [],
+          rig: [],
+          cargo: [],
+          other: []
+        }
+      })
+    );
+
+    expect(result).toBe("shield");
+  });
+
+  it("keeps weak hardener-only fits unresolved under id-first flow", () => {
+    const result = inferTankTypeFromFit(
+      fit({
+        modulesBySlot: {
+          high: [],
+          mid: [
+            {
+              typeId: 2281,
+              name: "Multispectrum Shield Hardener II",
+              groupId: 77,
+              categoryId: 7,
+              effectIds: [5230]
+            } as FitModule
+          ],
+          low: [],
+          rig: [],
+          cargo: [],
+          other: []
+        }
+      })
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it("keeps near-tie mixed fits unresolved under id-first flow", () => {
+    const result = inferTankTypeFromFit(
+      fit({
+        modulesBySlot: {
+          high: [],
+          mid: [
+            {
+              typeId: 32780,
+              name: "X-Large Ancillary Shield Booster",
+              groupId: 1156,
+              categoryId: 7,
+              effectIds: [4936]
+            } as FitModule
+          ],
+          low: [
+            {
+              typeId: 33101,
+              name: "Medium Ancillary Armor Repairer",
+              groupId: 1199,
+              categoryId: 7,
+              effectIds: [5275]
+            } as FitModule
+          ],
+          rig: [],
+          cargo: [],
+          other: []
+        }
+      })
+    );
+
+    expect(result).toBeNull();
+  });
+
+  it("emits fallback-path diagnostic when id metadata is unavailable", () => {
+    const diagnostics: string[] = [];
+    const result = inferTankTypeFromFit(
+      fit({
+        modulesBySlot: {
+          high: [],
+          mid: [{ typeId: 1, name: "Large Shield Extender II" }],
+          low: [],
+          rig: [],
+          cargo: [],
+          other: []
+        }
+      }),
+      {
+        onDiagnostic: (entry) => diagnostics.push(entry.kind)
+      }
+    );
+
+    expect(result).toBe("shield");
+    expect(diagnostics).toContain("fallback-regex");
   });
 
   it("suppresses non-Fleet/Solo pills when selected evidence is missing", () => {

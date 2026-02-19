@@ -108,6 +108,7 @@ export async function processPilotEntry(
       row: stageTwoRow,
       settings: params.settings,
       namesById: stageTwoNames,
+      dogmaIndex: params.dogmaIndex,
       topShips: params.topShips,
       logDebug: params.logDebug
     });

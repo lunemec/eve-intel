@@ -1,6 +1,7 @@
 import { getShipRiskFlags, roleBadgeClass, roleIconClass, roleShort, toPctNumber } from "./presentation";
 import type { CynoRisk } from "./cyno";
 import type { FitCandidate, ShipPrediction } from "./intel";
+import { classifyTankByModuleMetadata, type TankType } from "./tank/classifier";
 
 const CYNO_ICON_TYPE_ID = 21096;
 const RESIST_LAYER_META = {
@@ -19,12 +20,15 @@ const ROLE_ICON_TYPE_IDS: Record<string, number> = {
   "Shield Logi": 8635,
   "Armor Logi": 16455
 };
-const TANK_TYPES = ["shield", "armor", "hull"] as const;
+const TANK_TYPES: TankType[] = ["shield", "armor", "hull"];
 type FitModule = NonNullable<FitCandidate["modulesBySlot"]>["high"][number];
 type FitModuleWithDogmaMeta = FitModule & {
   effects?: string[];
   effectsMeta?: Array<{ effectId?: number; effectName?: string }>;
 };
+export type TankInferenceDiagnostic =
+  | { kind: "fallback-regex" }
+  | { kind: "module-no-classification-signal"; typeId?: number };
 const TANK_IMPACT_WEIGHT = {
   major: 4,
   medium: 3,
@@ -34,48 +38,47 @@ const TANK_IMPACT_WEIGHT = {
 const TANK_NAME_RULES: Record<TankType, Array<{ pattern: RegExp; weight: number }>> = {
   shield: [
     { pattern: /shield extender/i, weight: TANK_IMPACT_WEIGHT.major },
-    { pattern: /core defense field (?:extender|purger|safeguard)/i, weight: TANK_IMPACT_WEIGHT.medium },
-    { pattern: /shield booster|shield boost amplifier/i, weight: TANK_IMPACT_WEIGHT.medium },
+    {
+      pattern: /core defense (?:field )?(?:extender|purger|safeguard|operational solidifier)/i,
+      weight: TANK_IMPACT_WEIGHT.major
+    },
+    { pattern: /ancillary shield booster|shield booster/i, weight: TANK_IMPACT_WEIGHT.major },
+    { pattern: /shield boost amplifier/i, weight: TANK_IMPACT_WEIGHT.medium },
     { pattern: /shield hardener|shield resistance|shield reinforcer|screen reinforcer/i, weight: TANK_IMPACT_WEIGHT.minor }
   ],
   armor: [
     { pattern: /armor plate|steel plates|crystalline carbonide.*plates/i, weight: TANK_IMPACT_WEIGHT.major },
-    { pattern: /armor repairer|ancillary armor/i, weight: TANK_IMPACT_WEIGHT.medium },
+    { pattern: /armor repairer|ancillary armor/i, weight: TANK_IMPACT_WEIGHT.major },
     {
-      pattern: /trimark armor pump|auxiliary nano pump|nanobot accelerator|armor reinforcer|anti-.*pump/i,
-      weight: TANK_IMPACT_WEIGHT.minor
+      pattern: /trimark armor pump|auxiliary nano pump|nanobot accelerator|anti-.*pump/i,
+      weight: TANK_IMPACT_WEIGHT.major
     },
+    { pattern: /armor reinforcer/i, weight: TANK_IMPACT_WEIGHT.minor },
     { pattern: /armor hardener|armor resistance/i, weight: TANK_IMPACT_WEIGHT.minor }
   ],
   hull: [
     { pattern: /hull reinforcer|transverse bulkhead|bulkhead/i, weight: TANK_IMPACT_WEIGHT.major },
-    { pattern: /hull repairer|structure repairer/i, weight: TANK_IMPACT_WEIGHT.medium },
+    { pattern: /hull repairer|structure repairer/i, weight: TANK_IMPACT_WEIGHT.major },
     { pattern: /hull resistance|structure resistance/i, weight: TANK_IMPACT_WEIGHT.minor }
   ]
 };
 const TANK_EFFECT_RULES: Record<TankType, Array<{ pattern: RegExp; weight: number }>> = {
   shield: [
     { pattern: /shield.*(?:capacity|hp).*bonus/i, weight: TANK_IMPACT_WEIGHT.major },
-    { pattern: /shield.*(?:boost|booster|boostamplifier|safeguard)/i, weight: TANK_IMPACT_WEIGHT.medium },
+    { pattern: /shield.*(?:boost|booster|boostamplifier|safeguard|purger|solidifier)/i, weight: TANK_IMPACT_WEIGHT.major },
     { pattern: /shield.*(?:resonance|resistance|reinforcer|hardener|purger)/i, weight: TANK_IMPACT_WEIGHT.minor }
   ],
   armor: [
     { pattern: /armor.*(?:hp|hitpoint).*bonus/i, weight: TANK_IMPACT_WEIGHT.major },
-    { pattern: /armor.*(?:repair|repairer|nanobot|pump|damageamount)/i, weight: TANK_IMPACT_WEIGHT.medium },
+    { pattern: /armor.*(?:repair|repairer|nanobot|pump|damageamount)/i, weight: TANK_IMPACT_WEIGHT.major },
     { pattern: /armor.*(?:resonance|resistance|reinforcer|hardener)/i, weight: TANK_IMPACT_WEIGHT.minor }
   ],
   hull: [
     { pattern: /(?:hull|structure).*(?:hp|hitpoint).*bonus/i, weight: TANK_IMPACT_WEIGHT.major },
-    { pattern: /(?:hull|structure).*(?:repair|repairer|bulkhead)/i, weight: TANK_IMPACT_WEIGHT.medium },
+    { pattern: /(?:hull|structure).*(?:repair|repairer|bulkhead)/i, weight: TANK_IMPACT_WEIGHT.major },
     { pattern: /(?:hull|structure).*(?:resonance|resistance|reinforcer)/i, weight: TANK_IMPACT_WEIGHT.minor }
   ]
 };
-// Confidence gate: avoid forcing tank labels on weak or near-tied evidence.
-const TANK_INFERENCE_MIN_SCORE = 4;
-const TANK_INFERENCE_MIN_MARGIN = 2;
-
-export type TankType = (typeof TANK_TYPES)[number];
-
 function cynoTitle(ship: ShipPrediction): string {
   return `Cyno: this hull has direct same-hull historical cyno-fit evidence for this pilot (${ship.shipName}).`;
 }
@@ -121,10 +124,33 @@ export function renderResistCell(value: number, damageClass: string) {
   );
 }
 
-export function inferTankTypeFromFit(fit: FitCandidate | undefined): TankType | null {
+export function inferTankTypeFromFit(
+  fit: FitCandidate | undefined,
+  options?: { onDiagnostic?: (entry: TankInferenceDiagnostic) => void }
+): TankType | null {
   if (!fit) {
     return null;
   }
+
+  const resolvedModules = collectResolvedFitModules(fit);
+  if (hasIdMetadataEvidence(resolvedModules)) {
+    const classified = classifyTankByModuleMetadata(
+      resolvedModules.map((module) => ({
+        typeId: module.typeId,
+        groupId: module.groupId,
+        categoryId: module.categoryId,
+        effectIds: module.effectIds
+      }))
+    );
+    for (const module of classified.unclassifiedTankLikeModules) {
+      options?.onDiagnostic?.({
+        kind: "module-no-classification-signal",
+        typeId: module.typeId
+      });
+    }
+    return classified.tankType;
+  }
+  options?.onDiagnostic?.({ kind: "fallback-regex" });
 
   const scores: Record<TankType, number> = {
     shield: 0,
@@ -132,7 +158,6 @@ export function inferTankTypeFromFit(fit: FitCandidate | undefined): TankType | 
     hull: 0
   };
 
-  const resolvedModules = collectResolvedFitModules(fit);
   if (hasResolvedModuleEvidence(resolvedModules)) {
     scoreResolvedModules(resolvedModules, scores);
   } else {
@@ -142,10 +167,19 @@ export function inferTankTypeFromFit(fit: FitCandidate | undefined): TankType | 
     }
     scoreModuleNames(eftModuleNames, scores);
   }
+  const hasAnyScore = TANK_TYPES.some((tankType) => scores[tankType] > 0);
+  if (!hasAnyScore) {
+    for (const module of resolvedModules) {
+      options?.onDiagnostic?.({
+        kind: "module-no-classification-signal",
+        typeId: module.typeId
+      });
+    }
+  }
 
   const orderedScores = TANK_TYPES.map((tankType) => scores[tankType]).sort((a, b) => b - a);
   const topScore = orderedScores[0] ?? 0;
-  if (topScore < TANK_INFERENCE_MIN_SCORE) {
+  if (topScore < 4) {
     return null;
   }
 
@@ -155,11 +189,23 @@ export function inferTankTypeFromFit(fit: FitCandidate | undefined): TankType | 
   }
 
   const secondScore = orderedScores[1] ?? 0;
-  if (topScore - secondScore < TANK_INFERENCE_MIN_MARGIN) {
+  if (topScore - secondScore < 2) {
     return null;
   }
 
   return topMatches[0];
+}
+
+function hasIdMetadataEvidence(modules: FitModuleWithDogmaMeta[]): boolean {
+  return modules.some((module) => {
+    if (typeof module.groupId === "number" && module.groupId > 0) {
+      return true;
+    }
+    if (typeof module.categoryId === "number" && module.categoryId > 0) {
+      return true;
+    }
+    return Array.isArray(module.effectIds) && module.effectIds.some((effectId) => Number.isInteger(effectId) && effectId > 0);
+  });
 }
 
 export function renderResistRowHeader(layer: TankType, tankType: TankType | null): JSX.Element {

@@ -1,6 +1,8 @@
 import type { ZkillKillmail } from "../api/zkill";
+import type { DogmaIndex } from "../dogma/index";
 import type { FitResolvedSlots } from "../dogma/types";
 import type { FitCandidate, FitEftSections, ShipPrediction } from "../intel";
+import { enrichResolvedSlotsWithDogmaMetadata } from "./fitDogmaEnrichment";
 
 type LossItem = {
   item_type_id: number;
@@ -22,6 +24,7 @@ export function deriveFitCandidates(params: {
   losses: ZkillKillmail[];
   predictedShips: ShipPrediction[];
   itemNamesByTypeId: Map<number, string>;
+  dogmaIndex?: DogmaIndex | null;
   onFitDebug?: (entry: {
     shipTypeId: number;
     sourceLossKillmailId: number;
@@ -84,7 +87,10 @@ export function deriveFitCandidates(params: {
     });
 
     const sections = buildEftSections(items, params.itemNamesByTypeId);
-    const modulesBySlot = buildResolvedSlots(items, params.itemNamesByTypeId);
+    const modulesBySlot = enrichResolvedSlotsWithDogmaMetadata(
+      buildResolvedSlots(items, params.itemNamesByTypeId),
+      params.dogmaIndex
+    );
     const moduleTokens = flattenFittedSections(sections);
     if (moduleTokens.length === 0) {
       continue;

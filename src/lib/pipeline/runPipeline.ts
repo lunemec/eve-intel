@@ -1,5 +1,6 @@
 import type { ParsedPilotInput } from "../../types";
 import type { Dispatch, SetStateAction } from "react";
+import type { DogmaIndex } from "../dogma/index";
 import { resolveCharacterIds } from "../api/esi";
 import { createRetryNoticeHandler } from "./network";
 import { collectUnresolvedEntries, buildUnresolvedPilotError } from "./unresolved";
@@ -45,6 +46,7 @@ export async function runPilotPipeline(
     entries: ParsedPilotInput[];
     lookbackDays: number;
     topShips: number;
+    dogmaIndex?: DogmaIndex | null;
     signal: PipelineSignal;
     isCancelled: CancelCheck;
     logDebug: DebugLogger;
@@ -93,6 +95,7 @@ export async function runPilotPipeline(
     tasks,
     lookbackDays: params.lookbackDays,
     topShips: params.topShips,
+    dogmaIndex: params.dogmaIndex,
     maxPages: params.maxPages ?? ZKILL_PAGE_MAX_ROUNDS,
     signal: params.signal,
     onRetry,

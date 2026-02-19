@@ -1,5 +1,6 @@
 import type { ParsedPilotInput } from "../../types";
 import { fetchCharacterPublic, resolveUniverseNames, type CharacterPublic } from "../api/esi";
+import type { DogmaIndex } from "../dogma/index";
 import {
   fetchCharacterStats,
   fetchLatestKillsPage,
@@ -110,6 +111,7 @@ export async function runBreadthPilotPipeline(
     tasks: ResolvedPilotTask[];
     lookbackDays: number;
     topShips: number;
+    dogmaIndex?: DogmaIndex | null;
     maxPages?: number;
     signal: PipelineSignal;
     onRetry: RetryBuilder;
@@ -144,6 +146,7 @@ export async function runBreadthPilotPipeline(
       pilots,
       lookbackDays: params.lookbackDays,
       topShips: params.topShips,
+      dogmaIndex: params.dogmaIndex,
       maxPages,
       signal: params.signal,
       onRetry: params.onRetry,
@@ -303,6 +306,7 @@ export async function runPagedHistoryRounds(
     pilots: PilotBreadthState[];
     lookbackDays: number;
     topShips: number;
+    dogmaIndex?: DogmaIndex | null;
     maxPages: number;
     signal: PipelineSignal;
     onRetry: RetryBuilder;
@@ -370,6 +374,7 @@ async function recomputeForPilots(
     pilots: PilotBreadthState[];
     lookbackDays: number;
     topShips: number;
+    dogmaIndex?: DogmaIndex | null;
     signal: PipelineSignal;
     onRetry: RetryBuilder;
     isCancelled: CancelCheck;
@@ -396,7 +401,7 @@ async function recomputeForPilots(
       ids,
       signal: params.signal,
       onRetry: params.onRetry,
-      dogmaIndex: null,
+      dogmaIndex: params.dogmaIndex ?? null,
       logDebug: params.logDebug
     });
     const stageTwoRow = deps.buildStageTwoRow({
@@ -418,6 +423,7 @@ async function recomputeForPilots(
       row: stageTwoRow,
       settings: { lookbackDays: params.lookbackDays },
       namesById,
+      dogmaIndex: params.dogmaIndex ?? null,
       cacheKey,
       debugLog: params.logDebug
     });

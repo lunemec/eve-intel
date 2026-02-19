@@ -246,6 +246,7 @@ export function usePilotIntelPipelineEffect(
         entries: [entry],
         lookbackDays: params.settings.lookbackDays,
         topShips: TOP_SHIP_CANDIDATES,
+        dogmaIndex: params.dogmaIndex,
         signal: abortController.signal,
         isCancelled: () => cancelled,
         logDebug,

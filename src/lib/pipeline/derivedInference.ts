@@ -1,4 +1,5 @@
 import type { Settings } from "../../types";
+import type { DogmaIndex } from "../dogma/index";
 import type { PilotCard } from "../usePilotIntelPipeline";
 import { getCachedStateAsync, type CacheLookup } from "../cache";
 import { buildDerivedInferenceKey, isDerivedInferenceUsable } from "./pure";
@@ -24,6 +25,7 @@ export async function loadDerivedInferenceWithCache(
     row: PilotCard;
     settings: Settings;
     namesById: Map<number, string>;
+    dogmaIndex?: DogmaIndex | null;
     topShips: number;
     logDebug: DebugLogger;
   },
@@ -50,6 +52,7 @@ export async function loadDerivedInferenceWithCache(
         row: params.row,
         settings: params.settings,
         namesById: params.namesById,
+        dogmaIndex: params.dogmaIndex,
         cacheKey: derivedKey,
         debugLog: params.logDebug
       });
@@ -64,6 +67,7 @@ export async function loadDerivedInferenceWithCache(
     row: params.row,
     settings: params.settings,
     namesById: params.namesById,
+    dogmaIndex: params.dogmaIndex,
     cacheKey: derivedKey,
     debugLog: params.logDebug
   });
