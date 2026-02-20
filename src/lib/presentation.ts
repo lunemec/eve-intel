@@ -20,6 +20,13 @@ export function toPctNumber(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value * 100)));
 }
 
+export function formatShipLikelihoodPercent(value: number): string {
+  if (!Number.isFinite(value)) {
+    return "0%";
+  }
+  return `${Math.max(0, Math.min(100, Math.round(value)))}%`;
+}
+
 export function formatRange(value: number): string {
   if (!Number.isFinite(value) || value <= 0) {
     return "—";

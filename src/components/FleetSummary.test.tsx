@@ -96,7 +96,7 @@ describe("FleetSummary", () => {
           pilot({
             characterId: 123,
             characterName: "Pilot",
-            predictedShips: [{ shipTypeId: 641, shipName: longShipName, probability: 82, source: "inferred", reason: [] }]
+            predictedShips: [{ shipTypeId: 641, shipName: longShipName, probability: 81.6, source: "inferred", reason: [] }]
           })
         ]}
         copyableFleetCount={1}
@@ -107,6 +107,7 @@ describe("FleetSummary", () => {
 
     const shipColumn = document.querySelector(".fleet-col-ship");
     expect(shipColumn?.textContent).toContain("82%");
+    expect(shipColumn?.textContent).not.toContain("81.6%");
     expect(shipColumn?.textContent).toContain(longShipName);
     const probability = shipColumn?.querySelector(".fleet-summary-probability");
     const shipName = shipColumn?.querySelector(".fleet-summary-ship");

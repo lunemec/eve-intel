@@ -6,6 +6,7 @@ import {
   formatIsk,
   formatRange,
   formatRatio,
+  formatShipLikelihoodPercent,
   formatSpeedRange,
   getShipRiskFlags,
   orderRolePills,
@@ -46,6 +47,13 @@ describe("presentation helpers", () => {
     expect(toPct(0.321)).toBe("32%");
     expect(toPctNumber(1.2)).toBe(100);
     expect(toPctNumber(-1)).toBe(0);
+  });
+
+  it("formats ship likelihood percentages as rounded whole numbers", () => {
+    expect(formatShipLikelihoodPercent(82.6)).toBe("83%");
+    expect(formatShipLikelihoodPercent(82.4)).toBe("82%");
+    expect(formatShipLikelihoodPercent(101)).toBe("100%");
+    expect(formatShipLikelihoodPercent(Number.NaN)).toBe("0%");
   });
 
   it("formats ratios and isk", () => {

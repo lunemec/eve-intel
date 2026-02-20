@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.3.1 - 2026-02-20
+- Rounded ship likelihood percentage display to whole numbers in `src/components/PilotCardView.tsx` and `src/components/FleetSummary.tsx`, while preserving underlying `predictedShips.probability` precision and leaving EFT fit-confidence formatting unchanged.
+- Added ship-likelihood rounding coverage in `src/components/PilotCardView.test.tsx`, `src/components/FleetSummary.test.tsx`, and `src/lib/presentation.test.ts` via a shared formatter in `src/lib/presentation.ts`.
+
+Boundary source:
+- Previous boundary marker commit `ecfb03e` (`v0.3.0`) used as lower boundary because no `v0.3.1` tag exists yet.
+- Summarized from history in range `ecfb03e..HEAD`.
+
 ## v0.3.0 - 2026-02-18
 - Improved ID-first shield drift resilience for deferred shield-resistance-amplifier candidates by adding `effectId=2052` (`modifyShieldResonancePostPercent`) as a minor shield signal in `src/lib/tank/classifier.ts`; added a focused regression in `src/lib/tank/classifier.test.ts` proving `groupId=295` amplifier modules (`1808`, `2537`) now contribute shield score without forcing classification, preserving ambiguity/near-tie `null` behavior.
 - Expanded ID-first shield-local drift resilience for unresolved `Shield Power Relay` family TypeIds seen in fresh corpus usage by adding a narrow local shield major ID signal (`groupId=57` with `effectId=5461`) in `src/lib/tank/classifier.ts`; extended curated fixture guards in `src/lib/tank/classifier.test.ts` for `1422` (`Shield Power Relay II`) and `37820` (`Caldari Navy Shield Power Relay`), and added an explicit remote-logi negative guard for `3586` (`Small Remote Shield Booster I`) to preserve `null` outcomes for remote shield boosters.

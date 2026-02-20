@@ -1,7 +1,14 @@
 import { memo } from "react";
 import type { PilotCard } from "../lib/usePilotIntelPipeline";
 import { renderShipPills } from "../lib/ui";
-import { engagementStyleFromSoloRatio, engagementStyleTitle, shipHasPotentialCyno, threatClass, threatScore } from "../lib/presentation";
+import {
+  engagementStyleFromSoloRatio,
+  engagementStyleTitle,
+  formatShipLikelihoodPercent,
+  shipHasPotentialCyno,
+  threatClass,
+  threatScore
+} from "../lib/presentation";
 import { pilotDetailAnchorId, smoothScrollToElement, extractErrorMessage } from "../lib/appUtils";
 import {
   allianceZkillUrl,
@@ -168,7 +175,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
               <span className="fleet-col fleet-col-ship fleet-col-ship-primary">
                 {topShip ? (
                   <>
-                    <span className="fleet-summary-probability">{topShip.probability}%</span>
+                    <span className="fleet-summary-probability">{formatShipLikelihoodPercent(topShip.probability)}</span>
                     <img
                       src={shipIconUrl(topShip.shipTypeId)}
                       alt={topShip.shipName}
@@ -190,7 +197,7 @@ export const FleetSummary = memo(function FleetSummary(props: {
               <span className="fleet-col fleet-col-ship fleet-col-ship-secondary">
                 {secondShip ? (
                   <>
-                    <span className="fleet-summary-probability">{secondShip.probability}%</span>
+                    <span className="fleet-summary-probability">{formatShipLikelihoodPercent(secondShip.probability)}</span>
                     <img
                       src={shipIconUrl(secondShip.shipTypeId)}
                       alt={secondShip.shipName}

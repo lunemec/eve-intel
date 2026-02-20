@@ -3,6 +3,7 @@ import { formatFitAsEft } from "../lib/eft";
 import {
   engagementStyleFromSoloRatio,
   engagementStyleTitle,
+  formatShipLikelihoodPercent,
   shipHasPotentialCyno,
   threatClass,
   threatLabel,
@@ -191,7 +192,7 @@ export const PilotCardView = memo(function PilotCardView(props: {
                       loading="lazy"
                     />
                     <span className="ship-summary-name">{ship.shipName}</span>
-                    <span className="ship-summary-prob">{ship.probability}%</span>
+                    <span className="ship-summary-prob">{formatShipLikelihoodPercent(ship.probability)}</span>
                     {renderShipPills(ship, pilot.cynoRisk)}
                   </li>
                 );
@@ -335,7 +336,7 @@ export const PilotCardView = memo(function PilotCardView(props: {
                       </button>
                     ) : null}
                   </span>
-                  <strong className="ship-probability">{ship.probability}%</strong>
+                  <strong className="ship-probability">{formatShipLikelihoodPercent(ship.probability)}</strong>
                 </li>
               );
             })

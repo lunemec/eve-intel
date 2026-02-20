@@ -93,6 +93,21 @@ describe("PilotCardView", () => {
     expect(screen.getAllByText("Capsule").length).toBeGreaterThan(0);
   });
 
+  it("rounds decimal ship likelihood percentages to whole numbers in ship summary and likely ships", () => {
+    const metrics: FitMetricResult = { status: "unavailable", key: "k", reason: "No dogma" };
+    const p = pilot({
+      status: "ready",
+      predictedShips: [
+        { shipTypeId: 456, shipName: "Onyx", probability: 82.6, source: "inferred", reason: [] }
+      ]
+    });
+
+    render(<PilotCardView pilot={p} getFitMetrics={vi.fn(() => metrics)} />);
+
+    expect(screen.getAllByText("83%")).toHaveLength(2);
+    expect(screen.queryByText("82.6%")).toBeNull();
+  });
+
   it("highlights detected tank row while keeping S/A/H labels in resist table", () => {
     const p = pilot({
       status: "ready",
