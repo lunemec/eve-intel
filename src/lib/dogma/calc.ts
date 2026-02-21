@@ -51,6 +51,9 @@ const CATEGORY_DRONE = 18;
 const REACTIVE_ARMOR_SHIFT_ATTRIBUTE_ID = 1849;
 type DamageTypeKey = keyof DamageProfile;
 type DefenseLayer = "shield" | "armor" | "hull";
+type PrimaryDpsGroup = "turret" | "launcher" | "drone" | "disintegrator" | "other";
+type PropulsionKind = "ab" | "mwd";
+const PRIMARY_DPS_GROUP_ORDER: PrimaryDpsGroup[] = ["turret", "launcher", "drone", "disintegrator", "other"];
 
 type ShipWeaponProfileOverride = {
   shipTypeId: number;
@@ -176,6 +179,15 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
   let rangeFalloff = 0;
   let missileRange = 0;
   const damage = { ...DEFAULT_DAMAGE };
+  const dpsByGroup: Record<PrimaryDpsGroup, number> = {
+    turret: 0,
+    launcher: 0,
+    drone: 0,
+    disintegrator: 0,
+    other: 0
+  };
+  const dpsByTypeId = new Map<number, number>();
+  const dpsTypeGroups = new Map<number, PrimaryDpsGroup>();
   let weaponResolved = 0;
   const shipDroneEffectMultiplier = getShipDroneEffectDamageMultiplier(effectiveShip);
   if (shipDroneEffectMultiplier > 1) {
@@ -198,6 +210,9 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
     const adjustedAlpha = estimate.alpha * stacked.damageMultiplier;
     dps += adjustedDps;
     alpha += adjustedAlpha;
+    dpsByGroup[primaryDpsGroupFromWeaponFamily(estimate.family)] += Math.max(0, adjustedDps);
+    accumulateDpsByTypeId(dpsByTypeId, mod.typeId, adjustedDps);
+    dpsTypeGroups.set(mod.typeId, primaryDpsGroupFromWeaponFamily(estimate.family));
     rangeOptimal = Math.max(rangeOptimal, estimate.optimal);
     rangeFalloff = Math.max(rangeFalloff, estimate.falloff);
     missileRange = Math.max(missileRange, estimate.missileMax);
@@ -220,6 +235,9 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
     const adjustedDroneAlpha = estimate.alpha * droneDamageMultiplier * shipDroneEffectMultiplier;
     dps += adjustedDroneDps;
     alpha += adjustedDroneAlpha;
+    dpsByGroup.drone += Math.max(0, adjustedDroneDps);
+    accumulateDpsByTypeId(dpsByTypeId, mod.typeId, adjustedDroneDps);
+    dpsTypeGroups.set(mod.typeId, "drone");
     rangeOptimal = Math.max(rangeOptimal, estimate.optimal);
     rangeFalloff = Math.max(rangeFalloff, estimate.falloff);
     accumulateDamage(damage, estimate.damageSplit, adjustedDroneDps);
@@ -246,6 +264,9 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
   const speedAndSig = estimateSpeedAndSignature(index, effectiveShip, mid, low, rig, assumptions);
   const resists = readResistsFromResonance(defense.resonance);
   const ehp = estimateEhp(defense.hp.shield, defense.hp.armor, defense.hp.hull, resists);
+  const primaryDpsGroup = resolvePrimaryDpsGroup(dpsByGroup);
+  const primaryDpsTypeId = resolvePrimaryDpsTypeId(dpsByTypeId);
+  const primaryDpsSourceLabel = resolvePrimaryDpsSourceLabel(index, primaryDpsTypeId, dpsTypeGroups);
 
   const effectiveBand = Math.max(rangeOptimal + rangeFalloff, missileRange);
 
@@ -277,6 +298,10 @@ export function calculateShipCombatMetrics(index: DogmaIndex, input: CalculateCo
     resists,
     confidence,
     assumptions: unique(assumptions),
+    primaryDpsGroup,
+    primaryDpsTypeId,
+    primaryDpsSourceLabel,
+    propulsionKind: speedAndSig.propulsionKind,
     trace: input.trace ? trace.flush() : undefined
   };
 }
@@ -1838,7 +1863,11 @@ function estimateSpeedAndSignature(
   low: FitResolvedModule[],
   rig: FitResolvedModule[],
   assumptions: string[]
-): { speed: { base: number; propOn: number; propOnHeated: number }; signature: { base: number; propOn: number } } {
+): {
+  speed: { base: number; propOn: number; propOnHeated: number };
+  signature: { base: number; propOn: number };
+  propulsionKind: PropulsionKind | null;
+} {
   const baseHullSpeed = getAttrResolved(index, ship, "Maximum Velocity") ?? 0;
   const baseHullSig = getAttrResolved(index, ship, "Signature Radius") ?? 0;
   const speedMods = collectVelocityModifiers(index, low, rig);
@@ -1857,7 +1886,8 @@ function estimateSpeedAndSignature(
       signature: {
         base: round1(baseHullSig),
         propOn: round1(baseHullSig)
-      }
+      },
+      propulsionKind: null
     };
   }
 
@@ -1891,7 +1921,8 @@ function estimateSpeedAndSignature(
     signature: {
       base: round1(baseHullSig),
       propOn: round1(propSig)
-    }
+    },
+    propulsionKind: prop.kind
   };
 }
 
@@ -1936,7 +1967,7 @@ function collectVelocityModifiers(index: DogmaIndex, low: FitResolvedModule[], r
 function pickPropModule(
   index: DogmaIndex,
   mid: FitResolvedModule[]
-): { row: FitResolvedModule; type?: DogmaTypeEntry; kind: "mwd" | "ab" } | null {
+): { row: FitResolvedModule; type?: DogmaTypeEntry; kind: PropulsionKind } | null {
   for (const row of mid) {
     const name = row.name.toLowerCase();
     if (name.includes("microwarpdrive") || name.includes("afterburner")) {
@@ -1946,6 +1977,88 @@ function pickPropModule(
     }
   }
   return null;
+}
+
+function primaryDpsGroupFromWeaponFamily(family: WeaponFamily): PrimaryDpsGroup {
+  if (family === "hybrid" || family === "projectile" || family === "energy") {
+    return "turret";
+  }
+  if (family === "missile") {
+    return "launcher";
+  }
+  if (family === "disintegrator") {
+    return "disintegrator";
+  }
+  return "other";
+}
+
+function resolvePrimaryDpsGroup(groups: Record<PrimaryDpsGroup, number>): PrimaryDpsGroup | null {
+  let winner: PrimaryDpsGroup | null = null;
+  let highest = 0;
+  for (const group of PRIMARY_DPS_GROUP_ORDER) {
+    const value = groups[group];
+    if (value > highest + 1e-9) {
+      highest = value;
+      winner = group;
+    }
+  }
+  return highest > 0 ? winner : null;
+}
+
+function accumulateDpsByTypeId(contributions: Map<number, number>, typeId: number, dps: number): void {
+  if (!Number.isFinite(typeId) || typeId <= 0 || !Number.isFinite(dps) || dps <= 0) {
+    return;
+  }
+  contributions.set(typeId, (contributions.get(typeId) ?? 0) + dps);
+}
+
+function resolvePrimaryDpsTypeId(contributions: Map<number, number>): number | null {
+  let winner: number | null = null;
+  let highest = 0;
+  for (const [typeId, value] of contributions.entries()) {
+    if (value > highest + 1e-9) {
+      highest = value;
+      winner = typeId;
+      continue;
+    }
+    if (Math.abs(value - highest) <= 1e-9 && winner !== null && typeId < winner) {
+      winner = typeId;
+    }
+  }
+  return highest > 0 ? winner : null;
+}
+
+function resolvePrimaryDpsSourceLabel(
+  index: DogmaIndex,
+  primaryDpsTypeId: number | null,
+  typeGroups: Map<number, PrimaryDpsGroup>
+): string | null {
+  if (!primaryDpsTypeId || primaryDpsTypeId <= 0) {
+    return null;
+  }
+  const group = typeGroups.get(primaryDpsTypeId);
+  if (group === "drone") {
+    return "Drones";
+  }
+  const type = getType(index, primaryDpsTypeId);
+  const name = (type?.name ?? "").toLowerCase();
+  if (name.includes("blaster")) return "Blasters";
+  if (name.includes("railgun")) return "Railguns";
+  if (name.includes("autocannon")) return "Autocannons";
+  if (name.includes("artillery")) return "Artillery";
+  if (name.includes("pulse laser")) return "Pulse Lasers";
+  if (name.includes("beam laser")) return "Beam Lasers";
+  if (name.includes("rapid heavy missile launcher")) return "Rapid Heavy Missile Launchers";
+  if (name.includes("rapid light missile launcher")) return "Rapid Light Missile Launchers";
+  if (name.includes("heavy assault missile launcher")) return "Heavy Assault Missile Launchers";
+  if (name.includes("heavy missile launcher")) return "Heavy Missile Launchers";
+  if (name.includes("light missile launcher")) return "Light Missile Launchers";
+  if (name.includes("rocket launcher")) return "Rocket Launchers";
+  if (name.includes("cruise missile launcher")) return "Cruise Missile Launchers";
+  if (name.includes("torpedo launcher")) return "Torpedo Launchers";
+  if (name.includes("missile launcher")) return "Missile Launchers";
+  if (name.includes("disintegrator")) return "Disintegrators";
+  return type?.name ?? null;
 }
 
 function inferMwdSigBloomMitigation(

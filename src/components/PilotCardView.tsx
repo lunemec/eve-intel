@@ -23,6 +23,95 @@ import type { FitMetricResult } from "../lib/useFitMetrics";
 import type { PilotStats } from "../lib/intel";
 
 const DETAIL_FIT_CANDIDATES = 3;
+type DisplayPropulsionKind = "ab" | "mwd";
+const STATIC_ASSET_BASE = import.meta.env.BASE_URL ?? "/";
+
+function staticAssetUrl(path: string): string {
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${STATIC_ASSET_BASE}${normalizedPath}`;
+}
+
+const DAMAGE_PROFILE_HEADERS: Array<{ damageClass: string; iconPath: string; alt: string; title: string }> = [
+  {
+    damageClass: "damage-em",
+    iconPath: staticAssetUrl("icons/damage/em_big.png"),
+    alt: "EM resistance profile",
+    title: "Electromagnetic resistance"
+  },
+  {
+    damageClass: "damage-th",
+    iconPath: staticAssetUrl("icons/damage/thermal_big.png"),
+    alt: "Thermal resistance profile",
+    title: "Thermal resistance"
+  },
+  {
+    damageClass: "damage-ki",
+    iconPath: staticAssetUrl("icons/damage/kinetic_big.png"),
+    alt: "Kinetic resistance profile",
+    title: "Kinetic resistance"
+  },
+  {
+    damageClass: "damage-ex",
+    iconPath: staticAssetUrl("icons/damage/explosive_big.png"),
+    alt: "Explosive resistance profile",
+    title: "Explosive resistance"
+  }
+];
+const PROPULSION_ICON_TYPE_ID: Record<DisplayPropulsionKind, number> = {
+  ab: 6003,
+  mwd: 35660
+};
+
+function renderDpsValueWithIcon(
+  dps: number,
+  primaryDpsTypeId: number | null | undefined,
+  primaryDpsSourceLabel: string | null | undefined
+): JSX.Element {
+  const hasPrimaryDpsType = Number.isFinite(primaryDpsTypeId) && Number(primaryDpsTypeId) > 0;
+  const resolvedPrimaryDpsTypeId = hasPrimaryDpsType ? Number(primaryDpsTypeId) : undefined;
+  const resolvedLabel = (primaryDpsSourceLabel ?? "").trim() || "Unknown";
+  return (
+    <strong className="metric-value-with-icon">
+      {hasPrimaryDpsType ? (
+        <img
+          src={shipIconUrl(resolvedPrimaryDpsTypeId)}
+          alt={resolvedLabel}
+          title={resolvedLabel}
+          className="metric-leading-icon"
+          loading="lazy"
+        />
+      ) : null}
+      <span>{dps}</span>
+    </strong>
+  );
+}
+
+function renderSpeedValueWithIcon(
+  speedRange: string,
+  propulsionKind: DisplayPropulsionKind | null | undefined
+): JSX.Element {
+  const typeId = propulsionKind ? PROPULSION_ICON_TYPE_ID[propulsionKind] : undefined;
+  const title =
+    propulsionKind === "ab"
+      ? "Afterburner fitted propulsion profile"
+      : propulsionKind === "mwd"
+        ? "Microwarpdrive fitted propulsion profile"
+        : "";
+  return (
+    <strong className="metric-value-with-icon">
+      {typeId ? (
+        <img
+          src={shipIconUrl(typeId)}
+          alt={`Fitted propulsion: ${propulsionKind}`}
+          title={title}
+          className="metric-leading-icon"
+          loading="lazy"
+        />
+      ) : null}
+      <span>{speedRange}</span>
+    </strong>
+  );
+}
 
 function formatGangProfile(stats: PilotStats): string {
   const avgGang = stats.avgGangSize;
@@ -260,7 +349,11 @@ export const PilotCardView = memo(function PilotCardView(props: {
                               <div className="ship-metrics-grid">
                                 <div className="ship-metric-tile">
                                   <span>DPS</span>
-                                  <strong>{metrics.value.dpsTotal}</strong>
+                                  {renderDpsValueWithIcon(
+                                    metrics.value.dpsTotal,
+                                    metrics.value.primaryDpsTypeId,
+                                    metrics.value.primaryDpsSourceLabel
+                                  )}
                                   <div className="damage-inline">
                                     <span className="damage-em">{toPct(metrics.value.damageSplit.em)}</span>
                                     <span className="damage-th">{toPct(metrics.value.damageSplit.therm)}</span>
@@ -285,6 +378,16 @@ export const PilotCardView = memo(function PilotCardView(props: {
                                   <strong>{formatEhp(metrics.value.ehp)}</strong>
                                 </div>
                                 <table className="ship-resist-table">
+                                  <thead>
+                                    <tr>
+                                      <th scope="col" aria-hidden="true" />
+                                      {DAMAGE_PROFILE_HEADERS.map((header) => (
+                                      <th key={header.damageClass} scope="col" className={`ship-resist-damage-head ${header.damageClass}`}>
+                                          <img src={header.iconPath} alt={header.alt} title={header.title} loading="lazy" />
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
                                   <tbody>
                                     <tr className={tankType === "shield" ? "ship-resist-row-warning" : undefined}>
                                       {renderResistRowHeader("shield", tankType)}
@@ -312,7 +415,10 @@ export const PilotCardView = memo(function PilotCardView(props: {
                               </div>
                               <div className="ship-metric-tile ship-metric-tile-wide">
                                 <span>Speed</span>
-                                <strong>{formatSpeedRange(metrics.value.speed)}</strong>
+                                {renderSpeedValueWithIcon(
+                                  formatSpeedRange(metrics.value.speed),
+                                  metrics.value.propulsionKind
+                                )}
                               </div>
                             </>
                           ) : (

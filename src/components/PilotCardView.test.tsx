@@ -39,7 +39,7 @@ function fit(overrides: Partial<FitCandidate> = {}): FitCandidate {
   };
 }
 
-function readyMetrics(): FitMetricResult {
+function readyMetrics(): Extract<FitMetricResult, { status: "ready" }> {
   return {
     status: "ready",
     key: "ready",
@@ -137,6 +137,47 @@ describe("PilotCardView", () => {
     expect(armorRow?.classList.contains("ship-resist-row-warning")).toBe(true);
     expect(armorRowHeader?.textContent).toBe("A");
     expect(armorRowHeader?.getAttribute("title")).toContain("Armor tank detected");
+  });
+
+  it("renders resist damage header icons in EM/Thermal/Kinetic/Explosive order", () => {
+    const p = pilot({
+      status: "ready",
+      predictedShips: [
+        { shipTypeId: 456, shipName: "Onyx", probability: 75, source: "inferred", reason: [] }
+      ],
+      fitCandidates: [fit({ shipTypeId: 456 })]
+    });
+    const { container } = render(<PilotCardView pilot={p} getFitMetrics={vi.fn(() => readyMetrics())} />);
+
+    const headerIcons = Array.from(container.querySelectorAll(".ship-resist-damage-head img"));
+    expect(headerIcons.map((icon) => icon.getAttribute("alt"))).toEqual([
+      "EM resistance profile",
+      "Thermal resistance profile",
+      "Kinetic resistance profile",
+      "Explosive resistance profile"
+    ]);
+    expect(headerIcons[0]?.getAttribute("src")).toContain("icons/damage/em_big.png");
+  });
+
+  it("renders leading DPS and speed icons from computed combat metrics", () => {
+    const p = pilot({
+      status: "ready",
+      predictedShips: [
+        { shipTypeId: 456, shipName: "Onyx", probability: 75, source: "inferred", reason: [] }
+      ],
+      fitCandidates: [fit({ shipTypeId: 456 })]
+    });
+    const metrics = readyMetrics();
+    metrics.value.primaryDpsTypeId = 2410;
+    metrics.value.primaryDpsSourceLabel = "Missile Launchers";
+    metrics.value.propulsionKind = "mwd";
+
+    render(<PilotCardView pilot={p} getFitMetrics={vi.fn(() => metrics)} />);
+
+    const dpsIcon = screen.getByRole("img", { name: "Missile Launchers" });
+    const speedIcon = screen.getByRole("img", { name: "Fitted propulsion: mwd" });
+    expect(dpsIcon.getAttribute("src")).toContain("/types/2410/icon?size=64");
+    expect(speedIcon.getAttribute("src")).toContain("/types/35660/icon?size=64");
   });
 
   it("shows gang profile line with Fleet pill when solo ratio is low", () => {

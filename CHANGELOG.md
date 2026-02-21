@@ -2,13 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
-## v0.3.2 - 2026-02-21
+## v0.3.4 - 2026-02-21
 - Updated fleet summary cyno row highlighting in `src/styles.css` so `.fleet-summary-line.cyno-highlight` uses full-row tinting (instead of the partial fade used for ship-list rows), eliminating the visible uncolored strip and coloring the full fleet-summary row when cyno is highlighted.
 - Removed `gap` spacing from `.fleet-summary-list` in `src/styles.css` so highlighted fleet rows render their background flush to each row's separator line (`border-bottom`) instead of leaving an uncolored inter-row strip.
 - Normalized Fleet Summary row highlight height in `src/styles.css` by applying consistent vertical padding to all `.fleet-summary-line` rows and no longer removing bottom padding on `:last-child`, so highlighted top/bottom rows render with matching height while still dropping only the final divider border.
+- Aligned combat-capability damage coloring to pyfa/EVE resistance palette in `src/styles.css` using shared damage color variables (`EM/Thermal/Kinetic/Explosive`) across both DPS split labels and resist table cells, and fixed primary tank-row highlighting so it no longer overrides per-damage text/bar colorization.
+- Added resistance-profile header damage icons above the resist columns in `src/components/PilotCardView.tsx`, rendered from bundled local pyfa assets in `public/icons/damage`.
+- Added leading combat icons in `src/components/PilotCardView.tsx`: DPS now uses the exact Dogma-simulated primary DPS source `typeId` icon (`images.evetech.net/types/{typeId}/icon`) and Speed shows an AB/MWD propulsion icon before the speed range value via ESI type icons.
+- Extended Dogma output metadata in `src/lib/dogma/types.ts` and `src/lib/dogma/calc.ts` with optional `primaryDpsGroup` and `propulsionKind` display signals so UI icon rendering follows modeled combat and propulsion behavior.
+- Added regression coverage for the above behavior in `src/lib/dogma/calc.test.ts`, `src/components/PilotCardView.test.tsx`, `src/styles.combatCapability.test.ts`, and `src/assets.combatIcons.test.ts`.
 
 Boundary source:
-- No `v0.3.2` tag exists yet; this entry captures current workspace changes after `v0.3.1`.
+- Previous boundary marker commit `2efc572` (`v0.3.3`) used as lower boundary because no `v0.3.4` tag exists yet.
+- Summarized from history in range `2efc572..HEAD` plus current workspace changes.
 
 ## v0.3.1 - 2026-02-20
 - Rounded ship likelihood percentage display to whole numbers in `src/components/PilotCardView.tsx` and `src/components/FleetSummary.tsx`, while preserving underlying `predictedShips.probability` precision and leaving EFT fit-confidence formatting unchanged.

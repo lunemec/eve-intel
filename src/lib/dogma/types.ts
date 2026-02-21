@@ -111,5 +111,9 @@ export type CombatMetrics = {
   resists: LayerResists;
   confidence: number;
   assumptions: string[];
+  primaryDpsGroup?: "turret" | "launcher" | "drone" | "disintegrator" | "other" | null;
+  primaryDpsTypeId?: number | null;
+  primaryDpsSourceLabel?: string | null;
+  propulsionKind?: "ab" | "mwd" | null;
   trace?: Array<{ stage: string; message: string; source?: string }>;
 };

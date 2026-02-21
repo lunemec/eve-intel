@@ -290,6 +290,102 @@ describe("dogma calc", () => {
     expect(metrics.engagementRange.effectiveBand).toBeGreaterThan(0);
   });
 
+  it("reports primary DPS group for turret, launcher, drone, and empty offense", () => {
+    const pack: DogmaPack = {
+      ...basePack,
+      types: [
+        ...basePack.types,
+        {
+          typeId: 3200,
+          groupId: 100,
+          categoryId: 18,
+          name: "Hobgoblin II",
+          attrs: {
+            "EM damage": 0,
+            "Thermal damage": 12,
+            "Kinetic damage": 0,
+            "Explosive damage": 0,
+            "Damage Modifier": 1.92,
+            "Rate of fire": 4000
+          },
+          effects: ["targetAttack"]
+        }
+      ],
+      typeCount: basePack.typeCount + 1
+    };
+    const index = buildDogmaIndex(pack);
+
+    const turret = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: {
+        ...emptySlots,
+        high: [{ typeId: 2000, name: "200mm Autocannon II", chargeTypeId: 2100, chargeName: "EMP S" }]
+      }
+    });
+    expect(turret.primaryDpsGroup).toBe("turret");
+    expect(turret.primaryDpsTypeId).toBe(2000);
+    expect(turret.primaryDpsSourceLabel).toBe("Autocannons");
+
+    const launcher = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: {
+        ...emptySlots,
+        high: [{ typeId: 3000, name: "Rapid Light Missile Launcher II", chargeTypeId: 3100, chargeName: "Scourge Light Missile" }]
+      }
+    });
+    expect(launcher.primaryDpsGroup).toBe("launcher");
+    expect(launcher.primaryDpsTypeId).toBe(3000);
+    expect(launcher.primaryDpsSourceLabel).toBe("Missile Launchers");
+
+    const drone = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: { ...emptySlots },
+      drones: [{ typeId: 3200, name: "Hobgoblin II", quantity: 5 }]
+    });
+    expect(drone.primaryDpsGroup).toBe("drone");
+    expect(drone.primaryDpsTypeId).toBe(3200);
+    expect(drone.primaryDpsSourceLabel).toBe("Drones");
+
+    const empty = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: { ...emptySlots }
+    });
+    expect(empty.primaryDpsGroup).toBeNull();
+    expect(empty.primaryDpsTypeId).toBeNull();
+    expect(empty.primaryDpsSourceLabel).toBeNull();
+  });
+
+  it("reports propulsion kind for AB, MWD, and no-prop fits", () => {
+    const index = buildDogmaIndex(basePack);
+
+    const ab = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: {
+        ...emptySlots,
+        mid: [{ typeId: 438, name: "1MN Afterburner II" }]
+      }
+    });
+    expect(ab.propulsionKind).toBe("ab");
+
+    const mwd = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: {
+        ...emptySlots,
+        mid: [{ typeId: 440, name: "5MN Microwarpdrive II" }]
+      }
+    });
+    expect(mwd.propulsionKind).toBe("mwd");
+
+    const noProp = calculateShipCombatMetrics(index, {
+      shipTypeId: 1000,
+      slots: {
+        ...emptySlots,
+        mid: [{ typeId: 447, name: "Warp Scrambler II" }]
+      }
+    });
+    expect(noProp.propulsionKind).toBeNull();
+  });
+
   it("applies pre-module ship HP parity override profiles from table data", () => {
     const pack: DogmaPack = {
       ...basePack,
