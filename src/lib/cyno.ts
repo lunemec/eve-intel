@@ -18,6 +18,11 @@ export type ShipCynoChance = {
   cynoChance: number;
 };
 
+type LossCynoStats = {
+  total: number;
+  cyno: number;
+};
+
 export function deriveShipCynoBaitEvidence(params: {
   predictedShips: ShipPrediction[];
   fitCandidates: FitCandidate[];
@@ -27,10 +32,11 @@ export function deriveShipCynoBaitEvidence(params: {
   namesByTypeId: Map<number, string>;
 }): Map<string, PillEvidenceByName> {
   const out = new Map<string, PillEvidenceByName>();
+  const pilotWideBaitKills = collectPilotWideBaitKills(params.kills, params.characterId, params.namesByTypeId);
 
   for (const ship of params.predictedShips) {
     const fitId = resolveFitId(ship, params.fitCandidates);
-    const candidatesByPill = collectShipCynoBaitCandidates(ship, fitId, params);
+    const candidatesByPill = collectShipCynoBaitCandidates(ship, fitId, pilotWideBaitKills, params);
     const selectedCyno = selectMostRecentPillEvidence(candidatesByPill.cyno);
     const selectedBait = selectMostRecentPillEvidence(candidatesByPill.bait);
 
@@ -74,6 +80,19 @@ const COVERT_OR_CYNO_SHIPS = new Set<string>([
   "Prorator",
   "Crane",
   "Viator",
+  // Tech I haulers / industrials (industrial cyno capable)
+  "Badger",
+  "Bestower",
+  "Hoarder",
+  "Mammoth",
+  "Nereus",
+  "Sigil",
+  "Tayra",
+  "Wreathe",
+  "Iteron Mark V",
+  "Epithal",
+  "Kryos",
+  "Miasmos",
   // Deep Space Transports (industrial cyno capable)
   "Bustard",
   "Impel",
@@ -211,7 +230,8 @@ export function estimateShipCynoChance(params: {
   namesByTypeId: Map<number, string>;
 }): Map<string, ShipCynoChance> {
   const result = new Map<string, ShipCynoChance>();
-  const lossesByShip = new Map<string, { total: number; cyno: number }>();
+  const lossesByShipName = new Map<string, LossCynoStats>();
+  const lossesByShipTypeId = new Map<number, LossCynoStats>();
   let totalLosses = 0;
   let totalCynoLosses = 0;
 
@@ -220,40 +240,46 @@ export function estimateShipCynoChance(params: {
       continue;
     }
     totalLosses += 1;
-    const shipName = loss.victim.ship_type_id
-      ? params.namesByTypeId.get(loss.victim.ship_type_id) ?? `Type ${loss.victim.ship_type_id}`
+    const shipTypeId = loss.victim.ship_type_id;
+    const shipName = shipTypeId
+      ? params.namesByTypeId.get(shipTypeId) ?? `Type ${shipTypeId}`
       : "Unknown Ship";
-    const hasCyno = hasCynoModuleInLoss(loss, params.namesByTypeId);
+    const hasCyno = hasFittedCynoModuleInLoss(loss, params.namesByTypeId);
     if (hasCyno) {
       totalCynoLosses += 1;
     }
 
-    const current = lossesByShip.get(shipName) ?? { total: 0, cyno: 0 };
-    current.total += 1;
-    if (hasCyno) {
-      current.cyno += 1;
+    incrementLossCynoStats(lossesByShipName, shipName, hasCyno);
+    if (typeof shipTypeId === "number") {
+      incrementLossCynoStats(lossesByShipTypeId, shipTypeId, hasCyno);
     }
-    lossesByShip.set(shipName, current);
   }
 
   const globalRate = totalLosses > 0 ? totalCynoLosses / totalLosses : 0;
 
   for (const ship of params.predictedShips) {
+    // Deterministic evidence priority:
+    // 1) Same-ship-type fitted cyno module evidence => 100%, regardless of whitelist.
+    // 2) Whitelist capability + other-hull fitted cyno evidence => intermediate confidence.
+    // 3) Whitelist capability only => low baseline confidence.
+    const sameShipTypeFittedCynoEvidence = hasSameShipTypeFittedCynoEvidence(
+      ship,
+      lossesByShipTypeId,
+      lossesByShipName
+    );
+    if (sameShipTypeFittedCynoEvidence) {
+      result.set(ship.shipName, { cynoCapable: true, cynoChance: 100 });
+      continue;
+    }
+
     const capable = COVERT_OR_CYNO_SHIPS.has(ship.shipName);
     if (!capable) {
       result.set(ship.shipName, { cynoCapable: false, cynoChance: 0 });
       continue;
     }
 
-    const perShip = lossesByShip.get(ship.shipName);
-    // Deterministic evidence priority:
-    // 1) Same-hull cyno module evidence => 100%.
-    // 2) Other-hull cyno evidence => intermediate confidence.
-    // 3) Capability-only => low baseline confidence.
     let chance: number;
-    if ((perShip?.cyno ?? 0) > 0) {
-      chance = 100;
-    } else if (totalCynoLosses > 0) {
+    if (totalCynoLosses > 0) {
       chance = Math.round(clamp(25 + ship.probability * 0.25 + globalRate * 35, 20, 85));
     } else {
       chance = Math.round(clamp(8 + ship.probability * 0.15, 5, 30));
@@ -263,6 +289,30 @@ export function estimateShipCynoChance(params: {
   }
 
   return result;
+}
+
+function hasSameShipTypeFittedCynoEvidence(
+  ship: ShipPrediction,
+  lossesByShipTypeId: Map<number, LossCynoStats>,
+  lossesByShipName: Map<string, LossCynoStats>
+): boolean {
+  if (typeof ship.shipTypeId === "number") {
+    return (lossesByShipTypeId.get(ship.shipTypeId)?.cyno ?? 0) > 0;
+  }
+  return (lossesByShipName.get(ship.shipName)?.cyno ?? 0) > 0;
+}
+
+function incrementLossCynoStats<TKey extends string | number>(
+  lossesByShip: Map<TKey, LossCynoStats>,
+  key: TKey,
+  hasCyno: boolean
+): void {
+  const current = lossesByShip.get(key) ?? { total: 0, cyno: 0 };
+  current.total += 1;
+  if (hasCyno) {
+    current.cyno += 1;
+  }
+  lossesByShip.set(key, current);
 }
 
 function collectHistoricalShipNames(params: {
@@ -307,7 +357,7 @@ function estimateBaitScore(
   let best = 0;
   const historicalNames = collectHistoricalShipNames(params);
   const hasJumpAssociation = historicalNames.some((name) => isJumpCapableShip(name));
-  const globalCynoEvidence = params.losses.some((loss) => hasCynoModuleInLoss(loss, params.namesByTypeId));
+  const globalCynoEvidence = params.losses.some((loss) => hasFittedCynoModuleInLoss(loss, params.namesByTypeId));
 
   for (const ship of params.predictedShips) {
     const scoreRow = perShip.get(ship.shipName);
@@ -324,7 +374,7 @@ function estimateBaitScore(
 
     const hasTackle = moduleNames.some((name) => isTackleModuleName(name));
     const hasTank = moduleNames.some((name) => isTankModuleName(name));
-    const hasShipCynoEvidence = shipLosses.some((loss) => hasCynoModuleInLoss(loss, params.namesByTypeId));
+    const hasShipCynoEvidence = shipLosses.some((loss) => hasFittedCynoModuleInLoss(loss, params.namesByTypeId));
     const hasShipCynoCapability = scoreRow?.cynoCapable ?? false;
     const cynoChance = scoreRow?.cynoChance ?? 0;
 
@@ -364,8 +414,8 @@ function estimateBaitScore(
 function collectShipCynoBaitCandidates(
   ship: ShipPrediction,
   fitId: string,
+  pilotWideBaitKills: ZkillKillmail[],
   params: {
-    kills: ZkillKillmail[];
     losses: ZkillKillmail[];
     characterId: number;
     namesByTypeId: Map<number, string>;
@@ -408,34 +458,36 @@ function collectShipCynoBaitCandidates(
     }
   }
 
-  for (const kill of params.kills) {
-    if (!isBaitEligibleKillmail(kill, ship.shipName, ship.shipTypeId, params.characterId, params.namesByTypeId)) {
-      continue;
+  if (isCynoCapableNonCombatBaitShip(ship.shipName)) {
+    for (const kill of pilotWideBaitKills) {
+      bait.push({
+        ...toPillEvidenceCandidate({
+          causingModule: "Matched attacker ship on killmail",
+          fitId,
+          killmailId: kill.killmail_id,
+          timestamp: kill.killmail_time
+        }),
+        pillName: "Bait"
+      });
     }
-    bait.push({
-      ...toPillEvidenceCandidate({
-        causingModule: "Matched attacker ship on killmail",
-        fitId,
-        killmailId: kill.killmail_id,
-        timestamp: kill.killmail_time
-      }),
-      pillName: "Bait"
-    });
   }
 
   return { cyno, bait };
 }
 
-function isBaitEligibleKillmail(
+function collectPilotWideBaitKills(
+  kills: ZkillKillmail[],
+  characterId: number,
+  namesByTypeId: Map<number, string>
+): ZkillKillmail[] {
+  return kills.filter((kill) => isPilotWideBaitKillmail(kill, characterId, namesByTypeId));
+}
+
+function isPilotWideBaitKillmail(
   kill: ZkillKillmail,
-  shipName: string,
-  shipTypeId: number,
   characterId: number,
   namesByTypeId: Map<number, string>
 ): boolean {
-  if (!isCynoCapableNonCombatBaitShip(shipName)) {
-    return false;
-  }
   if (kill.zkb?.solo === true) {
     return false;
   }
@@ -444,10 +496,12 @@ function isBaitEligibleKillmail(
   if (characterAttackers.length < 2) {
     return false;
   }
-  const hasMatchedAttackerShip = characterAttackers.some(
-    (attacker) => attacker.character_id === characterId && attacker.ship_type_id === shipTypeId
-  );
-  if (!hasMatchedAttackerShip) {
+  const selfAttacker = characterAttackers.find((attacker) => attacker.character_id === characterId);
+  if (!selfAttacker || typeof selfAttacker.ship_type_id !== "number") {
+    return false;
+  }
+  const selfShipName = namesByTypeId.get(selfAttacker.ship_type_id);
+  if (!selfShipName || !isCynoCapableNonCombatBaitShip(selfShipName)) {
     return false;
   }
   return !isPodKillmailVictim(kill, namesByTypeId);
@@ -472,8 +526,11 @@ function isPodKillmailVictim(kill: ZkillKillmail, namesByTypeId: Map<number, str
   return victimShipName === "pod" || victimShipName.includes("capsule");
 }
 
-function hasCynoModuleInLoss(loss: ZkillKillmail, namesByTypeId: Map<number, string>): boolean {
+function hasFittedCynoModuleInLoss(loss: ZkillKillmail, namesByTypeId: Map<number, string>): boolean {
   for (const item of loss.victim.items ?? []) {
+    if (!isFittedItemFlag(item.flag)) {
+      continue;
+    }
     const moduleName = namesByTypeId.get(item.item_type_id);
     if (!moduleName) {
       continue;

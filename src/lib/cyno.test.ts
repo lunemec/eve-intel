@@ -228,6 +228,78 @@ describe("estimateShipCynoChance", () => {
     expect(result.get("Drake")).toEqual({ cynoCapable: false, cynoChance: 0 });
   });
 
+  it("returns 100% for non-whitelisted hull when same-ship-type losses show fitted cyno evidence", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 14,
+        killmail_time: "2026-02-13T00:00:00Z",
+        victim: {
+          character_id: 55,
+          ship_type_id: 500,
+          items: [{ item_type_id: 9004, flag: 27 }]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const result = estimateShipCynoChance({
+      predictedShips: [
+        {
+          shipName: "Drake",
+          probability: 88,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 500
+        }
+      ],
+      characterId: 55,
+      losses,
+      namesByTypeId: new Map([
+        [500, "Drake"],
+        [9004, "Cynosural Field Generator I"]
+      ])
+    });
+
+    expect(result.get("Drake")).toEqual({ cynoCapable: true, cynoChance: 100 });
+  });
+
+  it("matches same-hull cyno evidence by shipTypeId even when predicted ship name differs", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 15,
+        killmail_time: "2026-02-13T00:00:00Z",
+        victim: {
+          character_id: 55,
+          ship_type_id: 500,
+          items: [{ item_type_id: 9005, flag: 27 }]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const result = estimateShipCynoChance({
+      predictedShips: [
+        {
+          shipName: "Custom Alias",
+          probability: 44,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 500
+        }
+      ],
+      characterId: 55,
+      losses,
+      namesByTypeId: new Map([
+        [500, "Drake"],
+        [9005, "Covert Cynosural Field Generator I"]
+      ])
+    });
+
+    expect(result.get("Custom Alias")).toEqual({ cynoCapable: true, cynoChance: 100 });
+  });
+
   it("returns intermediate chance when only other-hull cyno evidence exists", () => {
     const losses: ZkillKillmail[] = [
       {
@@ -288,7 +360,114 @@ describe("estimateShipCynoChance", () => {
     expect(chance).toBeLessThan(40);
   });
 
-  it("returns 0% for non-cyno-capable hull", () => {
+  it("returns 100% for Sigil when same-hull losses show industrial cyno evidence", () => {
+    const losses: ZkillKillmail[] = [
+      {
+        killmail_id: 13,
+        killmail_time: "2026-02-13T00:00:00Z",
+        victim: {
+          character_id: 55,
+          ship_type_id: 600,
+          items: [{ item_type_id: 9003 }]
+        },
+        attackers: [],
+        zkb: {}
+      }
+    ];
+
+    const result = estimateShipCynoChance({
+      predictedShips: [
+        {
+          shipName: "Sigil",
+          probability: 65,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 600
+        }
+      ],
+      characterId: 55,
+      losses,
+      namesByTypeId: new Map([
+        [600, "Sigil"],
+        [9003, "Industrial Cynosural Field Generator I"]
+      ])
+    });
+
+    expect(result.get("Sigil")).toEqual({ cynoCapable: true, cynoChance: 100 });
+  });
+
+  it("ignores cargo-only cyno modules on same hull for non-whitelisted ships", () => {
+    const result = estimateShipCynoChance({
+      predictedShips: [
+        {
+          shipName: "Hecate",
+          probability: 95,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 35683
+        }
+      ],
+      characterId: 55,
+      losses: [
+        {
+          killmail_id: 12,
+          killmail_time: "2026-02-13T00:00:00Z",
+          victim: {
+            character_id: 55,
+            ship_type_id: 35683,
+            items: [{ item_type_id: 9002, flag: 5 }]
+          },
+          attackers: [],
+          zkb: {}
+        }
+      ],
+      namesByTypeId: new Map([
+        [35683, "Hecate"],
+        [9002, "Covert Cynosural Field Generator I"]
+      ])
+    });
+
+    expect(result.get("Hecate")).toEqual({ cynoCapable: false, cynoChance: 0 });
+  });
+
+  it("returns low baseline chance for whitelisted hull when only cargo cyno evidence exists globally", () => {
+    const result = estimateShipCynoChance({
+      predictedShips: [
+        {
+          shipName: "Viator",
+          probability: 60,
+          source: "inferred",
+          reason: [],
+          shipTypeId: 301
+        }
+      ],
+      characterId: 55,
+      losses: [
+        {
+          killmail_id: 16,
+          killmail_time: "2026-02-13T00:00:00Z",
+          victim: {
+            character_id: 55,
+            ship_type_id: 300,
+            items: [{ item_type_id: 9001, flag: 5 }]
+          },
+          attackers: [],
+          zkb: {}
+        }
+      ],
+      namesByTypeId: new Map([
+        [300, "Falcon"],
+        [301, "Viator"],
+        [9001, "Covert Cynosural Field Generator I"]
+      ])
+    });
+
+    const chance = result.get("Viator")?.cynoChance ?? 0;
+    expect(chance).toBeGreaterThan(0);
+    expect(chance).toBeLessThan(40);
+  });
+
+  it("returns 0% for non-whitelisted hull without same-ship-type fitted cyno evidence", () => {
     const result = estimateShipCynoChance({
       predictedShips: [
         {
@@ -302,12 +481,12 @@ describe("estimateShipCynoChance", () => {
       characterId: 55,
       losses: [
         {
-          killmail_id: 12,
+          killmail_id: 17,
           killmail_time: "2026-02-13T00:00:00Z",
           victim: {
             character_id: 55,
-            ship_type_id: 500,
-            items: [{ item_type_id: 9002 }]
+            ship_type_id: 501,
+            items: [{ item_type_id: 9002, flag: 27 }]
           },
           attackers: [],
           zkb: {}
@@ -315,6 +494,7 @@ describe("estimateShipCynoChance", () => {
       ],
       namesByTypeId: new Map([
         [500, "Drake"],
+        [501, "Falcon"],
         [9002, "Covert Cynosural Field Generator I"]
       ])
     });
@@ -601,6 +781,57 @@ describe("deriveShipCynoBaitEvidence", () => {
         url: "https://zkillboard.com/kill/46/",
         timestamp: "2026-02-18T11:00:00.000Z"
       }
+    });
+  });
+
+  it("applies non-combat bait killmail evidence across predicted non-combat bait ships", () => {
+    const kills: ZkillKillmail[] = [
+      {
+        killmail_id: 126192881,
+        killmail_time: "2025-04-10T14:02:59Z",
+        victim: { ship_type_id: 35683 },
+        attackers: [
+          { character_id: 10, ship_type_id: 12745 },
+          { character_id: 12, ship_type_id: 29990 }
+        ],
+        zkb: {}
+      }
+    ];
+
+    const evidence = deriveShipCynoBaitEvidence({
+      predictedShips: [
+        inferredShip({ shipName: "Occator", shipTypeId: 12745 }),
+        inferredShip({ shipName: "Impel", shipTypeId: 12747 })
+      ],
+      fitCandidates: [
+        fit({ shipTypeId: 12745, fitLabel: "DST bait evidence" }),
+        fit({ shipTypeId: 12747, fitLabel: "DST alternate hull" })
+      ],
+      kills,
+      losses: [],
+      characterId: 10,
+      namesByTypeId: new Map([
+        [12745, "Occator"],
+        [12747, "Impel"],
+        [35683, "Hecate"]
+      ])
+    });
+
+    expect(evidence.get("Occator")?.Bait).toEqual({
+      pillName: "Bait",
+      causingModule: "Matched attacker ship on killmail",
+      fitId: "12745:DST bait evidence",
+      killmailId: 126192881,
+      url: "https://zkillboard.com/kill/126192881/",
+      timestamp: "2025-04-10T14:02:59.000Z"
+    });
+    expect(evidence.get("Impel")?.Bait).toEqual({
+      pillName: "Bait",
+      causingModule: "Matched attacker ship on killmail",
+      fitId: "12747:DST alternate hull",
+      killmailId: 126192881,
+      url: "https://zkillboard.com/kill/126192881/",
+      timestamp: "2025-04-10T14:02:59.000Z"
     });
   });
 });

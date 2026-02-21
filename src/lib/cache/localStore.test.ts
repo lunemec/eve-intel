@@ -48,4 +48,10 @@ describe("cache/localStore", () => {
     localStorage.setItem(versionedKey("corrupt"), "{bad");
     expect(getLocalCachedState("corrupt")).toEqual({ value: null, stale: false });
   });
+
+  it("uses app-versioned cache key namespace", () => {
+    const key = versionedKey("alpha");
+    expect(key).toContain(".alpha");
+    expect(key.startsWith("eve-intel.app-")).toBe(true);
+  });
 });

@@ -660,6 +660,40 @@ describe("ui helpers", () => {
     expect(screen.queryByText("Web")).toBeNull();
   });
 
+  it("renders evidence-backed bait pill even for low-probability ships without jump-association", () => {
+    const baitEvidenceUrl = "https://zkillboard.com/kill/126192881/";
+    const cynoRisk: CynoRisk = { potentialCyno: false, jumpAssociation: false, reasons: [] };
+    const { container } = render(
+      <>
+        {renderShipPills(
+          ship({
+            shipName: "Occator",
+            probability: 5,
+            pillEvidence: {
+              Bait: {
+                pillName: "Bait",
+                causingModule: "Matched attacker ship on killmail",
+                fitId: "12745:unknown-fit",
+                killmailId: 126192881,
+                url: baitEvidenceUrl,
+                timestamp: "2025-04-10T14:02:59.000Z"
+              }
+            }
+          }),
+          cynoRisk,
+          "pill"
+        )}
+      </>
+    );
+
+    const bait = container.querySelector(".risk-badge.risk-bait");
+    expect(bait).toBeTruthy();
+    if (!bait) {
+      throw new Error("expected bait pill to render");
+    }
+    expect(bait.closest("a")?.getAttribute("href")).toBe(baitEvidenceUrl);
+  });
+
   it("links evidence-backed pill-mode pills to zKill evidence", () => {
     const cynoEvidenceUrl = "https://zkillboard.com/kill/41/";
     const webEvidenceUrl = "https://zkillboard.com/kill/42/";

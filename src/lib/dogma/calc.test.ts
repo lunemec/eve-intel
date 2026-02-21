@@ -335,7 +335,7 @@ describe("dogma calc", () => {
     });
     expect(launcher.primaryDpsGroup).toBe("launcher");
     expect(launcher.primaryDpsTypeId).toBe(3000);
-    expect(launcher.primaryDpsSourceLabel).toBe("Missile Launchers");
+    expect(launcher.primaryDpsSourceLabel).toBe("Rapid Light Missile Launchers");
 
     const drone = calculateShipCombatMetrics(index, {
       shipTypeId: 1000,

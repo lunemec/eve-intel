@@ -120,20 +120,6 @@ export function threatClass(danger?: number): string {
   return "threat-low";
 }
 
-function isLikelyBaitHullName(name: string): boolean {
-  return (
-    name === "Devoter" ||
-    name === "Onyx" ||
-    name === "Broadsword" ||
-    name === "Phobos" ||
-    name === "Praxis" ||
-    name === "Abaddon" ||
-    name === "Raven" ||
-    name === "Hyperion" ||
-    name === "Maelstrom"
-  );
-}
-
 export function getShipRiskFlags(ship: ShipPrediction, cynoRisk?: CynoRisk): ShipRiskFlags {
   const normalized = ship.shipName.toLowerCase();
   const isPod = normalized.includes("capsule") || normalized.includes("pod");
@@ -142,12 +128,7 @@ export function getShipRiskFlags(ship: ShipPrediction, cynoRisk?: CynoRisk): Shi
     (ship.cynoChance ?? 0) >= 100 &&
     Boolean(ship.pillEvidence?.Cyno);
   const softCyno = false;
-  const bait =
-    !isPod &&
-    ship.probability >= 20 &&
-    Boolean(cynoRisk?.jumpAssociation) &&
-    (Boolean(ship.cynoCapable) || isLikelyBaitHullName(ship.shipName)) &&
-    Boolean(ship.pillEvidence?.Bait);
+  const bait = !isPod && Boolean(ship.pillEvidence?.Bait);
 
   return { hardCyno, softCyno, bait };
 }

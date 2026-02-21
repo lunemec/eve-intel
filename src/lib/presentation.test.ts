@@ -143,4 +143,28 @@ describe("presentation helpers", () => {
     expect(shipHasPotentialCyno(ship({ cynoCapable: true, cynoChance: 99 }))).toBe(false);
     expect(shipHasPotentialCyno(ship({ cynoCapable: true, cynoChance: 100 }))).toBe(true);
   });
+
+  it("shows bait risk when valid bait evidence exists even for low-probability non-jump-association ships", () => {
+    const cynoRisk: CynoRisk = { potentialCyno: false, jumpAssociation: false, reasons: [] };
+
+    expect(
+      getShipRiskFlags(
+        ship({
+          shipName: "Occator",
+          probability: 5,
+          pillEvidence: {
+            Bait: {
+              pillName: "Bait",
+              causingModule: "Matched attacker ship on killmail",
+              fitId: "12745:unknown-fit",
+              killmailId: 126192881,
+              url: "https://zkillboard.com/kill/126192881/",
+              timestamp: "2025-04-10T14:02:59.000Z"
+            }
+          }
+        }),
+        cynoRisk
+      ).bait
+    ).toBe(true);
+  });
 });

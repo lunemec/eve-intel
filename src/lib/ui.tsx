@@ -84,7 +84,7 @@ function cynoTitle(ship: ShipPrediction): string {
 }
 
 function baitTitle(ship: ShipPrediction): string {
-  return `Bait: this pilot/ship profile shows bait indicators (jump-association and tackle/tank signals) on ${ship.shipName}.`;
+  return `Bait: direct killmail evidence shows this pilot flying ${ship.shipName} in a bait context.`;
 }
 
 function roleTitle(role: string): string {
