@@ -442,12 +442,13 @@ body {
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 6px;
+  gap: 0;
 }
 
 .fleet-summary-line {
   align-items: center;
   border-bottom: 1px solid #2a3340;
+  padding-top: 6px;
   padding-bottom: 6px;
   font-size: 0.86rem;
   cursor: pointer;
@@ -455,10 +456,16 @@ body {
 
 .fleet-summary-line:last-child {
   border-bottom: 0;
-  padding-bottom: 0;
 }
 
-.fleet-summary-line.cyno-highlight,
+.fleet-summary-line.cyno-highlight {
+  background: #5b1f1f52;
+  box-shadow: inset 0 0 0 1px #5b1f1f66;
+  border-left: 2px solid #b94a4a;
+  border-radius: 4px;
+  padding-left: 6px;
+}
+
 .ship-summary-list li.cyno-highlight,
 .ship-column li.cyno-highlight {
   background: linear-gradient(90deg, #5b1f1f66 0%, #3a242400 72%);

@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## v0.3.2 - 2026-02-21
+- Updated fleet summary cyno row highlighting in `src/styles.css` so `.fleet-summary-line.cyno-highlight` uses full-row tinting (instead of the partial fade used for ship-list rows), eliminating the visible uncolored strip and coloring the full fleet-summary row when cyno is highlighted.
+- Removed `gap` spacing from `.fleet-summary-list` in `src/styles.css` so highlighted fleet rows render their background flush to each row's separator line (`border-bottom`) instead of leaving an uncolored inter-row strip.
+- Normalized Fleet Summary row highlight height in `src/styles.css` by applying consistent vertical padding to all `.fleet-summary-line` rows and no longer removing bottom padding on `:last-child`, so highlighted top/bottom rows render with matching height while still dropping only the final divider border.
+
+Boundary source:
+- No `v0.3.2` tag exists yet; this entry captures current workspace changes after `v0.3.1`.
+
 ## v0.3.1 - 2026-02-20
 - Rounded ship likelihood percentage display to whole numbers in `src/components/PilotCardView.tsx` and `src/components/FleetSummary.tsx`, while preserving underlying `predictedShips.probability` precision and leaving EFT fit-confidence formatting unchanged.
 - Added ship-likelihood rounding coverage in `src/components/PilotCardView.test.tsx`, `src/components/FleetSummary.test.tsx`, and `src/lib/presentation.test.ts` via a shared formatter in `src/lib/presentation.ts`.
