@@ -211,7 +211,7 @@ describe("repository artifact hygiene", () => {
     );
   });
 
-  it("enforces artifact consistency checks and hermetic build mode in CI validate workflow before build", async () => {
+  it("enforces deterministic artifact bootstrap before consistency checks and hermetic build in CI validate workflow", async () => {
     const ciWorkflowPath = path.join(process.cwd(), ".github", "workflows", "ci.yml");
     const ciWorkflow = await readFile(ciWorkflowPath, "utf8");
     const validateSection = ciWorkflow.match(/jobs:\s*\n(?:.*\n)*?  validate:\s*\n([\s\S]*)/);
@@ -219,20 +219,24 @@ describe("repository artifact hygiene", () => {
     expect(validateSection?.[1]).toBeDefined();
 
     const validateWorkflow = validateSection?.[1] ?? "";
+    const bootstrapCommand = "run: npm run sde:prepare";
     const testCommand = "run: npm test";
     const consistencyCommand = "run: npm run check:artifact-consistency";
     const buildCommand = "run: npm run build";
 
+    expect(validateWorkflow).toContain(bootstrapCommand);
     expect(validateWorkflow).toContain(testCommand);
     expect(validateWorkflow).toContain(consistencyCommand);
     expect(validateWorkflow).toContain(buildCommand);
 
+    const bootstrapIndex = validateWorkflow.indexOf(bootstrapCommand);
     const testIndex = validateWorkflow.indexOf(testCommand);
     const consistencyIndex = validateWorkflow.indexOf(consistencyCommand);
     const buildIndex = validateWorkflow.indexOf(buildCommand);
 
     expect(testIndex).toBeGreaterThanOrEqual(0);
-    expect(consistencyIndex).toBeGreaterThan(testIndex);
+    expect(bootstrapIndex).toBeGreaterThan(testIndex);
+    expect(consistencyIndex).toBeGreaterThan(bootstrapIndex);
     expect(buildIndex).toBeGreaterThan(consistencyIndex);
 
     const hasJobLevelHermeticEnv =

@@ -158,20 +158,18 @@ export function usePilotIntelPipelineEffect(
         requestRun(entry, "interactive", false);
       }
     } else {
-      for (const [pilotKey] of activeByPilotKeyRef.current.entries()) {
-        if (removedKeys.has(pilotKey)) {
-          cancelPilotRun({
-            pilotKey,
-            activeByPilotKey: activeByPilotKeyRef.current,
-            pendingByPilotKey: pendingByPilotKeyRef.current
-          });
-          lastEntrySignatureByPilotKeyRef.current.delete(pilotKey);
-          characterIdByPilotKeyRef.current.delete(pilotKey);
-          latestHeadByPilotKeyRef.current.delete(pilotKey);
-          predictedShipsByPilotKeyRef.current.delete(pilotKey);
-          forceRefreshByPilotKeyRef.current.delete(pilotKey);
-          refreshInFlightByPilotKeyRef.current.delete(pilotKey);
-        }
+      for (const pilotKey of removedKeys) {
+        cancelPilotRun({
+          pilotKey,
+          activeByPilotKey: activeByPilotKeyRef.current,
+          pendingByPilotKey: pendingByPilotKeyRef.current
+        });
+        lastEntrySignatureByPilotKeyRef.current.delete(pilotKey);
+        characterIdByPilotKeyRef.current.delete(pilotKey);
+        latestHeadByPilotKeyRef.current.delete(pilotKey);
+        predictedShipsByPilotKeyRef.current.delete(pilotKey);
+        forceRefreshByPilotKeyRef.current.delete(pilotKey);
+        refreshInFlightByPilotKeyRef.current.delete(pilotKey);
       }
 
       params.setPilotCards((current) => {

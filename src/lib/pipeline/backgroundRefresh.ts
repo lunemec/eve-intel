@@ -21,8 +21,13 @@ export function collectBackgroundRefreshCandidates(params: {
   forceRefreshByPilotKey: Set<string>;
 }): BackgroundRefreshCandidate[] {
   const candidates: BackgroundRefreshCandidate[] = [];
+  const seenPilotKeys = new Set<string>();
   for (const entry of params.entries) {
     const pilotKey = toPilotKey(entry.pilotName);
+    if (seenPilotKeys.has(pilotKey)) {
+      continue;
+    }
+    seenPilotKeys.add(pilotKey);
     if (params.isPilotRunActive(pilotKey)) {
       continue;
     }

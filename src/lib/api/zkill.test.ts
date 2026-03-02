@@ -419,6 +419,30 @@ describe("character stats endpoint", () => {
     }
   });
 
+  it("keeps dangerRatio boundary value of 1 as 1 percent", async () => {
+    const characterId = 95996769;
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes(`/stats/characterID/${characterId}/`)) {
+        return jsonResponse({
+          shipsDestroyed: 42,
+          shipsLost: 7,
+          dangerRatio: 1
+        });
+      }
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+    globalThis.fetch = fetchMock;
+
+    try {
+      const stats = await fetchCharacterStats(characterId);
+      expect(stats?.danger).toBe(1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("propagates aborts and does not cache null from cancelled requests", async () => {
     const characterId = 991499999;
     const originalFetch = globalThis.fetch;

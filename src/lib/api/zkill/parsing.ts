@@ -209,7 +209,7 @@ function normalizeDangerPercent(
   if (value === undefined) {
     return undefined;
   }
-  if (value <= 1) {
+  if (value < 1) {
     return Number((value * 100).toFixed(1));
   }
   if (options?.allowTenPointScale && value <= 10) {
