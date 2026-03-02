@@ -1,0 +1,9 @@
+export const ZKILL_BASE = "https://zkillboard.com/api";
+export const ZKILL_CACHE_TTL_MS = 1000 * 60 * 10;
+export const ZKILL_PAGE_ONE_REVALIDATE_MS = 1000 * 30;
+export const ZKILL_MAX_LOOKBACK_DAYS = 7;
+export const ESI_BASE = "https://esi.evetech.net/latest";
+export const ESI_DATASOURCE = "tranquility";
+export const KILLMAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
+export const MAX_HYDRATE = 50;
+export const HYDRATE_CONCURRENCY = 5;

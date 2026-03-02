@@ -5,10 +5,13 @@ import path from "node:path";
 import { readFileSync } from "node:fs";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { renderResistCell } from "../components/pilotCardResistRender";
+import { renderShipPills } from "../components/shipPillRender";
 import type { CynoRisk } from "./cyno";
 import type { FitCandidate } from "./intel";
 import type { ShipPrediction } from "./intel";
-import { formatUpdaterStatus, inferTankTypeFromFit, renderResistCell, renderShipPills } from "./ui";
+import { formatUpdaterStatus } from "./presentation";
+import { inferTankTypeFromFit } from "./ui";
 
 type FitModule = NonNullable<FitCandidate["modulesBySlot"]>["high"][number];
 
@@ -88,6 +91,15 @@ function loadTankInferenceCorpusExpectations(): TankCorpusExpectation[] {
 }
 
 describe("ui helpers", () => {
+  it("keeps render helpers out of src/lib/ui.tsx", () => {
+    const uiSource = readFileSync(path.join(process.cwd(), "src", "lib", "ui.tsx"), "utf8");
+
+    expect(
+      uiSource,
+      "Move JSX/presentation helpers out of src/lib/ui.tsx to component/presentation modules."
+    ).not.toMatch(/export function (renderShipPills|renderResistCell|renderResistRowHeader|formatUpdaterStatus)\b/);
+  });
+
   it("formats updater statuses", () => {
     expect(formatUpdaterStatus(null)).toBe("Updates: idle");
     expect(formatUpdaterStatus({ status: "dev", progress: 0, version: "1.0.0", availableVersion: null, downloadedVersion: null, error: null, errorDetails: null })).toBe("Updates: dev mode");

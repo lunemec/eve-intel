@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { FitCandidate } from "./intel";
 import type { DogmaIndex } from "./dogma/index";
-import type { PilotCard } from "./usePilotIntelPipeline";
+import type { PilotCard } from "./pilotDomain";
 import { createFitMetricsResolver, type FitMetricResult } from "./useFitMetrics";
 
 export function useFitMetricsResolver(params: {

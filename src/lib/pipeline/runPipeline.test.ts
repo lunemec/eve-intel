@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { runPilotPipeline } from "./runPipeline";
 import type { ParsedPilotInput } from "../../types";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 
 const ENTRY_A: ParsedPilotInput = {
   pilotName: "Pilot A",

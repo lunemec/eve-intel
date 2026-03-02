@@ -3,17 +3,35 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
+import {
+  DOGMA_RETENTION_POLICY_VERSION,
+  applyDogmaArtifactRetentionPolicy,
+  buildDogmaManifest,
+  writeDogmaRetentionIndex
+} from "./lib/dogma-artifact-policy.mjs";
 
 const repoRoot = process.cwd();
 const sdeRoot = path.join(repoRoot, "data", "sde");
 const manifestPath = path.join(sdeRoot, ".manifest.json");
 const publicDataDir = path.join(repoRoot, "public", "data");
+const REQUIRED_SDE_FILES = [
+  "invTypes.csv",
+  "invGroups.csv",
+  "invCategories.csv",
+  "dgmTypeAttributes.csv",
+  "dgmTypeEffects.csv",
+  "dgmAttributeTypes.csv",
+  "dgmEffects.csv"
+];
+const PLACEHOLDER_SDE_HASH_MARKERS = new Set(["offline-placeholder", "missing"]);
 
 async function main() {
   const sdeManifest = await loadJson(manifestPath);
   if (!sdeManifest?.version) {
     throw new Error("Missing SDE manifest. Run `npm run sde:sync` first.");
   }
+  validateSdeManifestHashes(sdeManifest);
+  validateSdeManifestSyncState(sdeManifest);
   const rawDir = path.join(sdeRoot, "raw", sdeManifest.version);
 
   const invTypes = await loadCsv(path.join(rawDir, "invTypes.csv"));
@@ -23,6 +41,13 @@ async function main() {
   const dgmTypeEffects = await loadCsv(path.join(rawDir, "dgmTypeEffects.csv"));
   const dgmAttributeTypes = await loadCsv(path.join(rawDir, "dgmAttributeTypes.csv"));
   const dgmEffects = await loadCsv(path.join(rawDir, "dgmEffects.csv"));
+  validateSdeCsvRows("invTypes.csv", invTypes, ["typeID", "groupID", "typeName"]);
+  validateSdeCsvRows("invGroups.csv", invGroups, ["groupID", "categoryID", "groupName"]);
+  validateSdeCsvRows("invCategories.csv", invCategories, ["categoryID", "categoryName"]);
+  validateSdeCsvRows("dgmTypeAttributes.csv", dgmTypeAttributes, ["typeID", "attributeID"]);
+  validateSdeCsvRows("dgmTypeEffects.csv", dgmTypeEffects, ["typeID", "effectID"]);
+  validateSdeCsvRows("dgmAttributeTypes.csv", dgmAttributeTypes, ["attributeID", "attributeName"]);
+  validateSdeCsvRows("dgmEffects.csv", dgmEffects, ["effectID", "effectName"]);
 
   const pyfaDbPath = path.join(repoRoot, "pyfa", "eve.db");
   if (existsSync(pyfaDbPath)) {
@@ -197,25 +222,49 @@ async function main() {
   const serialized = `${JSON.stringify(pack)}\n`;
   const packHash = createHash("sha256").update(serialized).digest("hex");
   const packFile = `dogma-pack.${sdeManifest.version}.json`;
+  const retentionArchiveDir = path.join(sdeRoot, "artifacts", "dogma-packs");
+  const retentionIndexPath = path.join(sdeRoot, "artifacts", "dogma-pack-retention.json");
 
   await mkdir(publicDataDir, { recursive: true });
   await writeFile(path.join(publicDataDir, packFile), serialized, "utf8");
+  const retentionResult = await applyDogmaArtifactRetentionPolicy({
+    runtimeDir: publicDataDir,
+    archiveDir: retentionArchiveDir,
+    activePackFile: packFile
+  });
+  const retentionIndex = await writeDogmaRetentionIndex({
+    indexPath: retentionIndexPath,
+    activeVersion: sdeManifest.version,
+    activePackFile: packFile,
+    activeSha256: packHash,
+    generatedAt: pack.generatedAt,
+    runtimeDir: toPortablePath(path.relative(repoRoot, publicDataDir)),
+    archiveDir: toPortablePath(path.relative(repoRoot, retentionArchiveDir)),
+    archivedEntries: retentionResult.archivedEntries
+  });
+  const archivedPackCount = retentionIndex.entries.filter((entry) => entry.location === "archive").length;
+  const manifest = buildDogmaManifest({
+    activeVersion: sdeManifest.version,
+    packFile,
+    sha256: packHash,
+    generatedAt: pack.generatedAt,
+    retention: {
+      policyVersion: DOGMA_RETENTION_POLICY_VERSION,
+      runtimePackCount: retentionResult.runtimePackFiles.length,
+      archivedPackCount,
+      archiveIndexFile: toPortablePath(path.relative(repoRoot, retentionIndexPath)),
+      archiveDir: toPortablePath(path.relative(repoRoot, retentionArchiveDir))
+    }
+  });
   await writeFile(
     path.join(publicDataDir, "dogma-manifest.json"),
-    `${JSON.stringify(
-      {
-        activeVersion: sdeManifest.version,
-        packFile,
-        sha256: packHash,
-        generatedAt: pack.generatedAt
-      },
-      null,
-      2
-    )}\n`,
+    `${JSON.stringify(manifest, null, 2)}\n`,
     "utf8"
   );
 
-  log(`compiled ${packFile} (${typeEntries.length} types)`);
+  log(
+    `compiled ${packFile} (${typeEntries.length} types) runtimePacks=${retentionResult.runtimePackFiles.length} archived=${retentionResult.archivedPackFiles.length}`
+  );
 }
 
 async function loadJson(filePath, fallback = null) {
@@ -236,6 +285,80 @@ async function loadCsv(filePath) {
   }
   const raw = await readFile(filePath, "utf8");
   return parseCsv(raw);
+}
+
+function validateSdeManifestHashes(sdeManifest) {
+  const fileHashes =
+    sdeManifest?.fileHashes && typeof sdeManifest.fileHashes === "object"
+      ? sdeManifest.fileHashes
+      : null;
+  if (!fileHashes) {
+    throw new Error(
+      "Invalid SDE manifest: missing fileHashes map. Run `npm run sde:sync` before `npm run sde:compile`."
+    );
+  }
+
+  const invalidFiles = [];
+  for (const fileName of REQUIRED_SDE_FILES) {
+    const hash = fileHashes[fileName];
+    const normalizedHash = typeof hash === "string" ? hash.trim().toLowerCase() : "";
+    if (!normalizedHash || PLACEHOLDER_SDE_HASH_MARKERS.has(normalizedHash)) {
+      invalidFiles.push(`${fileName}=${normalizedHash || "<missing-hash>"}`);
+    }
+  }
+
+  if (invalidFiles.length > 0) {
+    throw new Error(
+      `Invalid SDE state for compile: placeholder or missing inputs detected (${invalidFiles.join(", ")}). Run \`npm run sde:sync\` with network access before compiling artifacts.`
+    );
+  }
+}
+
+function validateSdeManifestSyncState(sdeManifest) {
+  if (!sdeManifest?.syncState || typeof sdeManifest.syncState !== "object") {
+    return;
+  }
+
+  const status =
+    typeof sdeManifest.syncState.status === "string"
+      ? sdeManifest.syncState.status.trim().toLowerCase()
+      : "";
+  if (!status || status === "complete") {
+    return;
+  }
+
+  const failedFiles = normalizeManifestFileList(sdeManifest.syncState.failedFiles);
+  const reusedFiles = normalizeManifestFileList(sdeManifest.syncState.reusedFiles);
+  const placeholderFiles = normalizeManifestFileList(sdeManifest.syncState.placeholderFiles);
+  const missingFiles = normalizeManifestFileList(sdeManifest.syncState.missingFiles);
+  const details = [
+    failedFiles.length > 0 ? `failed=${failedFiles.join(",")}` : null,
+    reusedFiles.length > 0 ? `reused=${reusedFiles.join(",")}` : null,
+    placeholderFiles.length > 0 ? `placeholders=${placeholderFiles.join(",")}` : null,
+    missingFiles.length > 0 ? `missing=${missingFiles.join(",")}` : null
+  ]
+    .filter((entry) => entry !== null)
+    .join(" ");
+
+  throw new Error(
+    `Invalid SDE state for compile: syncState.status=${status}${details ? ` (${details})` : ""}. Run \`npm run sde:sync\` with network access before compiling artifacts.`
+  );
+}
+
+function validateSdeCsvRows(fileName, rows, requiredColumns) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error(
+      `Invalid SDE state for compile: ${fileName} has no parsed rows. Refusing to publish partial dogma artifacts.`
+    );
+  }
+  const hasAllColumns = requiredColumns.every((columnName) =>
+    rows.some((row) => Object.prototype.hasOwnProperty.call(row, columnName))
+  );
+  if (!hasAllColumns) {
+    throw new Error(
+      `Invalid SDE state for compile: ${fileName} missing required columns (${requiredColumns.join(", ")}).`
+    );
+  }
 }
 
 function parseCsv(raw) {
@@ -503,6 +626,19 @@ function toNumber(value) {
 
 function log(message) {
   console.log(`[sde:compile] ${message}`);
+}
+
+function toPortablePath(value) {
+  return value.split(path.sep).join("/");
+}
+
+function normalizeManifestFileList(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+    .filter((entry) => entry.length > 0);
 }
 
 main().catch((error) => {

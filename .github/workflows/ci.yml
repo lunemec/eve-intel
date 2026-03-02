@@ -26,5 +26,10 @@ jobs:
       - name: Run unit/integration tests
         run: npm test
 
+      - name: Run artifact consistency checks
+        run: npm run check:artifact-consistency
+
       - name: Run typecheck and production build
+        env:
+          EVE_HERMETIC_BUILD: "1"
         run: npm run build

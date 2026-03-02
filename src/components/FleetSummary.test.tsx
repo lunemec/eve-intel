@@ -4,7 +4,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as appUtils from "../lib/appUtils";
-import type { PilotCard } from "../lib/usePilotIntelPipeline";
+import type { PilotCard } from "../lib/pilotDomain";
 import { FleetSummary } from "./FleetSummary";
 
 function pilot(overrides: Partial<PilotCard> = {}): PilotCard {
@@ -539,5 +539,47 @@ describe("FleetSummary", () => {
 
     detail.remove();
     smoothScrollSpy.mockRestore();
+  });
+
+  it("delegates header and row surfaces to extracted FleetSummary subviews", async () => {
+    vi.resetModules();
+    const headerSpy = vi.fn((props: { copyableFleetCount: number }) => (
+      <div data-testid="fleet-summary-header-subview">{props.copyableFleetCount}</div>
+    ));
+    const rowSpy = vi.fn((props: { pilot: PilotCard }) => (
+      <li data-testid="fleet-summary-row-subview">{props.pilot.parsedEntry.pilotName}</li>
+    ));
+
+    vi.doMock("./fleetSummarySubviews", () => ({
+      FleetSummaryHeaderSubview: headerSpy,
+      FleetSummaryRowSubview: rowSpy
+    }));
+
+    try {
+      const { FleetSummary: IsolatedFleetSummary } = await import("./FleetSummary");
+      const samplePilot = pilot({
+        characterId: 123,
+        characterName: "Pilot",
+        predictedShips: [{ shipTypeId: 456, shipName: "Onyx", probability: 82, source: "inferred", reason: [] }]
+      });
+      render(
+        <IsolatedFleetSummary
+          pilotCards={[samplePilot]}
+          copyableFleetCount={1}
+          setNetworkNotice={vi.fn()}
+          logDebug={vi.fn()}
+        />
+      );
+
+      expect(screen.getByTestId("fleet-summary-header-subview")).toBeTruthy();
+      expect(screen.getByTestId("fleet-summary-row-subview")).toBeTruthy();
+      expect(headerSpy).toHaveBeenCalled();
+      expect(rowSpy).toHaveBeenCalled();
+      expect(headerSpy.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ copyableFleetCount: 1 }));
+      expect(rowSpy.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ pilot: samplePilot }));
+    } finally {
+      vi.doUnmock("./fleetSummarySubviews");
+      vi.resetModules();
+    }
   });
 });

@@ -23,6 +23,7 @@ async function main() {
 
   const fileHashes = {};
   const rawByName = {};
+  const failedFiles = [];
   let downloaded = false;
 
   for (const name of requiredFiles) {
@@ -38,6 +39,7 @@ async function main() {
       downloaded = true;
       log(`fetched ${name}`);
     } catch (error) {
+      failedFiles.push(name);
       log(`failed to fetch ${name}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
@@ -64,7 +66,15 @@ async function main() {
       version: fallbackVersion,
       generatedAt: new Date().toISOString(),
       files: requiredFiles,
-      fileHashes
+      fileHashes,
+      syncState: {
+        status: "placeholder",
+        fetchedFiles: [],
+        failedFiles: [...requiredFiles],
+        reusedFiles: [],
+        placeholderFiles: [...requiredFiles],
+        missingFiles: [...requiredFiles]
+      }
     };
     await writeFile(manifestPath, `${JSON.stringify(fallbackManifest, null, 2)}\n`, "utf8");
     log("created offline placeholder SDE cache.");
@@ -75,6 +85,9 @@ async function main() {
   const version = `${new Date().toISOString().slice(0, 10)}-${versionHash}`;
   const rawDir = path.join(sdeRoot, "raw", version);
   await mkdir(rawDir, { recursive: true });
+  const reusedFiles = [];
+  const placeholderFiles = [];
+  const missingFiles = [];
 
   for (const name of requiredFiles) {
     const text = rawByName[name];
@@ -86,22 +99,39 @@ async function main() {
         const reused = await readFile(previousFile, "utf8");
         await writeFile(path.join(rawDir, name), reused, "utf8");
         fileHashes[name] = sha256(reused);
+        reusedFiles.push(name);
         log(`reused ${name} from previous cache`);
       } else {
         await writeFile(path.join(rawDir, name), "{}\n", "utf8");
         fileHashes[name] = "missing";
+        placeholderFiles.push(name);
+        missingFiles.push(name);
       }
       continue;
     }
     await writeFile(path.join(rawDir, name), text, "utf8");
   }
 
+  const fetchedFiles = requiredFiles.filter((name) => Object.prototype.hasOwnProperty.call(rawByName, name));
+  const syncStatus =
+    reusedFiles.length > 0 || placeholderFiles.length > 0 || missingFiles.length > 0
+      ? "partial"
+      : "complete";
+
   const nextManifest = {
     source: sourceBase,
     version,
     generatedAt: new Date().toISOString(),
     files: requiredFiles,
-    fileHashes
+    fileHashes,
+    syncState: {
+      status: syncStatus,
+      fetchedFiles,
+      failedFiles,
+      reusedFiles,
+      placeholderFiles,
+      missingFiles
+    }
   };
   await writeFile(manifestPath, `${JSON.stringify(nextManifest, null, 2)}\n`, "utf8");
   log(`SDE sync complete (${version})`);

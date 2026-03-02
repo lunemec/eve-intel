@@ -21,7 +21,20 @@ import {
   hasTacticalDestroyerHullDefenseBonus,
   hasTacticalDestroyerShieldDefenseBonus
 } from "./rules/shipEffects";
-import type { CombatMetrics, DamageProfile, DogmaTypeEntry, FitResolvedModule, FitResolvedSlots, LayerResists } from "./types";
+import {
+  applyHpBonus,
+  applyShieldCapacityBonus,
+  damageKey,
+  estimateEhp,
+  inferResistanceBonusLayer,
+  isArmorPlateBonusModifier,
+  isShieldCapacityModifier,
+  isShieldExtenderBonusModifier,
+  normalizeHullResonance,
+  readResistsFromResonance,
+  shouldApplyPassiveCompensation
+} from "./rules/defenseMath";
+import type { CombatMetrics, DamageProfile, DogmaTypeEntry, FitResolvedModule, FitResolvedSlots } from "./types";
 
 export type CalculateCombatMetricsInput = {
   shipTypeId: number;
@@ -1630,33 +1643,6 @@ function applyCommandBurstDefenseBonus(
   }
 }
 
-function normalizeHullResonance(value: number | undefined): number {
-  if (value === undefined) {
-    return 0.67;
-  }
-  // pyfa effectively treats "1" structure resonance as baseline ~33% hull resists.
-  if (Math.abs(value - 1) < 1e-6) {
-    return 0.67;
-  }
-  return value;
-}
-
-function isShieldCapacityModifier(effectTags: string): boolean {
-  return (
-    effectTags.includes("shieldcapacity") ||
-    effectTags.includes("shieldhpmultiply") ||
-    effectTags.includes("shieldhpbonus")
-  );
-}
-
-function isShieldExtenderBonusModifier(effectTags: string): boolean {
-  return effectTags.includes("shieldcapacitybonusonline");
-}
-
-function isArmorPlateBonusModifier(effectTags: string): boolean {
-  return effectTags.includes("armorhpbonusadd");
-}
-
 function resolveReactiveArmorShiftAmount(index: DogmaIndex, type: DogmaTypeEntry): number {
   const byName = getAttrResolved(index, type, "Resistance Shift Amount", "resistanceShiftAmount");
   if (byName !== undefined && byName > 0) {
@@ -1765,95 +1751,6 @@ function solveReactiveArmorEquilibrium({
     kin: Number((sum[2] / averaged.length).toFixed(3)),
     exp: Number((sum[3] / averaged.length).toFixed(3))
   };
-}
-
-function applyShieldCapacityBonus(
-  hp: { shield: number; armor: number; hull: number },
-  shieldBonus: number,
-  effectTags: string
-): void {
-  if (!Number.isFinite(shieldBonus) || shieldBonus === 0) {
-    return;
-  }
-  const isPercent =
-    effectTags.includes("percent") ||
-    effectTags.includes("multiply") ||
-    effectTags.includes("postpercent") ||
-    effectTags.includes("prepercent");
-  if (isPercent) {
-    hp.shield *= toMultiplier(shieldBonus);
-    return;
-  }
-  // Shield extenders provide flat HP and should not be interpreted as percentage multipliers.
-  hp.shield += shieldBonus;
-}
-
-function applyHpBonus(
-  hp: { shield: number; armor: number; hull: number },
-  layer: "shield" | "armor" | "hull",
-  value: number | undefined,
-  effectTags: string
-): void {
-  if (value === undefined || value === 0) {
-    return;
-  }
-  const isAdd = effectTags.includes("add");
-  const isPercent = effectTags.includes("percent") || effectTags.includes("multiply");
-  if (isAdd && !isPercent) {
-    hp[layer] += value;
-    return;
-  }
-  if (isPercent) {
-    hp[layer] *= toMultiplier(value);
-    return;
-  }
-  if (value > 2) {
-    hp[layer] *= 1 + value / 100;
-  } else if (value > 0) {
-    hp[layer] *= value;
-  }
-}
-
-function toMultiplier(value: number): number {
-  if (!Number.isFinite(value)) {
-    return 1;
-  }
-  if (value > 2) {
-    return 1 + value / 100;
-  }
-  if (value > 0) {
-    return value;
-  }
-  return 1;
-}
-
-function inferResistanceBonusLayer(
-  attrName: string,
-  effectTags: string
-): "shield" | "armor" | "hull" {
-  const lower = attrName.toLowerCase();
-  if (lower.startsWith("shield ")) return "shield";
-  if (lower.startsWith("armor ")) return "armor";
-  if (lower.startsWith("structure ")) return "hull";
-  if (effectTags.includes("armorresonance")) return "armor";
-  if (effectTags.includes("shieldresonance")) return "shield";
-  if (effectTags.includes("structureresonance") || effectTags.includes("hull")) return "hull";
-  return "armor";
-}
-
-function shouldApplyPassiveCompensation(effectTags: string): boolean {
-  if (effectTags.includes("rigslot")) {
-    return false;
-  }
-  return effectTags.includes("modifyarmorresonancepostpercent") || effectTags.includes("modifyshieldresonancepostpercent");
-}
-
-function damageKey(token: string): "em" | "therm" | "kin" | "exp" {
-  const lower = token.toLowerCase();
-  if (lower.startsWith("therm")) return "therm";
-  if (lower.startsWith("kin")) return "kin";
-  if (lower.startsWith("exp")) return "exp";
-  return "em";
 }
 
 function estimateSpeedAndSignature(
@@ -2104,49 +2001,6 @@ function inferHullPropSpeedBonusMultiplier(
   return multiplier;
 }
 
-function readResistsFromResonance(resonance: {
-  shield: { em: number; therm: number; kin: number; exp: number };
-  armor: { em: number; therm: number; kin: number; exp: number };
-  hull: { em: number; therm: number; kin: number; exp: number };
-}): LayerResists {
-  return {
-    shield: {
-      em: toResist(resonance.shield.em),
-      therm: toResist(resonance.shield.therm),
-      kin: toResist(resonance.shield.kin),
-      exp: toResist(resonance.shield.exp)
-    },
-    armor: {
-      em: toResist(resonance.armor.em),
-      therm: toResist(resonance.armor.therm),
-      kin: toResist(resonance.armor.kin),
-      exp: toResist(resonance.armor.exp)
-    },
-    hull: {
-      em: toResist(resonance.hull.em),
-      therm: toResist(resonance.hull.therm),
-      kin: toResist(resonance.hull.kin),
-      exp: toResist(resonance.hull.exp)
-    }
-  };
-}
-
-function toResist(resonance: number | undefined): number {
-  if (typeof resonance === "number" && Number.isFinite(resonance)) {
-    return clamp01(1 - resonance);
-  }
-  return 0.2;
-}
-
-function estimateEhp(shield: number, armor: number, hull: number, resists: LayerResists): number {
-  const avg = (p: { em: number; therm: number; kin: number; exp: number }) =>
-    (p.em + p.therm + p.kin + p.exp) / 4;
-  const shieldEhp = shield / Math.max(0.05, 1 - avg(resists.shield));
-  const armorEhp = armor / Math.max(0.05, 1 - avg(resists.armor));
-  const hullEhp = hull / Math.max(0.05, 1 - avg(resists.hull));
-  return shieldEhp + armorEhp + hullEhp;
-}
-
 function accumulateDamage(target: DamageProfile, profile: DamageProfile, dps: number): void {
   target.em += profile.em * dps;
   target.therm += profile.therm * dps;
@@ -2197,10 +2051,6 @@ function round1(value: number): number {
 
 function round2(value: number): number {
   return Number(value.toFixed(2));
-}
-
-function clamp01(value: number): number {
-  return Math.max(0, Math.min(0.95, value));
 }
 
 function unique(values: string[]): string[] {

@@ -1,10 +1,6 @@
 import type { ParsedPilotInput, Settings } from "../../types";
 import type { DogmaIndex } from "../dogma/index";
-import { fetchAndPrepareStageOne } from "./stageOneFetch";
-import { fetchAndMergeStageTwoHistory } from "./stageTwo";
-import { enrichStageTwoRow } from "./stageTwoEnrichment";
-import { loadDerivedInferenceWithCache } from "./derivedInference";
-import { ensureExplicitShipTypeId } from "./executors";
+import { runBreadthPilotPipeline } from "./breadthPipeline";
 import { createErrorCard } from "./stateTransitions";
 import { extractErrorMessage, isAbortError } from "./pure";
 import type {
@@ -17,22 +13,14 @@ import type {
 } from "./types";
 
 type PilotProcessorDeps = {
-  fetchAndPrepareStageOne: typeof fetchAndPrepareStageOne;
-  fetchAndMergeStageTwoHistory: typeof fetchAndMergeStageTwoHistory;
-  enrichStageTwoRow: typeof enrichStageTwoRow;
-  loadDerivedInferenceWithCache: typeof loadDerivedInferenceWithCache;
-  ensureExplicitShipTypeId: typeof ensureExplicitShipTypeId;
+  runBreadthPilotPipeline: typeof runBreadthPilotPipeline;
   createErrorCard: typeof createErrorCard;
   extractErrorMessage: typeof extractErrorMessage;
   isAbortError: typeof isAbortError;
 };
 
 const DEFAULT_DEPS: PilotProcessorDeps = {
-  fetchAndPrepareStageOne,
-  fetchAndMergeStageTwoHistory,
-  enrichStageTwoRow,
-  loadDerivedInferenceWithCache,
-  ensureExplicitShipTypeId,
+  runBreadthPilotPipeline,
   createErrorCard,
   extractErrorMessage,
   isAbortError
@@ -56,79 +44,18 @@ export async function processPilotEntry(
   deps: PilotProcessorDeps = DEFAULT_DEPS
 ): Promise<void> {
   try {
-    const stageOneResult = await deps.fetchAndPrepareStageOne({
-      entry: params.entry,
-      characterId: params.characterId,
-      settings: params.settings,
+    await deps.runBreadthPilotPipeline({
+      tasks: [{ entry: params.entry, characterId: params.characterId }],
+      lookbackDays: params.settings.lookbackDays,
       topShips: params.topShips,
-      signal: params.signal,
-      onRetry: params.onRetry,
       dogmaIndex: params.dogmaIndex,
-      logDebug: params.logDebug,
-      isCancelled: params.isCancelled
-    });
-    if (!stageOneResult || params.isCancelled()) {
-      return;
-    }
-
-    const { character, stageOneRow, stageOneDerived } = stageOneResult;
-    params.updatePilotCard(params.entry.pilotName, {
-      ...stageOneRow,
-      predictedShips: stageOneDerived.predictedShips,
-      fitCandidates: stageOneDerived.fitCandidates,
-      cynoRisk: stageOneDerived.cynoRisk
-    });
-
-    const { mergedInferenceKills, mergedInferenceLosses } = await deps.fetchAndMergeStageTwoHistory({
-      pilotName: params.entry.pilotName,
-      characterId: params.characterId,
-      inferenceKills: stageOneRow.inferenceKills,
-      inferenceLosses: stageOneRow.inferenceLosses,
       maxPages: params.deepHistoryMaxPages,
       signal: params.signal,
       onRetry: params.onRetry,
-      logDebug: params.logDebug
-    });
-    if (params.isCancelled()) {
-      return;
-    }
-
-    const { stageTwoRow, namesById: stageTwoNames } = await deps.enrichStageTwoRow({
-      characterId: params.characterId,
-      stageOneRow,
-      character,
-      inferenceKills: mergedInferenceKills,
-      inferenceLosses: mergedInferenceLosses,
-      signal: params.signal,
-      onRetry: params.onRetry,
-      dogmaIndex: params.dogmaIndex,
-      logDebug: params.logDebug
-    });
-    const stageTwoDerived = await deps.loadDerivedInferenceWithCache({
-      row: stageTwoRow,
-      settings: params.settings,
-      namesById: stageTwoNames,
-      dogmaIndex: params.dogmaIndex,
-      topShips: params.topShips,
-      logDebug: params.logDebug
-    });
-    await deps.ensureExplicitShipTypeId({
-      predictedShips: stageTwoDerived.predictedShips,
-      parsedEntry: params.entry,
-      signal: params.signal,
-      onRetry: params.onRetry,
-      logDebug: params.logDebug
-    });
-    params.updatePilotCard(params.entry.pilotName, {
-      ...stageTwoRow,
-      predictedShips: stageTwoDerived.predictedShips,
-      fitCandidates: stageTwoDerived.fitCandidates,
-      cynoRisk: stageTwoDerived.cynoRisk
-    });
-    params.logDebug("Pilot stage 2 ready", {
-      pilot: params.entry.pilotName,
-      predicted: stageTwoDerived.predictedShips.length,
-      fits: stageTwoDerived.fitCandidates.length
+      isCancelled: params.isCancelled,
+      updatePilotCard: params.updatePilotCard,
+      logDebug: params.logDebug,
+      logError: params.logError
     });
   } catch (error) {
     if (deps.isAbortError(error)) {

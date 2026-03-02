@@ -1,5 +1,5 @@
 import type { PilotStats } from "../intel";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import type { ParsedPilotInput } from "../../types";
 import type { ZkillKillmail } from "../api/zkill";
 

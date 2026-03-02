@@ -1,3 +1,9 @@
+import {
+  assertCliArgvArray,
+  readRequiredCliOptionValue,
+  throwUnknownCliArgument
+} from "../cli-utils.mjs";
+
 export const DEFAULT_MAX_RECORDS = 200;
 export const DEFAULT_RETRY_MAX_ATTEMPTS = 5;
 export const DEFAULT_RETRY_BASE_MS = 1000;
@@ -32,7 +38,8 @@ export function formatFetchZkillFitsUsage() {
   ].join("\n");
 }
 
-export function parseFetchZkillFitsArgs(argv) {
+export function parseFetchZkillFitsArgs(argv = []) {
+  const args = assertCliArgvArray(argv, FetchZkillFitsCliUsageError);
   const raw = {
     shipTypeIds: "",
     outputPath: "",
@@ -47,7 +54,6 @@ export function parseFetchZkillFitsArgs(argv) {
     help: false
   };
 
-  const args = Array.isArray(argv) ? argv : [];
   for (let i = 0; i < args.length; i += 1) {
     const token = args[i];
     switch (token) {
@@ -56,47 +62,47 @@ export function parseFetchZkillFitsArgs(argv) {
         raw.help = true;
         break;
       case "--ship-type-ids":
-        raw.shipTypeIds = nextValue(args, i, token);
+        raw.shipTypeIds = readNextValue(args, token, i + 1);
         i += 1;
         break;
       case "--output":
-        raw.outputPath = nextValue(args, i, token);
+        raw.outputPath = readNextValue(args, token, i + 1);
         i += 1;
         break;
       case "--errors-output":
-        raw.errorsOutputPath = nextValue(args, i, token);
+        raw.errorsOutputPath = readNextValue(args, token, i + 1);
         i += 1;
         break;
       case "--manifest-output":
-        raw.manifestOutputPath = nextValue(args, i, token);
+        raw.manifestOutputPath = readNextValue(args, token, i + 1);
         i += 1;
         break;
       case "--max-records":
-        raw.maxRecords = parsePositiveInteger(nextValue(args, i, token), token);
+        raw.maxRecords = parsePositiveInteger(readNextValue(args, token, i + 1), token);
         i += 1;
         break;
       case "--before-killmail-id":
-        raw.beforeKillmailId = parsePositiveInteger(nextValue(args, i, token), token);
+        raw.beforeKillmailId = parsePositiveInteger(readNextValue(args, token, i + 1), token);
         i += 1;
         break;
       case "--retry-max-attempts":
-        raw.retryMaxAttempts = parsePositiveInteger(nextValue(args, i, token), token);
+        raw.retryMaxAttempts = parsePositiveInteger(readNextValue(args, token, i + 1), token);
         i += 1;
         break;
       case "--retry-base-ms":
-        raw.retryBaseMs = parsePositiveInteger(nextValue(args, i, token), token);
+        raw.retryBaseMs = parsePositiveInteger(readNextValue(args, token, i + 1), token);
         i += 1;
         break;
       case "--retry-max-ms":
-        raw.retryMaxMs = parsePositiveInteger(nextValue(args, i, token), token);
+        raw.retryMaxMs = parsePositiveInteger(readNextValue(args, token, i + 1), token);
         i += 1;
         break;
       case "--request-timeout-ms":
-        raw.requestTimeoutMs = parsePositiveInteger(nextValue(args, i, token), token);
+        raw.requestTimeoutMs = parsePositiveInteger(readNextValue(args, token, i + 1), token);
         i += 1;
         break;
       default:
-        throw new FetchZkillFitsCliUsageError(`Unknown argument: ${token}`);
+        throwUnknownCliArgument(token, FetchZkillFitsCliUsageError);
     }
   }
 
@@ -160,10 +166,15 @@ function parsePositiveInteger(rawValue, flagName) {
   return parsed;
 }
 
-function nextValue(args, index, flagName) {
-  const value = args[index + 1];
-  if (!value || value.startsWith("--")) {
-    throw new FetchZkillFitsCliUsageError(`${flagName} requires a value.`);
-  }
-  return value;
+function readNextValue(args, token, nextIndex) {
+  return readRequiredCliOptionValue({
+    argv: args,
+    token,
+    nextIndex,
+    UsageErrorClass: FetchZkillFitsCliUsageError,
+    missingValueMessage: `${token} requires a value.`,
+    emptyValueMessage: `${token} requires a value.`,
+    rejectIfFlag: true,
+    coerceToString: true
+  });
 }

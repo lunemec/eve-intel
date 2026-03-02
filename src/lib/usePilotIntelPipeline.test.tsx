@@ -73,6 +73,17 @@ vi.mock("./intel", () => ({
     danger: 0
   })),
   deriveShipPredictions: vi.fn(() => []),
+  summarizeEvidence: vi.fn(() => ({
+    coverage: {
+      totalKills: 0,
+      totalLosses: 0,
+      killRowsWithMatchedAttackerShip: 0,
+      killRowsWithoutAttackers: 0,
+      killRowsWithAttackersButNoCharacterMatch: 0,
+      lossRowsWithVictimShip: 0
+    },
+    topShips: []
+  })),
   summarizeEvidenceCoverage: vi.fn(() => ({
     totalKills: 0,
     totalLosses: 0,

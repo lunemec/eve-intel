@@ -8,7 +8,7 @@ import {
   type ZkillKillmail
 } from "../api/zkill";
 import { derivePilotStats } from "../intel";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import { buildDerivedInferenceKey, isAbortError, mergeKillmailLists, mergePilotStats } from "./pure";
 import { buildStageOneRow, buildStageTwoRow } from "./rows";
 import { createErrorCard } from "./stateTransitions";
@@ -58,6 +58,7 @@ type PilotBreadthState = {
   exhaustedKills: boolean;
   exhaustedLosses: boolean;
   lastMaterialSignature: string;
+  failed?: boolean;
 };
 
 type BreadthDeps = {
@@ -275,6 +276,7 @@ export async function hydrateBaseCards(
         historyLosses: new Map<number, ZkillKillmail>(warmInferenceLosses.map((row) => [row.killmail_id, row])),
         exhaustedKills: false,
         exhaustedLosses: false,
+        failed: false,
         lastMaterialSignature: buildPilotMaterialSignature({
           fetchPhase: stageOneForPipeline.fetchPhase ?? "base",
           statsDanger: stageOneForPipeline.stats?.danger,
@@ -325,7 +327,7 @@ export async function runPagedHistoryRounds(
     if (params.isCancelled()) {
       return;
     }
-    const active = params.pilots.filter((pilot) => hasRemainingPages(pilot, params.maxPages));
+    const active = params.pilots.filter((pilot) => pilot.failed !== true && hasRemainingPages(pilot, params.maxPages));
     if (active.length === 0) {
       break;
     }
@@ -347,8 +349,9 @@ export async function runPagedHistoryRounds(
     }
 
     roundsProcessed += 1;
+    const validPilots = params.pilots.filter((pilot) => pilot.failed !== true);
     if (roundsProcessed === 1) {
-      await recomputeForPilots(params, deps, false);
+      await recomputeForPilots({ ...params, pilots: validPilots }, deps, false);
     }
 
     if (roundNewRows === 0) {
@@ -360,10 +363,11 @@ export async function runPagedHistoryRounds(
     return;
   }
 
+  const validPilots = params.pilots.filter((pilot) => pilot.failed !== true);
   if (roundsProcessed > 1) {
-    await recomputeForPilots(params, deps, true);
+    await recomputeForPilots({ ...params, pilots: validPilots }, deps, true);
   } else {
-    for (const pilot of params.pilots) {
+    for (const pilot of validPilots) {
       params.updatePilotCard(pilot.entry.pilotName, { fetchPhase: "ready" });
     }
   }
@@ -388,105 +392,120 @@ async function recomputeForPilots(
     if (params.isCancelled()) {
       return;
     }
-    const inferenceKills = toSortedRows(pilot.historyKills, deps);
-    const inferenceLosses = toSortedRows(pilot.historyLosses, deps);
-    const ids = deps.collectStageNameResolutionIds({
-      characterId: pilot.characterId,
-      inferenceKills,
-      inferenceLosses,
-      corporationId: pilot.character.corporation_id,
-      allianceId: pilot.character.alliance_id
-    });
-    const namesById = await deps.resolveNamesSafely({
-      ids,
-      signal: params.signal,
-      onRetry: params.onRetry,
-      dogmaIndex: params.dogmaIndex ?? null,
-      logDebug: params.logDebug
-    });
-    const stageTwoRow = deps.buildStageTwoRow({
-      stageOne: pilot.stageOneRow,
-      character: pilot.character,
-      namesById,
-      inferenceKills,
-      inferenceLosses
-    });
-    const cacheKey = buildDerivedInferenceKey({
-      characterId: pilot.characterId,
-      lookbackDays: params.lookbackDays,
-      topShips: params.topShips,
-      explicitShip: pilot.entry.explicitShip,
-      kills: inferenceKills,
-      losses: inferenceLosses
-    });
-    const derived: DerivedInference = await deps.recomputeDerivedInference({
-      row: stageTwoRow,
-      settings: { lookbackDays: params.lookbackDays },
-      namesById,
-      dogmaIndex: params.dogmaIndex ?? null,
-      cacheKey,
-      debugLog: params.logDebug
-    });
-    await deps.ensureExplicitShipTypeId({
-      predictedShips: derived.predictedShips,
-      parsedEntry: pilot.entry,
-      signal: params.signal,
-      onRetry: params.onRetry,
-      logDebug: params.logDebug
-    });
-    const patch: Partial<PilotCard> = {
-      ...stageTwoRow,
-      predictedShips: derived.predictedShips,
-      fitCandidates: derived.fitCandidates,
-      cynoRisk: derived.cynoRisk,
-      fetchPhase: finalPass ? "ready" : "history"
-    };
-
-    const nextSignature = buildPilotMaterialSignature({
-      fetchPhase: patch.fetchPhase ?? "history",
-      statsDanger: patch.stats?.danger,
-      inferenceKills: patch.inferenceKills ?? [],
-      inferenceLosses: patch.inferenceLosses ?? [],
-      predictedShips: patch.predictedShips ?? [],
-      fitCandidates: patch.fitCandidates ?? []
-    });
-    if (pilot.lastMaterialSignature !== nextSignature) {
-      params.updatePilotCard(pilot.entry.pilotName, patch);
-      pilot.lastMaterialSignature = nextSignature;
-    }
-
-    if (deps.savePilotSnapshot && deps.buildPilotSnapshotSourceSignature) {
-      await deps.savePilotSnapshot({
-        pilotName: pilot.entry.pilotName,
+    try {
+      const inferenceKills = toSortedRows(pilot.historyKills, deps);
+      const inferenceLosses = toSortedRows(pilot.historyLosses, deps);
+      const ids = deps.collectStageNameResolutionIds({
         characterId: pilot.characterId,
-        lookbackDays: params.lookbackDays,
-        baseRow: {
-          status: stageTwoRow.status,
-          fetchPhase: finalPass ? "ready" : "history",
-          characterId: stageTwoRow.characterId,
-          characterName: stageTwoRow.characterName,
-          corporationId: stageTwoRow.corporationId,
-          corporationName: stageTwoRow.corporationName,
-          allianceId: stageTwoRow.allianceId,
-          allianceName: stageTwoRow.allianceName,
-          securityStatus: stageTwoRow.securityStatus,
-          stats: stageTwoRow.stats
-        },
         inferenceKills,
         inferenceLosses,
+        corporationId: pilot.character.corporation_id,
+        allianceId: pilot.character.alliance_id
+      });
+      const namesById = await deps.resolveNamesSafely({
+        ids,
+        signal: params.signal,
+        onRetry: params.onRetry,
+        dogmaIndex: params.dogmaIndex ?? null,
+        logDebug: params.logDebug
+      });
+      const stageTwoRow = deps.buildStageTwoRow({
+        stageOne: pilot.stageOneRow,
+        character: pilot.character,
+        namesById,
+        inferenceKills,
+        inferenceLosses
+      });
+      const cacheKey = buildDerivedInferenceKey({
+        characterId: pilot.characterId,
+        lookbackDays: params.lookbackDays,
+        topShips: params.topShips,
+        explicitShip: pilot.entry.explicitShip,
+        kills: inferenceKills,
+        losses: inferenceLosses
+      });
+      const derived: DerivedInference = await deps.recomputeDerivedInference({
+        row: stageTwoRow,
+        settings: { lookbackDays: params.lookbackDays },
+        namesById,
+        dogmaIndex: params.dogmaIndex ?? null,
+        cacheKey,
+        debugLog: params.logDebug
+      });
+      await deps.ensureExplicitShipTypeId({
+        predictedShips: derived.predictedShips,
+        parsedEntry: pilot.entry,
+        signal: params.signal,
+        onRetry: params.onRetry,
+        logDebug: params.logDebug
+      });
+      const patch: Partial<PilotCard> = {
+        ...stageTwoRow,
         predictedShips: derived.predictedShips,
         fitCandidates: derived.fitCandidates,
         cynoRisk: derived.cynoRisk,
-        sourceSignature: deps.buildPilotSnapshotSourceSignature({
-          row: {
-            parsedEntry: pilot.entry,
-            inferenceKills,
-            inferenceLosses
-          },
-          lookbackDays: params.lookbackDays,
-          topShips: params.topShips
-        })
+        fetchPhase: finalPass ? "ready" : "history"
+      };
+
+      const nextSignature = buildPilotMaterialSignature({
+        fetchPhase: patch.fetchPhase ?? "history",
+        statsDanger: patch.stats?.danger,
+        inferenceKills: patch.inferenceKills ?? [],
+        inferenceLosses: patch.inferenceLosses ?? [],
+        predictedShips: patch.predictedShips ?? [],
+        fitCandidates: patch.fitCandidates ?? []
       });
+      if (pilot.lastMaterialSignature !== nextSignature) {
+        params.updatePilotCard(pilot.entry.pilotName, patch);
+        pilot.lastMaterialSignature = nextSignature;
+      }
+
+      if (deps.savePilotSnapshot && deps.buildPilotSnapshotSourceSignature) {
+        await deps.savePilotSnapshot({
+          pilotName: pilot.entry.pilotName,
+          characterId: pilot.characterId,
+          lookbackDays: params.lookbackDays,
+          baseRow: {
+            status: stageTwoRow.status,
+            fetchPhase: finalPass ? "ready" : "history",
+            characterId: stageTwoRow.characterId,
+            characterName: stageTwoRow.characterName,
+            corporationId: stageTwoRow.corporationId,
+            corporationName: stageTwoRow.corporationName,
+            allianceId: stageTwoRow.allianceId,
+            allianceName: stageTwoRow.allianceName,
+            securityStatus: stageTwoRow.securityStatus,
+            stats: stageTwoRow.stats
+          },
+          inferenceKills,
+          inferenceLosses,
+          predictedShips: derived.predictedShips,
+          fitCandidates: derived.fitCandidates,
+          cynoRisk: derived.cynoRisk,
+          sourceSignature: deps.buildPilotSnapshotSourceSignature({
+            row: {
+              parsedEntry: pilot.entry,
+              inferenceKills,
+              inferenceLosses
+            },
+            lookbackDays: params.lookbackDays,
+            topShips: params.topShips
+          })
+        });
+      }
+    } catch (error) {
+      if (deps.isAbortError(error)) {
+        return;
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      pilot.failed = true;
+      pilot.exhaustedKills = true;
+      pilot.exhaustedLosses = true;
+      params.logDebug("Pilot recompute failed", { pilot: pilot.entry.pilotName, error: message });
+      params.updatePilotCard(
+        pilot.entry.pilotName,
+        deps.createErrorCard(pilot.entry, `Failed to fetch pilot intel: ${message}`)
+      );
     }
   });
 }
@@ -547,16 +566,39 @@ async function runRoundBatch(
     onRetry: RetryBuilder;
     isCancelled: CancelCheck;
     updatePilotCard: PilotCardUpdater;
+    logDebug: DebugLogger;
   },
-  deps: Pick<BreadthDeps, "fetchLatestKillsPage" | "fetchLatestLossesPage" | "mergeKillmailLists">
+  deps: Pick<
+    BreadthDeps,
+    "fetchLatestKillsPage" |
+    "fetchLatestLossesPage" |
+    "mergeKillmailLists" |
+    "createErrorCard" |
+    "isAbortError"
+  >
 ): Promise<number> {
   let roundNewRows = 0;
   await runWithConcurrency(pilots, Math.max(1, ZKILL_PAGE_ROUND_CONCURRENCY), async (pilot) => {
     if (params.isCancelled() || !hasRemainingPages(pilot, params.maxPages)) {
       return;
     }
-    const added = await runPilotPageFetch(pilot, params, deps);
-    roundNewRows += added;
+    try {
+      const added = await runPilotPageFetch(pilot, params, deps);
+      roundNewRows += added;
+    } catch (error) {
+      if (deps.isAbortError(error)) {
+        return;
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      pilot.failed = true;
+      pilot.exhaustedKills = true;
+      pilot.exhaustedLosses = true;
+      params.logDebug("Pilot page fetch failed", { pilot: pilot.entry.pilotName, error: message });
+      params.updatePilotCard(
+        pilot.entry.pilotName,
+        deps.createErrorCard(pilot.entry, `Failed to fetch pilot intel: ${message}`)
+      );
+    }
   });
   return roundNewRows;
 }

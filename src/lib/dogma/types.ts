@@ -39,6 +39,13 @@ export type DogmaManifest = {
   packFile: string;
   sha256: string;
   generatedAt: string;
+  retention?: {
+    policyVersion: number;
+    runtimePackCount: number;
+    archivedPackCount: number;
+    archiveIndexFile: string;
+    archiveDir?: string;
+  };
 };
 
 export type FitResolvedModule = {

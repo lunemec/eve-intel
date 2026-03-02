@@ -1,4 +1,4 @@
-import type { PilotCard } from "./usePilotIntelPipeline";
+import type { PilotCard } from "./pilotDomain";
 
 export function extractErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) {

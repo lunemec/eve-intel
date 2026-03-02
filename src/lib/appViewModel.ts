@@ -1,5 +1,5 @@
 import { aggregatePilotProgress } from "./appUtils";
-import type { PilotCard } from "./usePilotIntelPipeline";
+import type { PilotCard } from "./pilotDomain";
 
 export function deriveAppViewModel(pilotCards: PilotCard[]): {
   copyableFleetCount: number;

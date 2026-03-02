@@ -19,6 +19,31 @@ function jsonResponse(payload: unknown, status = 200, headers?: HeadersInit): Re
   });
 }
 
+type PendingFetch = {
+  signal: AbortSignal | undefined;
+  resolve: (response: Response) => void;
+};
+
+function createPendingFetchMock(pending: PendingFetch[]) {
+  return vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+    return new Promise<Response>((resolve, reject) => {
+      const signal = init?.signal as AbortSignal | undefined;
+      if (signal?.aborted) {
+        reject(new DOMException("Aborted", "AbortError"));
+        return;
+      }
+      signal?.addEventListener(
+        "abort",
+        () => {
+          reject(new DOMException("Aborted", "AbortError"));
+        },
+        { once: true }
+      );
+      pending.push({ signal, resolve });
+    });
+  });
+}
+
 describe("zkill API client", () => {
   it("returns empty array when API returns non-array payload", async () => {
     const originalFetch = globalThis.fetch;
@@ -100,6 +125,45 @@ describe("zkill API client", () => {
       expect(data[0].victim.ship_type_id).toBe(2);
       expect(data[0].attackers?.[0]?.character_id).toBe(3);
       expect(data[0].attackers?.[0]?.ship_type_id).toBe(4);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("falls back to normalized zKill rows when hydration lookups fail", async () => {
+    const originalFetch = globalThis.fetch;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("zkillboard.com/api")) {
+        return jsonResponse([
+          {
+            killmail_id: 779,
+            killmail_time: "2025-11-01T00:00:00Z",
+            victim: {},
+            attackers: [],
+            zkb: { hash: "deadbeef", totalValue: 3000000 }
+          }
+        ]);
+      }
+
+      if (url.includes("/killmails/779/deadbeef/")) {
+        return new Response("upstream failed", { status: 500 });
+      }
+
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+    globalThis.fetch = fetchMock;
+
+    try {
+      const data = await fetchRecentKills(12345, 7);
+      expect(data).toHaveLength(1);
+      expect(data[0]).toEqual(
+        expect.objectContaining({
+          killmail_id: 779,
+          killmail_time: "2025-11-01T00:00:00Z"
+        })
+      );
+      expect(data[0].zkb?.hash).toBe("deadbeef");
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -206,30 +270,55 @@ describe("latest endpoint", () => {
     }
   });
 
-  it("does not dedupe foreground page refreshes across different abort signals", async () => {
-    vi.useFakeTimers();
+  it("dedupes foreground page refreshes when the same abort signal is reused", async () => {
     const originalFetch = globalThis.fetch;
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
-      return new Promise<Response>((resolve, reject) => {
-        const signal = init?.signal as AbortSignal | undefined;
-        if (signal?.aborted) {
-          reject(new DOMException("Aborted", "AbortError"));
-          return;
-        }
-        signal?.addEventListener("abort", () => {
-          reject(new DOMException("Aborted", "AbortError"));
-        });
-        setTimeout(() => {
-          resolve(jsonResponse([]));
-        }, 25);
+    const pending: PendingFetch[] = [];
+    const fetchMock = createPendingFetchMock(pending);
+    globalThis.fetch = fetchMock;
+
+    try {
+      const controller = new AbortController();
+
+      const first = fetchLatestKillsPage(
+        777776,
+        1,
+        controller.signal,
+        undefined,
+        { forceNetwork: true }
+      );
+      const second = fetchLatestKillsPage(
+        777776,
+        1,
+        controller.signal,
+        undefined,
+        { forceNetwork: true }
+      );
+
+      await vi.waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledTimes(1);
       });
-    });
+      pending[0]?.resolve(jsonResponse([]));
+
+      await expect(first).resolves.toEqual([]);
+      await expect(second).resolves.toEqual([]);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("does not dedupe foreground page refreshes across different abort signals", async () => {
+    const originalFetch = globalThis.fetch;
+    const pending: PendingFetch[] = [];
+    const fetchMock = createPendingFetchMock(pending);
     globalThis.fetch = fetchMock;
 
     try {
       const firstController = new AbortController();
       const secondController = new AbortController();
 
+      // Foreground refresh dedupe is scoped by AbortSignal identity.
+      // Distinct signals must not share an in-flight request.
       const first = fetchLatestKillsPage(
         777777,
         1,
@@ -249,16 +338,20 @@ describe("latest endpoint", () => {
         { forceNetwork: true }
       );
 
+      await vi.waitFor(() => {
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+      });
+      expect(pending[0]?.signal).not.toBe(pending[1]?.signal);
+
       firstController.abort();
-      await vi.advanceTimersByTimeAsync(30);
+      pending[1]?.resolve(jsonResponse([]));
 
       const firstError = await firstHandled;
       expect(firstError).toMatchObject({ name: "AbortError" });
       await expect(second).resolves.toEqual([]);
-      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
     } finally {
       globalThis.fetch = originalFetch;
-      vi.useRealTimers();
     }
   });
 });

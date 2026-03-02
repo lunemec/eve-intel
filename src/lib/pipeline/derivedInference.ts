@@ -1,6 +1,6 @@
 import type { Settings } from "../../types";
 import type { DogmaIndex } from "../dogma/index";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import { getCachedStateAsync, type CacheLookup } from "../cache";
 import { buildDerivedInferenceKey, isDerivedInferenceUsable } from "./pure";
 import { recomputeDerivedInference, type DerivedInference } from "./executors";

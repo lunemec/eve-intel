@@ -2,7 +2,7 @@ import type { DogmaIndex } from "../dogma/index";
 import type { PilotStats } from "../intel";
 import type { ParsedPilotInput } from "../../types";
 import type { ZkillKillmail } from "../api/zkill";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import { collectStageNameResolutionIds } from "./stages";
 import { resolveNamesSafely } from "./naming";
 import { buildStageOneRow } from "./rows";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PilotCard } from "./usePilotIntelPipeline";
+import type { PilotCard } from "./pilotDomain";
 import { deriveAppViewModel, sortPilotCardsByDanger } from "./appViewModel";
 
 function pilot(overrides: Partial<PilotCard> = {}): PilotCard {

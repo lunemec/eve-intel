@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Settings } from "../types";
-import { loadDebugEnabled, loadSettings } from "./settings";
-import { usePersistedSettings } from "./usePersistedSettings";
-import { useDebugToggle } from "./useDebugToggle";
+import {
+  loadDebugEnabled,
+  loadSettings,
+  persistDebugEnabled,
+  persistSettings
+} from "./settings";
 
 export function useAppPreferences(params: {
   maxLookbackDays: number;
@@ -13,8 +16,15 @@ export function useAppPreferences(params: {
 } {
   const [settings] = useState<Settings>(() => loadSettings(localStorage, params.maxLookbackDays));
   const [debugEnabled, setDebugEnabled] = useState<boolean>(() => loadDebugEnabled(localStorage));
-  usePersistedSettings({ settings, debugEnabled });
-  const onDebugToggle = useDebugToggle({ setDebugEnabled });
+  useEffect(() => {
+    persistSettings(localStorage, settings);
+  }, [settings]);
+  useEffect(() => {
+    persistDebugEnabled(localStorage, debugEnabled);
+  }, [debugEnabled]);
+  const onDebugToggle = useCallback((enabled: boolean) => {
+    setDebugEnabled(enabled);
+  }, []);
 
   return {
     settings,

@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import type { CancelCheck, PilotCardUpdater } from "./types";
 
 export function patchPilotCardRows(

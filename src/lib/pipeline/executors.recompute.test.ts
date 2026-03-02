@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ZkillKillmail } from "../api/zkill";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 
 const mocked = vi.hoisted(() => ({
   setCachedAsync: vi.fn(async () => undefined),

@@ -27,6 +27,28 @@ export function formatShipLikelihoodPercent(value: number): string {
   return `${Math.max(0, Math.min(100, Math.round(value)))}%`;
 }
 
+export function formatUpdaterStatus(state: DesktopUpdaterState | null): string {
+  if (!state) {
+    return "Updates: idle";
+  }
+  switch (state.status) {
+    case "dev":
+      return "Updates: dev mode";
+    case "checking":
+      return "Updates: checking...";
+    case "downloading":
+      return `Updates: downloading ${Math.max(0, Math.min(100, state.progress))}%`;
+    case "downloaded":
+      return `Updates: ready (${state.downloadedVersion ?? "new version"})`;
+    case "up-to-date":
+      return `Updates: up to date (${state.version})`;
+    case "error":
+      return `Updates: error${state.error ? ` (${state.error})` : ""}`;
+    default:
+      return "Updates: idle";
+  }
+}
+
 export function formatRange(value: number): string {
   if (!Number.isFinite(value) || value <= 0) {
     return "—";
