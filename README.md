@@ -293,6 +293,11 @@ Behavior:
 - Set `EVE_HERMETIC_BUILD=1` to skip `sde:sync` and compile from local SDE artifacts only (for example, `EVE_HERMETIC_BUILD=1 npm run build`)
 - `check:artifact-consistency` is a read-only deterministic integrity check for local dogma artifacts. It verifies manifest/runtime-pack hash coherence, one-pack runtime boundary, retention index consistency, and archive hash coverage. The command exits non-zero on drift.
 
+Dogma parity runtime note:
+
+- Local parity workflows write runtime report artifacts to `reports/local/dogma-parity-report.json` by default.
+- This report path is local-only and gitignored; tooling can still read the legacy `reports/dogma-parity-report.json` path when explicitly requested.
+
 Installer (`.exe`):
 
 ```bash

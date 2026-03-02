@@ -5,6 +5,7 @@ import { buildDogmaParityFollowupPrioritizationBacklog } from "./prioritization.
 
 export const DEFAULT_DOGMA_PARITY_REPORT_PATH = path.join(
   "reports",
+  "local",
   "dogma-parity-report.json"
 );
 

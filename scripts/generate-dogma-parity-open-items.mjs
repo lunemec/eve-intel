@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 
 const repoRoot = process.cwd();
-const parityPath = path.join(repoRoot, "reports", "dogma-parity-report.json");
+const parityPath = resolveParityReportPath(repoRoot);
 const auditPath = path.join(repoRoot, "reports", "dogma-bonus-audit.json");
 const outputPath = path.join(repoRoot, "reports", "dogma-parity-open-items.md");
 
@@ -59,3 +59,11 @@ if (existsSync(auditPath)) {
 mkdirSync(path.dirname(outputPath), { recursive: true });
 writeFileSync(outputPath, `${lines.join("\n")}\n`, "utf8");
 console.log(`[dogma:parity] wrote ${path.relative(repoRoot, outputPath)}`);
+
+function resolveParityReportPath(rootDir) {
+  const preferredPath = path.join(rootDir, "reports", "local", "dogma-parity-report.json");
+  if (existsSync(preferredPath)) {
+    return preferredPath;
+  }
+  return path.join(rootDir, "reports", "dogma-parity-report.json");
+}

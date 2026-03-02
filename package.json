@@ -10,6 +10,7 @@
     "pyfa:db:init": "node scripts/init-pyfa-evedb.mjs",
     "sde:compile": "npm run pyfa:db:init && node scripts/compile-dogma-pack.mjs",
     "check:artifact-consistency": "node scripts/check-artifact-consistency.mjs",
+    "check:docs-governance": "node scripts/check-docs-governance.mjs",
     "sde:prepare": "npm run sde:sync && npm run sde:compile",
     "sde:refresh": "npm run sde:prepare",
     "audit:bonuses": "node scripts/audit-dogma-bonuses.mjs",

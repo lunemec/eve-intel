@@ -72,7 +72,7 @@ describe("runDogmaParityFollowupBaselineCli", () => {
     ]);
     expect(baselineCalls).toEqual([
       {
-        parityReportPath: path.join("reports", "dogma-parity-report.json"),
+        parityReportPath: path.join("reports", "local", "dogma-parity-report.json"),
         summaryPath: path.join(
           "reports",
           "dogma-parity-followup-baseline-summary.json"

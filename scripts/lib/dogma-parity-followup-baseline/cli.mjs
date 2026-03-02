@@ -61,7 +61,7 @@ export function formatDogmaParityFollowupBaselineUsage() {
     "Options:",
     "  --help, -h            Show this help text",
     "  --precondition-met    Confirm prerequisite Ralph task is completed/merged",
-    "  --parity-report-path  Input parity report path (default: reports/dogma-parity-report.json)",
+    "  --parity-report-path  Input parity report path (default: reports/local/dogma-parity-report.json)",
     "  --summary-path        Output summary artifact path (default: reports/dogma-parity-followup-baseline-summary.json)"
   ].join("\n");
 }

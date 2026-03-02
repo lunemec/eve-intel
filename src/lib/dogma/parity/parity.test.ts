@@ -73,7 +73,7 @@ describe("dogma parity", () => {
 
     const failures = comparisons.filter((entry) => !entry.pass);
 
-    const reportPath = path.join(repoRoot, "reports", "dogma-parity-report.json");
+    const reportPath = path.join(repoRoot, "reports", "local", "dogma-parity-report.json");
     mkdirSync(path.dirname(reportPath), { recursive: true });
     writeFileSync(
       reportPath,
