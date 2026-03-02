@@ -2,7 +2,7 @@ import type { DogmaIndex } from "./dogma/index";
 import { calculateShipCombatMetrics, type CalculateCombatMetricsInput } from "./dogma/calc";
 import type { CombatMetrics } from "./dogma/types";
 import type { FitCandidate } from "./intel";
-import type { PilotCard } from "./usePilotIntelPipeline";
+import type { PilotCard } from "./pilotDomain";
 
 export type FitMetricResult =
   | { status: "ready"; key: string; value: CombatMetrics }

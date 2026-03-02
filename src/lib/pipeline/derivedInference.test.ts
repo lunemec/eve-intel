@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { loadDerivedInferenceWithCache } from "./derivedInference";
 import type { CacheLookup } from "../cache";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import type { DerivedInference } from "./executors";
 
 function makePilotCard(): PilotCard {

@@ -1,5 +1,5 @@
 import { getCachedStateAsync, setCachedAsync } from "../cache";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import type { PilotProcessedSnapshot } from "./types";
 
 const SNAPSHOT_VERSION = 2;

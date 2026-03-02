@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { enrichStageTwoRow } from "./stageTwoEnrichment";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import type { ParsedPilotInput } from "../../types";
 
 const ENTRY: ParsedPilotInput = {

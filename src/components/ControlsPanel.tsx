@@ -1,4 +1,4 @@
-import { formatUpdaterStatus } from "../lib/ui";
+import { formatUpdaterStatus } from "../lib/presentation";
 
 export function ControlsPanel(props: {
   manualEntry: string;

@@ -1,5 +1,5 @@
 import type { DogmaIndex } from "../dogma/index";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import type { ZkillKillmail } from "../api/zkill";
 import { resolveNamesSafely } from "./naming";
 import { buildStageTwoRow } from "./rows";

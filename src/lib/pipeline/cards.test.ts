@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createPilotCardUpdater, patchPilotCardRows } from "./cards";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 
 function makeCard(name: string): PilotCard {
   return {

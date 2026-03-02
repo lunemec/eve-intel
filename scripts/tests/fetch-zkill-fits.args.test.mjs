@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { parseFetchZkillFitsArgs } from "../lib/zkill-fit-fetch-cli/args.mjs";
 
 describe("parseFetchZkillFitsArgs", () => {
+  it("rejects non-array argv inputs", () => {
+    expect(() => parseFetchZkillFitsArgs(null)).toThrowError(
+      /CLI arguments must be provided as an array/
+    );
+  });
+
   it("requires --ship-type-ids", () => {
     expect(() => parseFetchZkillFitsArgs(["--output", "out.jsonl"])).toThrowError(
       /--ship-type-ids/

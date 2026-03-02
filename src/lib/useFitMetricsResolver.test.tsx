@@ -3,7 +3,7 @@
  */
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PilotCard } from "./usePilotIntelPipeline";
+import type { PilotCard } from "./pilotDomain";
 import { useFitMetricsResolver } from "./useFitMetricsResolver";
 import { createFitMetricsResolver } from "./useFitMetrics";
 

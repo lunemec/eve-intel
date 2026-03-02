@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { hydrateBaseCards, runBreadthPilotPipeline, runPagedHistoryRounds } from "./breadthPipeline";
 import type { ParsedPilotInput } from "../../types";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import type { ZkillKillmail } from "../api/zkill";
 import { buildPilotSnapshotSourceSignature, isPilotSnapshotUsable } from "./snapshotCache";
 
@@ -602,6 +602,140 @@ describe("pipeline/breadthPipeline", () => {
     killsGate.resolve([]);
     await runPromise;
     expect(fetchLatestLossesPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks only the failed pilot as error when page fetch rejects", async () => {
+    const updatePilotCard = vi.fn();
+    const pilotA = makePilotState(ENTRY_A, 401, 80);
+    const pilotB = makePilotState(ENTRY_B, 402, 80);
+
+    await runPagedHistoryRounds(
+      {
+        pilots: [pilotA, pilotB],
+        lookbackDays: 7,
+        topShips: 5,
+        maxPages: 1,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard,
+        logDebug: vi.fn()
+      },
+      {
+        fetchCharacterPublic: vi.fn(),
+        fetchCharacterStats: vi.fn(),
+        resolveUniverseNames: vi.fn(),
+        derivePilotStats: vi.fn(),
+        mergePilotStats: vi.fn(),
+        buildStageOneRow: vi.fn(),
+        createErrorCard: vi.fn((entry: ParsedPilotInput, error: string) => ({
+          ...makeStageOneRow(entry, 0),
+          status: "error" as const,
+          fetchPhase: "error" as const,
+          error
+        })),
+        fetchLatestKillsPage: vi.fn(async (characterId: number) => {
+          if (characterId === 401) {
+            throw new Error("kills page failed");
+          }
+          return [];
+        }),
+        fetchLatestLossesPage: vi.fn(async () => []),
+        mergeKillmailLists: vi.fn((a: ZkillKillmail[], b: ZkillKillmail[]) => [...a, ...b]),
+        collectStageNameResolutionIds: vi.fn(() => []),
+        resolveNamesSafely: vi.fn(async () => new Map<number, string>()),
+        buildStageTwoRow: vi.fn((params: { stageOne: PilotCard }) => params.stageOne),
+        recomputeDerivedInference: vi.fn(async () => ({
+          predictedShips: [],
+          fitCandidates: [],
+          cynoRisk: { potentialCyno: false, jumpAssociation: false, reasons: [] }
+        })),
+        ensureExplicitShipTypeId: vi.fn(async () => undefined),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    expect(updatePilotCard).toHaveBeenCalledWith(
+      "Pilot A",
+      expect.objectContaining({
+        status: "error",
+        fetchPhase: "error",
+        error: "Failed to fetch pilot intel: kills page failed"
+      })
+    );
+    expect(updatePilotCard).toHaveBeenCalledWith("Pilot B", expect.objectContaining({ fetchPhase: "ready" }));
+  });
+
+  it("marks only the failed pilot as error when recompute rejects", async () => {
+    const updatePilotCard = vi.fn();
+    const logDebug = vi.fn();
+    const pilotA = makePilotState(ENTRY_A, 501, 80);
+    const pilotB = makePilotState(ENTRY_B, 502, 80);
+
+    await runPagedHistoryRounds(
+      {
+        pilots: [pilotA, pilotB],
+        lookbackDays: 7,
+        topShips: 5,
+        maxPages: 1,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard,
+        logDebug
+      },
+      {
+        fetchCharacterPublic: vi.fn(),
+        fetchCharacterStats: vi.fn(),
+        resolveUniverseNames: vi.fn(),
+        derivePilotStats: vi.fn(),
+        mergePilotStats: vi.fn(),
+        buildStageOneRow: vi.fn(),
+        createErrorCard: vi.fn((entry: ParsedPilotInput, error: string) => ({
+          ...makeStageOneRow(entry, 0),
+          status: "error" as const,
+          fetchPhase: "error" as const,
+          error
+        })),
+        fetchLatestKillsPage: vi.fn(async () => []),
+        fetchLatestLossesPage: vi.fn(async () => []),
+        mergeKillmailLists: vi.fn((a: ZkillKillmail[], b: ZkillKillmail[]) => [...a, ...b]),
+        collectStageNameResolutionIds: vi.fn(() => []),
+        resolveNamesSafely: vi.fn(async () => new Map<number, string>()),
+        buildStageTwoRow: vi.fn((params: { stageOne: PilotCard }) => params.stageOne),
+        recomputeDerivedInference: vi.fn(async (params: { row: PilotCard }) => {
+          if (params.row.parsedEntry.pilotName === "Pilot A") {
+            throw new Error("recompute failed");
+          }
+          return {
+            predictedShips: [],
+            fitCandidates: [],
+            cynoRisk: { potentialCyno: false, jumpAssociation: false, reasons: [] }
+          };
+        }),
+        ensureExplicitShipTypeId: vi.fn(async () => undefined),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    expect(updatePilotCard).toHaveBeenCalledWith(
+      "Pilot A",
+      expect.objectContaining({
+        status: "error",
+        fetchPhase: "error",
+        error: "Failed to fetch pilot intel: recompute failed"
+      })
+    );
+    expect(logDebug).toHaveBeenCalledWith("Pilot recompute failed", {
+      pilot: "Pilot A",
+      error: "recompute failed"
+    });
+    expect(updatePilotCard).toHaveBeenCalledWith("Pilot B", expect.objectContaining({ fetchPhase: "ready" }));
+    expect(
+      updatePilotCard.mock.calls.some(
+        (call) => call[0] === "Pilot A" && typeof call[1] === "object" && call[1]?.fetchPhase === "ready"
+      )
+    ).toBe(false);
   });
 
   it("treats danger 75 as normal and danger >75 as high; NaN is normal", async () => {

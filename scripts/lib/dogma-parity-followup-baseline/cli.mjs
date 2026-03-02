@@ -3,6 +3,13 @@ import {
   DEFAULT_DOGMA_PARITY_REPORT_PATH,
   runDogmaParityFollowupBaseline
 } from "./baseline.mjs";
+import {
+  assertCliArgvArray,
+  formatCliRuntimeError,
+  readRequiredCliOptionValue,
+  throwUnknownCliArgument,
+  writeCliUsageError
+} from "../cli-utils.mjs";
 
 export class DogmaParityFollowupBaselineCliUsageError extends Error {
   constructor(message) {
@@ -12,11 +19,7 @@ export class DogmaParityFollowupBaselineCliUsageError extends Error {
 }
 
 export function parseDogmaParityFollowupBaselineArgs(argv = []) {
-  if (!Array.isArray(argv)) {
-    throw new DogmaParityFollowupBaselineCliUsageError(
-      "CLI arguments must be provided as an array."
-    );
-  }
+  const args = assertCliArgvArray(argv, DogmaParityFollowupBaselineCliUsageError);
 
   const parsed = {
     help: false,
@@ -25,8 +28,8 @@ export function parseDogmaParityFollowupBaselineArgs(argv = []) {
     summaryPath: DEFAULT_DOGMA_PARITY_FOLLOWUP_BASELINE_SUMMARY_PATH
   };
 
-  for (let index = 0; index < argv.length; index += 1) {
-    const token = argv[index];
+  for (let index = 0; index < args.length; index += 1) {
+    const token = args[index];
     switch (token) {
       case "--help":
       case "-h":
@@ -36,15 +39,15 @@ export function parseDogmaParityFollowupBaselineArgs(argv = []) {
         parsed.preconditionMet = true;
         break;
       case "--parity-report-path":
-        parsed.parityReportPath = readNextValue(argv, token, index + 1);
+        parsed.parityReportPath = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--summary-path":
-        parsed.summaryPath = readNextValue(argv, token, index + 1);
+        parsed.summaryPath = readNextValue(args, token, index + 1);
         index += 1;
         break;
       default:
-        throw new DogmaParityFollowupBaselineCliUsageError(`Unknown argument: ${token}`);
+        throwUnknownCliArgument(token, DogmaParityFollowupBaselineCliUsageError);
     }
   }
 
@@ -75,10 +78,14 @@ export async function runDogmaParityFollowupBaselineCli(argv = [], dependencies 
   try {
     parsed = parseArgsFn(argv);
   } catch (error) {
-    if (error instanceof DogmaParityFollowupBaselineCliUsageError) {
-      stderr(error.message);
-      stderr("");
-      stderr(formatUsageFn());
+    if (
+      writeCliUsageError({
+        error,
+        UsageErrorClass: DogmaParityFollowupBaselineCliUsageError,
+        stderr,
+        formatUsageFn
+      })
+    ) {
       return 2;
     }
     throw error;
@@ -104,28 +111,20 @@ export async function runDogmaParityFollowupBaselineCli(argv = [], dependencies 
     stdout("[dogma:parity:followup:baseline] baseline run complete.");
     return 0;
   } catch (error) {
-    stderr(`[dogma:parity:followup:baseline] fatal: ${formatRuntimeError(error)}`);
+    stderr(`[dogma:parity:followup:baseline] fatal: ${formatCliRuntimeError(error)}`);
     return 1;
   }
 }
 
-function formatRuntimeError(error) {
-  if (!error || typeof error !== "object") {
-    return "Unknown error";
-  }
-  const message =
-    typeof error.message === "string" && error.message.trim().length > 0
-      ? error.message.trim()
-      : "";
-  return message || "Unknown error";
-}
-
-function readNextValue(argv, token, nextIndex) {
-  const value = argv[nextIndex];
-  if (typeof value !== "string" || value.length === 0 || value.startsWith("--")) {
-    throw new DogmaParityFollowupBaselineCliUsageError(
-      `Missing value for ${token}`
-    );
-  }
-  return value;
+function readNextValue(args, token, nextIndex) {
+  return readRequiredCliOptionValue({
+    argv: args,
+    token,
+    nextIndex,
+    UsageErrorClass: DogmaParityFollowupBaselineCliUsageError,
+    missingValueMessage: `Missing value for ${token}`,
+    emptyValueMessage: `Missing value for ${token}`,
+    rejectIfFlag: true,
+    rejectIfNonString: true
+  });
 }

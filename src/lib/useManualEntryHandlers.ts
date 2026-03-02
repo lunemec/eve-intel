@@ -1,5 +1,4 @@
-import { useManualEntryChange } from "./useManualEntryChange";
-import { useManualEntrySubmit } from "./useManualEntrySubmit";
+import { useCallback } from "react";
 
 export function useManualEntryHandlers(params: {
   manualEntry: string;
@@ -9,8 +8,12 @@ export function useManualEntryHandlers(params: {
   onManualEntryChange: (value: string) => void;
   onManualEntrySubmit: () => void;
 } {
-  const onManualEntryChange = useManualEntryChange({ setManualEntry: params.setManualEntry });
-  const onManualEntrySubmit = useManualEntrySubmit({ manualEntry: params.manualEntry, applyPaste: params.applyPaste });
+  const onManualEntryChange = useCallback((value: string) => {
+    params.setManualEntry(value);
+  }, [params.setManualEntry]);
+  const onManualEntrySubmit = useCallback(() => {
+    params.applyPaste(params.manualEntry);
+  }, [params.applyPaste, params.manualEntry]);
 
   return {
     onManualEntryChange,

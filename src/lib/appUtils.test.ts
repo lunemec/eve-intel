@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PilotCard } from "./usePilotIntelPipeline";
+import type { PilotCard } from "./pilotDomain";
 import {
   aggregatePilotProgress,
   extractErrorMessage,

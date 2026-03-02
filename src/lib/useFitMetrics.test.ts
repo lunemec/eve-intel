@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FitCandidate } from "./intel";
-import type { PilotCard } from "./usePilotIntelPipeline";
+import type { PilotCard } from "./pilotDomain";
 import { createFitMetricsResolver } from "./useFitMetrics";
 import { calculateShipCombatMetrics } from "./dogma/calc";
 

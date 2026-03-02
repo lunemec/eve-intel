@@ -1,78 +1,44 @@
 import { getCachedStateAsync, setCachedAsync } from "../cache";
-import { fetchJsonWithMeta, fetchJsonWithMetaConditional, resolveHttpCachePolicy, type RetryInfo } from "./http";
+import { resolveHttpCachePolicy, type RetryInfo } from "./http";
+import { buildListCacheEnvelope, normalizeListCacheEnvelope, toConditionalHeaders } from "./zkill/cachePolicy";
+import {
+  KILLMAIL_CACHE_TTL_MS,
+  MAX_HYDRATE,
+  ZKILL_BASE,
+  ZKILL_CACHE_TTL_MS,
+  ZKILL_MAX_LOOKBACK_DAYS,
+  ZKILL_PAGE_ONE_REVALIDATE_MS
+} from "./zkill/constants";
+import { findHydrationCandidates, hydrateKillmailSummaries } from "./zkill/hydration";
+import { normalizeZkillArray, parseCharacterStats, parseZkillResponse } from "./zkill/parsing";
+import {
+  fetchCharacterStatsTransport,
+  fetchKillmailDetailsTransport,
+  fetchZkillListTransport
+} from "./zkill/transport";
+import type {
+  ZkillAttacker,
+  ZkillCacheEvent,
+  ZkillCharacterStats,
+  ZkillItem,
+  ZkillKillmail,
+  ZkillListCacheEnvelope,
+  ZkillVictim
+} from "./zkill/types";
 
-const ZKILL_BASE = "https://zkillboard.com/api";
-const ZKILL_CACHE_TTL_MS = 1000 * 60 * 10;
-const ZKILL_PAGE_ONE_REVALIDATE_MS = 1000 * 30;
-export const ZKILL_MAX_LOOKBACK_DAYS = 7;
-const ESI_BASE = "https://esi.evetech.net/latest";
-const ESI_DATASOURCE = "tranquility";
-const KILLMAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
-const MAX_HYDRATE = 50;
-const HYDRATE_CONCURRENCY = 5;
+export { ZKILL_MAX_LOOKBACK_DAYS };
+export type {
+  ZkillAttacker,
+  ZkillCacheEvent,
+  ZkillCharacterStats,
+  ZkillItem,
+  ZkillKillmail,
+  ZkillVictim
+};
+
 const zkillRefreshInFlight = new Map<string, Promise<ZkillKillmail[]>>();
 const signalIdByAbortSignal = new WeakMap<AbortSignal, number>();
 let nextAbortSignalId = 1;
-
-export type ZkillCacheEvent = {
-  forceNetwork: boolean;
-  status: number;
-  notModified: boolean;
-  requestEtag?: string;
-  requestLastModified?: string;
-  responseEtag?: string;
-  responseLastModified?: string;
-};
-
-export type ZkillAttacker = {
-  character_id?: number;
-  ship_type_id?: number;
-};
-
-export type ZkillVictim = {
-  character_id?: number;
-  ship_type_id?: number;
-};
-
-export type ZkillItem = {
-  item_type_id: number;
-  flag?: number;
-  charge_item_type_id?: number;
-  quantity_destroyed?: number;
-  quantity_dropped?: number;
-};
-
-export type ZkillKillmail = {
-  killmail_id: number;
-  killmail_time: string;
-  solar_system_id?: number;
-  victim: ZkillVictim & { items?: ZkillItem[] };
-  attackers?: ZkillAttacker[];
-  zkb?: {
-    hash?: string;
-    totalValue?: number;
-    solo?: boolean;
-    labels?: string[];
-  };
-};
-
-export type ZkillCharacterStats = {
-  kills?: number;
-  losses?: number;
-  solo?: number;
-  avgGangSize?: number;
-  gangRatio?: number;
-  danger?: number;
-  iskDestroyed?: number;
-  iskLost?: number;
-};
-
-type ZkillListCacheEnvelope = {
-  rows: ZkillKillmail[];
-  etag?: string;
-  lastModified?: string;
-  validatedAt: number;
-};
 
 export async function fetchRecentKills(
   characterId: number,
@@ -138,7 +104,11 @@ export async function fetchLatestKillsPage(
     cacheKey,
     signal,
     onRetry,
-    { aggressiveRevalidate: normalizedPage === 1, forceNetwork: options?.forceNetwork, onCacheEvent: options?.onCacheEvent }
+    {
+      aggressiveRevalidate: normalizedPage === 1,
+      forceNetwork: options?.forceNetwork,
+      onCacheEvent: options?.onCacheEvent
+    }
   );
 }
 
@@ -156,7 +126,11 @@ export async function fetchLatestLossesPage(
     cacheKey,
     signal,
     onRetry,
-    { aggressiveRevalidate: normalizedPage === 1, forceNetwork: options?.forceNetwork, onCacheEvent: options?.onCacheEvent }
+    {
+      aggressiveRevalidate: normalizedPage === 1,
+      forceNetwork: options?.forceNetwork,
+      onCacheEvent: options?.onCacheEvent
+    }
   );
 }
 
@@ -213,23 +187,28 @@ async function fetchZkillList(
       onCacheEvent: options.onCacheEvent
     });
   }
+
   if (normalizedEnvelope) {
     const cachedRows = normalizedEnvelope.rows;
-    if (!Array.isArray(cachedRows)) {
-      return refreshZkillListDeduped(url, cacheKey, onRetry, signal, normalizedEnvelope);
-    }
     const normalizedCached = normalizeZkillArray(cachedRows);
+    const envelopeForRefresh =
+      normalizedCached.length === cachedRows.length
+        ? normalizedEnvelope
+        : {
+            ...normalizedEnvelope,
+            rows: normalizedCached
+          };
+
     if (normalizedCached.length !== cachedRows.length) {
-      const repaired = { ...normalizedEnvelope, rows: normalizedCached };
-      await setCachedAsync(cacheKey, repaired, ZKILL_CACHE_TTL_MS);
+      await setCachedAsync(cacheKey, envelopeForRefresh, ZKILL_CACHE_TTL_MS);
     }
     if (normalizedCached.length === 0 && cachedRows.length > 0) {
-      return refreshZkillListDeduped(url, cacheKey, onRetry, signal, normalizedEnvelope);
+      return refreshZkillListDeduped(url, cacheKey, onRetry, signal, envelopeForRefresh);
     }
     if (normalizedCached.length === 0) {
       // Empty cache entries can be stale/poisoned from transient upstream responses.
       try {
-        return await refreshZkillListDeduped(url, cacheKey, onRetry, signal, normalizedEnvelope);
+        return await refreshZkillListDeduped(url, cacheKey, onRetry, signal, envelopeForRefresh);
       } catch {
         return [];
       }
@@ -237,12 +216,12 @@ async function fetchZkillList(
 
     const needsAggressiveRevalidate =
       Boolean(options?.aggressiveRevalidate) &&
-      Date.now() - normalizedEnvelope.validatedAt >= ZKILL_PAGE_ONE_REVALIDATE_MS;
+      Date.now() - envelopeForRefresh.validatedAt >= ZKILL_PAGE_ONE_REVALIDATE_MS;
 
     if (cached.stale) {
-      void refreshZkillListDeduped(url, cacheKey, onRetry, undefined, normalizedEnvelope);
+      void refreshZkillListDeduped(url, cacheKey, onRetry, undefined, envelopeForRefresh);
     } else if (needsAggressiveRevalidate) {
-      void refreshZkillListDeduped(url, cacheKey, onRetry, undefined, normalizedEnvelope);
+      void refreshZkillListDeduped(url, cacheKey, onRetry, undefined, envelopeForRefresh);
     }
     return normalizedCached;
   }
@@ -297,16 +276,17 @@ function refreshZkillListDeduped(
     onCacheEvent?: (event: ZkillCacheEvent) => void;
   }
 ): Promise<ZkillKillmail[]> {
+  // Dedupe boundary: foreground refreshes only share work when they reuse the same AbortSignal.
+  // This preserves abort isolation across concurrent UI refreshes with distinct controllers.
   const inFlightKey = `${cacheKey}|${resolveRefreshScopeKey(signal)}`;
   const existing = zkillRefreshInFlight.get(inFlightKey);
   if (existing) {
     return existing;
   }
 
-  const request = refreshZkillList(url, cacheKey, onRetry, signal, cachedEnvelope, options)
-    .finally(() => {
-      zkillRefreshInFlight.delete(inFlightKey);
-    });
+  const request = refreshZkillList(url, cacheKey, onRetry, signal, cachedEnvelope, options).finally(() => {
+    zkillRefreshInFlight.delete(inFlightKey);
+  });
   zkillRefreshInFlight.set(inFlightKey, request);
   return request;
 }
@@ -335,25 +315,9 @@ async function refreshZkillList(
     onCacheEvent?: (event: ZkillCacheEvent) => void;
   }
 ): Promise<ZkillKillmail[]> {
-  const conditionalHeaders = cachedEnvelope
-    ? {
-        etag: cachedEnvelope.etag,
-        lastModified: cachedEnvelope.lastModified
-      }
-    : undefined;
+  const conditionalHeaders = toConditionalHeaders(cachedEnvelope);
+  const response = await fetchZkillListTransport(url, signal, onRetry, conditionalHeaders);
 
-  const response = await fetchJsonWithMetaConditional<unknown>(
-    url,
-    {
-      headers: {
-        Accept: "application/json"
-      }
-    },
-    12000,
-    signal,
-    onRetry,
-    conditionalHeaders
-  );
   options?.onCacheEvent?.({
     forceNetwork: Boolean(options?.forceNetwork),
     status: response.status,
@@ -368,6 +332,7 @@ async function refreshZkillList(
     if (!cachedEnvelope) {
       return [];
     }
+
     const cachePolicy = resolveHttpCachePolicy(response.headers, {
       fallbackTtlMs: ZKILL_CACHE_TTL_MS,
       fallbackStaleMs: ZKILL_CACHE_TTL_MS,
@@ -391,7 +356,15 @@ async function refreshZkillList(
     return cachedEnvelope?.rows ?? [];
   }
 
-  const data = await parseZkillResponse(response.data, signal, onRetry);
+  const data = await parseZkillResponse(response.data, {
+    maxHydrate: MAX_HYDRATE,
+    signal,
+    onRetry,
+    findHydrationCandidates,
+    hydrateSummaries: async (rows, hydrateSignal, hydrateRetry) =>
+      hydrateKillmailSummaries(rows, fetchKillmailDetails, hydrateSignal, hydrateRetry)
+  });
+
   const cachePolicy = resolveHttpCachePolicy(response.headers, {
     fallbackTtlMs: ZKILL_CACHE_TTL_MS,
     fallbackStaleMs: ZKILL_CACHE_TTL_MS,
@@ -400,12 +373,11 @@ async function refreshZkillList(
   if (cachePolicy.cacheable) {
     await setCachedAsync(
       cacheKey,
-      {
-        rows: data,
+      buildListCacheEnvelope(data, {
         etag: response.headers.get("etag") ?? undefined,
         lastModified: response.headers.get("last-modified") ?? undefined,
         validatedAt: response.fetchedAt
-      },
+      }),
       cachePolicy.ttlMs,
       cachePolicy.staleMs
     );
@@ -420,17 +392,7 @@ async function refreshCharacterStats(
   onRetry?: (info: RetryInfo) => void
 ): Promise<ZkillCharacterStats | null> {
   try {
-    const response = await fetchJsonWithMeta<unknown>(
-      `${ZKILL_BASE}/stats/characterID/${characterId}/`,
-      {
-        headers: {
-          Accept: "application/json"
-        }
-      },
-      12000,
-      signal,
-      onRetry
-    );
+    const response = await fetchCharacterStatsTransport(characterId, signal, onRetry);
     const stats = parseCharacterStats(response.data);
     const cachePolicy = resolveHttpCachePolicy(response.headers, {
       fallbackTtlMs: ZKILL_CACHE_TTL_MS,
@@ -450,309 +412,6 @@ async function refreshCharacterStats(
   }
 }
 
-async function parseZkillResponse(
-  payload: unknown,
-  signal?: AbortSignal,
-  onRetry?: (info: RetryInfo) => void
-): Promise<ZkillKillmail[]> {
-  if (!Array.isArray(payload)) {
-    throw new Error(`Unexpected zKill payload (not array): ${formatPayloadSnippet(payload)}`);
-  }
-  const normalized = normalizeZkillArray(payload);
-  if (normalized.length > 0) {
-    const hydrationCandidates = findHydrationCandidates(payload);
-    if (hydrationCandidates.length === 0) {
-      return normalized;
-    }
-
-    const hydrated = await hydrateKillmailSummaries(hydrationCandidates.slice(0, MAX_HYDRATE), signal, onRetry);
-    if (hydrated.length === 0) {
-      return normalized;
-    }
-
-    const merged = new Map<number, ZkillKillmail>();
-    for (const row of normalized) {
-      merged.set(row.killmail_id, row);
-    }
-    for (const row of hydrated) {
-      merged.set(row.killmail_id, row);
-    }
-    return [...merged.values()];
-  }
-
-  const summaryRows = (payload as unknown[]).filter(
-    (entry): entry is { killmail_id: number; zkb?: { hash?: string; totalValue?: number } } =>
-      Boolean(
-        entry &&
-          typeof entry === "object" &&
-          typeof (entry as { killmail_id?: unknown }).killmail_id === "number" &&
-          typeof (entry as { zkb?: { hash?: unknown } }).zkb?.hash === "string"
-      )
-  );
-
-  if (summaryRows.length === 0) {
-    return [];
-  }
-
-  return hydrateKillmailSummaries(summaryRows.slice(0, MAX_HYDRATE), signal, onRetry);
-}
-
-function findHydrationCandidates(
-  payload: unknown
-): Array<{ killmail_id: number; zkb?: { hash?: string; totalValue?: number } }> {
-  if (!Array.isArray(payload)) {
-    return [];
-  }
-
-  return payload.filter(
-    (entry): entry is { killmail_id: number; zkb?: { hash?: string; totalValue?: number } } => {
-      if (!entry || typeof entry !== "object") {
-        return false;
-      }
-      const row = entry as Partial<ZkillKillmail>;
-      if (typeof row.killmail_id !== "number" || typeof row.zkb?.hash !== "string") {
-        return false;
-      }
-
-      const victimMissingShip = typeof row.victim?.ship_type_id !== "number";
-      const attackers = row.attackers;
-      const attackersMissingIdentity =
-        !Array.isArray(attackers) ||
-        attackers.length === 0 ||
-        attackers.every((attacker) => typeof attacker.character_id !== "number" || typeof attacker.ship_type_id !== "number");
-
-      return victimMissingShip || attackersMissingIdentity;
-    }
-  );
-}
-
-function normalizeZkillArray(payload: unknown[]): ZkillKillmail[] {
-  return payload.filter((entry): entry is ZkillKillmail => {
-    if (!entry || typeof entry !== "object") {
-      return false;
-    }
-    const row = entry as Partial<ZkillKillmail>;
-    return typeof row.killmail_id === "number" && typeof row.killmail_time === "string";
-  });
-}
-
-function normalizeListCacheEnvelope(value: ZkillKillmail[] | ZkillListCacheEnvelope | null): ZkillListCacheEnvelope | null {
-  if (!value) {
-    return null;
-  }
-  if (Array.isArray(value)) {
-    return {
-      rows: value,
-      validatedAt: 0
-    };
-  }
-  if (typeof value !== "object") {
-    return null;
-  }
-  const candidate = value as Partial<ZkillListCacheEnvelope>;
-  if (!Array.isArray(candidate.rows)) {
-    return null;
-  }
-  return {
-    rows: candidate.rows,
-    etag: typeof candidate.etag === "string" ? candidate.etag : undefined,
-    lastModified: typeof candidate.lastModified === "string" ? candidate.lastModified : undefined,
-    validatedAt: typeof candidate.validatedAt === "number" && Number.isFinite(candidate.validatedAt)
-      ? candidate.validatedAt
-      : 0
-  };
-}
-
-function formatPayloadSnippet(payload: unknown): string {
-  try {
-    const raw = JSON.stringify(payload);
-    return raw.length > 240 ? `${raw.slice(0, 240)}...` : raw;
-  } catch {
-    return String(payload);
-  }
-}
-
-function parseCharacterStats(payload: unknown): ZkillCharacterStats | null {
-  if (!payload || typeof payload !== "object") {
-    return null;
-  }
-
-  const root = payload as Record<string, unknown>;
-  const kills = extractNumber(root, [
-    "kills",
-    "kills.all",
-    "shipsDestroyed",
-    "shipsDestroyed.all",
-    "shipCountDestroyed",
-    "shipCountDestroyed.all"
-  ]);
-  const losses = extractNumber(root, [
-    "losses",
-    "losses.all",
-    "shipsLost",
-    "shipsLost.all",
-    "shipCountLost",
-    "shipCountLost.all"
-  ]);
-  const solo = extractNumber(root, ["solo", "soloKills", "soloKills.all"]);
-  const avgGangSize = extractNumber(root, [
-    "avgGang",
-    "avgGangSize",
-    "averageGang",
-    "averageGangSize",
-    "gangAverage",
-    "gang.average",
-    "gang.avg",
-    "gangAverage.all"
-  ]);
-  const gangRatioRaw = extractNumber(root, [
-    "gangRatio",
-    "gangPercent",
-    "gang",
-    "gangKillsRatio",
-    "gang.value",
-    "gang.all"
-  ]);
-  const dangerRaw = extractNumber(root, [
-    "danger",
-    "dangerRatio",
-    "dangerous",
-    "dangerousRatio",
-    "dangerous.value",
-    "dangerous.all"
-  ]);
-  const dangerRatioRaw = extractNumber(root, ["danger", "dangerRatio"]);
-  const legacyDangerRaw = extractNumber(root, ["dangerous", "dangerousRatio", "dangerous.value", "dangerous.all"]);
-  const iskDestroyed = extractNumber(root, ["iskDestroyed", "isk.destroyed", "iskDestroyed.all"]);
-  const iskLost = extractNumber(root, ["iskLost", "isk.lost", "iskLost.all"]);
-
-  if (
-    kills === undefined &&
-    losses === undefined &&
-    solo === undefined &&
-    avgGangSize === undefined &&
-    gangRatioRaw === undefined &&
-    dangerRaw === undefined &&
-    iskDestroyed === undefined &&
-    iskLost === undefined
-  ) {
-    return null;
-  }
-
-  const gangRatio = normalizeDangerPercent(gangRatioRaw);
-  const danger = normalizeDangerPercent(dangerRaw, {
-    allowTenPointScale: dangerRatioRaw === undefined && legacyDangerRaw !== undefined
-  });
-  return {
-    kills,
-    losses,
-    solo,
-    avgGangSize,
-    gangRatio,
-    danger,
-    iskDestroyed,
-    iskLost
-  };
-}
-
-function extractNumber(root: Record<string, unknown>, candidates: string[]): number | undefined {
-  for (const candidate of candidates) {
-    const value = getByPath(root, candidate);
-    const number = normalizeNumber(value);
-    if (number !== undefined) {
-      return number;
-    }
-  }
-  return undefined;
-}
-
-function getByPath(root: Record<string, unknown>, path: string): unknown {
-  const parts = path.split(".");
-  let current: unknown = root;
-  for (const part of parts) {
-    if (!current || typeof current !== "object") {
-      return undefined;
-    }
-    current = (current as Record<string, unknown>)[part];
-  }
-  return current;
-}
-
-function normalizeNumber(value: unknown): number | undefined {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-  if (typeof value === "string") {
-    const parsed = Number(value.replace(/,/g, ""));
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-  return undefined;
-}
-
-function normalizeDangerPercent(
-  value?: number,
-  options?: { allowTenPointScale?: boolean }
-): number | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (value <= 1) {
-    return Number((value * 100).toFixed(1));
-  }
-  if (options?.allowTenPointScale && value <= 10) {
-    return Number((value * 10).toFixed(1));
-  }
-  return Number(value.toFixed(1));
-}
-
-function isAbortError(error: unknown): boolean {
-  return error instanceof DOMException && error.name === "AbortError";
-}
-
-async function hydrateKillmailSummaries(
-  rows: Array<{ killmail_id: number; zkb?: { hash?: string; totalValue?: number } }>,
-  signal?: AbortSignal,
-  onRetry?: (info: RetryInfo) => void
-): Promise<ZkillKillmail[]> {
-  const output: ZkillKillmail[] = [];
-
-  for (let index = 0; index < rows.length; index += HYDRATE_CONCURRENCY) {
-    const batch = rows.slice(index, index + HYDRATE_CONCURRENCY);
-    const hydrated = await Promise.all(
-      batch.map(async (row) => {
-        const hash = row.zkb?.hash;
-        if (!hash) {
-          return null;
-        }
-        const details = await fetchKillmailDetails(row.killmail_id, hash, signal, onRetry);
-        if (!details) {
-          return null;
-        }
-        const normalized: ZkillKillmail = {
-          ...details,
-          zkb: {
-            ...(row.zkb ?? {}),
-            ...(details.zkb ?? {}),
-            hash,
-            totalValue: row.zkb?.totalValue ?? details.zkb?.totalValue
-          }
-        };
-        return normalized;
-      })
-    );
-
-    for (const entry of hydrated) {
-      if (entry) {
-        output.push(entry);
-      }
-    }
-  }
-
-  return output;
-}
-
 async function fetchKillmailDetails(
   killmailId: number,
   hash: string,
@@ -766,20 +425,7 @@ async function fetchKillmailDetails(
   }
 
   try {
-    const response = await fetchJsonWithMeta<{
-      killmail_id: number;
-      killmail_time: string;
-      solar_system_id?: number;
-      victim: ZkillKillmail["victim"];
-      attackers?: ZkillKillmail["attackers"];
-    }>(
-      `${ESI_BASE}/killmails/${killmailId}/${hash}/?datasource=${ESI_DATASOURCE}`,
-      undefined,
-      12000,
-      signal,
-      onRetry
-    );
-
+    const response = await fetchKillmailDetailsTransport(killmailId, hash, signal, onRetry);
     const normalized: ZkillKillmail = {
       killmail_id: response.data.killmail_id,
       killmail_time: response.data.killmail_time,
@@ -800,4 +446,8 @@ async function fetchKillmailDetails(
   } catch {
     return null;
   }
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
 }

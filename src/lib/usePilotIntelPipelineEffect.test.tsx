@@ -6,7 +6,7 @@ import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { usePilotIntelPipelineEffect } from "./usePilotIntelPipelineEffect";
 import type { ParsedPilotInput, Settings } from "../types";
-import type { PilotCard } from "./usePilotIntelPipeline";
+import type { PilotCard } from "./pilotDomain";
 import type { ZkillCacheEvent } from "./api/zkill";
 
 const ENTRY: ParsedPilotInput = {
@@ -659,5 +659,170 @@ describe("usePilotIntelPipelineEffect", () => {
     await Promise.resolve();
 
     expect(runPilotPipeline).toHaveBeenCalledTimes(2);
+  });
+
+  it("queues rerun when entry signature changes while pilot run is active", async () => {
+    vi.useFakeTimers();
+    const logDebug = vi.fn();
+    const logError = vi.fn();
+    const setNetworkNotice = vi.fn();
+    const createLoadingCard = vi.fn((entry: ParsedPilotInput): PilotCard => ({
+      parsedEntry: entry,
+      status: "loading",
+      predictedShips: [],
+      fitCandidates: [],
+      kills: [],
+      losses: [],
+      inferenceKills: [],
+      inferenceLosses: []
+    }));
+
+    const resolveRuns: Array<() => void> = [];
+    const runPilotPipeline = vi.fn(async (_params: { entries: ParsedPilotInput[] }) => new Promise<void>((resolve) => {
+      resolveRuns.push(resolve);
+    }));
+
+    const { rerender } = renderHook(
+      ({ entries }) =>
+        usePilotIntelPipelineEffect(
+          {
+            entries,
+            settings: SETTINGS,
+            dogmaIndex: null,
+            logDebugRef: { current: logDebug },
+            setPilotCards: vi.fn(),
+            setNetworkNotice
+          },
+          {
+            createLoadingCard,
+            createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
+            runPilotPipeline,
+            fetchLatestKillsPage: vi.fn(async () => []),
+            fetchLatestLossesPage: vi.fn(async () => [])
+          }
+        ),
+      { initialProps: { entries: [ENTRY] as ParsedPilotInput[] } }
+    );
+
+    await vi.advanceTimersByTimeAsync(0);
+    expect(runPilotPipeline).toHaveBeenCalledTimes(1);
+
+    rerender({ entries: [ENTRY_EXPLICIT] });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(runPilotPipeline).toHaveBeenCalledTimes(1);
+
+    resolveRuns[0]?.();
+    await Promise.resolve();
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+
+    expect(runPilotPipeline).toHaveBeenCalledTimes(2);
+    expect(runPilotPipeline).toHaveBeenNthCalledWith(2, expect.objectContaining({ entries: [ENTRY_EXPLICIT] }));
+  });
+
+  it("clears removed non-active pilot refresh flags before re-add", async () => {
+    vi.useFakeTimers();
+    const logDebug = vi.fn();
+    const logError = vi.fn();
+    const setNetworkNotice = vi.fn();
+    const createLoadingCard = vi.fn((entry: ParsedPilotInput): PilotCard => ({
+      parsedEntry: entry,
+      status: "loading",
+      predictedShips: [],
+      fitCandidates: [],
+      kills: [],
+      losses: [],
+      inferenceKills: [],
+      inferenceLosses: []
+    }));
+
+    const fetchLatestKillsPage = vi.fn(async () => []);
+    const fetchLatestLossesPage = vi.fn(async () => []);
+
+    let pilotARuns = 0;
+    const runPilotPipeline = vi.fn(async ({ entries, updatePilotCard }: {
+      entries: ParsedPilotInput[];
+      updatePilotCard: (pilotName: string, patch: Partial<PilotCard>) => void;
+    }) => {
+      const pilotName = entries[0]?.pilotName;
+      if (pilotName !== "Pilot A") {
+        return;
+      }
+      pilotARuns += 1;
+      if (pilotARuns < 3) {
+        updatePilotCard(pilotName, {
+          predictedShips: [{ shipTypeId: 11957, shipName: "Falcon", probability: 100, source: "inferred", reason: [] }],
+          inferenceKills: [{ killmail_id: 101, killmail_time: "2026-02-18T00:00:00Z", victim: {}, attackers: [] }],
+          inferenceLosses: [{ killmail_id: 301, killmail_time: "2026-02-18T00:00:00Z", victim: {}, attackers: [] }]
+        });
+        return;
+      }
+      updatePilotCard(pilotName, {
+        characterId: 9001,
+        predictedShips: [{ shipTypeId: 11957, shipName: "Falcon", probability: 100, source: "inferred", reason: [] }],
+        inferenceKills: [{ killmail_id: 101, killmail_time: "2026-02-18T00:00:00Z", victim: {}, attackers: [] }],
+        inferenceLosses: [{ killmail_id: 301, killmail_time: "2026-02-18T00:00:00Z", victim: {}, attackers: [] }]
+      });
+    });
+
+    const { rerender } = renderHook(
+      ({ entries }) =>
+        usePilotIntelPipelineEffect(
+          {
+            entries,
+            settings: SETTINGS,
+            dogmaIndex: null,
+            logDebugRef: { current: logDebug },
+            setPilotCards: vi.fn(),
+            setNetworkNotice
+          },
+          {
+            createLoadingCard,
+            createPipelineLoggers: vi.fn(() => ({ logDebug, logError })),
+            runPilotPipeline,
+            fetchLatestKillsPage,
+            fetchLatestLossesPage
+          }
+        ),
+      { initialProps: { entries: [ENTRY, ENTRY_B] as ParsedPilotInput[] } }
+    );
+
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    rerender({ entries: [ENTRY_EXPLICIT, ENTRY_B] });
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    rerender({ entries: [ENTRY_B] });
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+
+    rerender({ entries: [ENTRY, ENTRY_B] });
+    await vi.advanceTimersByTimeAsync(0);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    await vi.advanceTimersByTimeAsync(31_000);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fetchLatestKillsPage).toHaveBeenCalledWith(
+      9001,
+      1,
+      undefined,
+      undefined,
+      expect.objectContaining({ forceNetwork: false })
+    );
+    expect(fetchLatestLossesPage).toHaveBeenCalledWith(
+      9001,
+      1,
+      undefined,
+      undefined,
+      expect.objectContaining({ forceNetwork: false })
+    );
   });
 });

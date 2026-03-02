@@ -2,11 +2,15 @@
  * @vitest-environment jsdom
  */
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { useManualEntryHandlers } from "./useManualEntryHandlers";
 
 describe("useManualEntryHandlers", () => {
-  it("exposes change and submit callbacks with current manual entry", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("owns manual-entry callbacks directly with stable change-handler identity", () => {
     const setManualEntry = vi.fn();
     const applyPaste = vi.fn();
     const { result, rerender } = renderHook(
@@ -18,6 +22,8 @@ describe("useManualEntryHandlers", () => {
         }),
       { initialProps: { manualEntry: "Pilot A" } }
     );
+    const firstChange = result.current.onManualEntryChange;
+    const firstSubmit = result.current.onManualEntrySubmit;
 
     act(() => {
       result.current.onManualEntryChange("Pilot B");
@@ -29,6 +35,8 @@ describe("useManualEntryHandlers", () => {
       result.current.onManualEntrySubmit();
     });
 
+    expect(result.current.onManualEntryChange).toBe(firstChange);
+    expect(result.current.onManualEntrySubmit).not.toBe(firstSubmit);
     expect(setManualEntry).toHaveBeenCalledTimes(1);
     expect(setManualEntry).toHaveBeenCalledWith("Pilot B");
     expect(applyPaste).toHaveBeenCalledTimes(2);

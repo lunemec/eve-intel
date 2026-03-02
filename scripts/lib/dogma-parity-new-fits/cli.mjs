@@ -3,6 +3,13 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { shutdownPyfaLocalRuntimes } from "../../../tools/parity/pyfa-adapter/index.mjs";
 import {
+  assertCliArgvArray,
+  formatCliRuntimeError,
+  readRequiredCliOptionValue,
+  throwUnknownCliArgument,
+  writeCliUsageError
+} from "../cli-utils.mjs";
+import {
   DEFAULT_DOGMA_PARITY_NEW_FITS_REPORT_PATH,
   buildDogmaParityNewFitBlockedSummary,
   writeDogmaParityNewFitArtifacts
@@ -23,9 +30,7 @@ export class DogmaParityNewFitsCliUsageError extends Error {
 }
 
 export function parseDogmaParityNewFitsArgs(argv = []) {
-  if (!Array.isArray(argv)) {
-    throw new DogmaParityNewFitsCliUsageError("CLI arguments must be provided as an array.");
-  }
+  const args = assertCliArgvArray(argv, DogmaParityNewFitsCliUsageError);
 
   const parsed = {
     help: false,
@@ -46,73 +51,73 @@ export function parseDogmaParityNewFitsArgs(argv = []) {
     debug: false
   };
 
-  for (let index = 0; index < argv.length; index += 1) {
-    const token = argv[index];
+  for (let index = 0; index < args.length; index += 1) {
+    const token = args[index];
     switch (token) {
       case "--help":
       case "-h":
         parsed.help = true;
         break;
       case "--mode":
-        parsed.mode = parseMode(readNextValue(argv, token, index + 1));
+        parsed.mode = parseMode(readNextValue(args, token, index + 1));
         index += 1;
         break;
       case "--scope-file":
-        parsed.scopeFilePath = readNextValue(argv, token, index + 1);
+        parsed.scopeFilePath = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--fit-id":
       case "--fit-ids":
-        parsed.fitIdFlags.push(readNextValue(argv, token, index + 1));
+        parsed.fitIdFlags.push(readNextValue(args, token, index + 1));
         index += 1;
         break;
       case "--run-id":
-        parsed.runId = readNextValue(argv, token, index + 1);
+        parsed.runId = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--generated-at":
-        parsed.generatedAt = readNextValue(argv, token, index + 1);
+        parsed.generatedAt = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--source":
-        parsed.source = readNextValue(argv, token, index + 1);
+        parsed.source = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--corpus-path":
-        parsed.corpusPath = readNextValue(argv, token, index + 1);
+        parsed.corpusPath = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--references-path":
-        parsed.referencesPath = readNextValue(argv, token, index + 1);
+        parsed.referencesPath = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--manifest-path":
-        parsed.manifestPath = readNextValue(argv, token, index + 1);
+        parsed.manifestPath = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--report-path":
-        parsed.reportPath = readNextValue(argv, token, index + 1);
+        parsed.reportPath = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--diagnostics-path":
-        parsed.diagnosticsPath = readNextValue(argv, token, index + 1);
+        parsed.diagnosticsPath = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--python-bin":
-        parsed.pythonBin = readNextValue(argv, token, index + 1);
+        parsed.pythonBin = readNextValue(args, token, index + 1);
         index += 1;
         break;
       case "--timeout-ms":
         parsed.timeoutMs = parseIntegerArgument({
           token,
-          value: readNextValue(argv, token, index + 1)
+          value: readNextValue(args, token, index + 1)
         });
         index += 1;
         break;
       case "--hard-kill-ms":
         parsed.hardKillMs = parseIntegerArgument({
           token,
-          value: readNextValue(argv, token, index + 1)
+          value: readNextValue(args, token, index + 1)
         });
         index += 1;
         break;
@@ -120,7 +125,7 @@ export function parseDogmaParityNewFitsArgs(argv = []) {
         parsed.debug = true;
         break;
       default:
-        throw new DogmaParityNewFitsCliUsageError(`Unknown argument: ${token}`);
+        throwUnknownCliArgument(token, DogmaParityNewFitsCliUsageError);
     }
   }
 
@@ -177,10 +182,14 @@ export async function runDogmaParityNewFitsCli(argv, dependencies = {}) {
   try {
     parsed = parseArgsFn(argv);
   } catch (error) {
-    if (error instanceof DogmaParityNewFitsCliUsageError) {
-      stderr(error.message);
-      stderr("");
-      stderr(formatUsageFn());
+    if (
+      writeCliUsageError({
+        error,
+        UsageErrorClass: DogmaParityNewFitsCliUsageError,
+        stderr,
+        formatUsageFn
+      })
+    ) {
       return 2;
     }
     throw error;
@@ -257,7 +266,7 @@ export async function runDogmaParityNewFitsCli(argv, dependencies = {}) {
 
     return exitCode;
   } catch (error) {
-    stderr(`[dogma:parity:new-fits] fatal: ${formatRuntimeError(error)}`);
+    stderr(`[dogma:parity:new-fits] fatal: ${formatCliRuntimeError(error)}`);
     return 1;
   } finally {
     await shutdownSafely(shutdownPyfaFn, stderr);
@@ -353,6 +362,19 @@ function parseIntegerArgument({ token, value }) {
   return Math.trunc(numeric);
 }
 
+function readNextValue(args, token, nextIndex) {
+  return readRequiredCliOptionValue({
+    argv: args,
+    token,
+    nextIndex,
+    UsageErrorClass: DogmaParityNewFitsCliUsageError,
+    missingValueMessage: `${token} requires a value.`,
+    emptyValueMessage: `${token} requires a non-empty value.`,
+    trimForEmptyCheck: true,
+    coerceToString: true
+  });
+}
+
 function validateScopeSource(parsed) {
   if (parsed.help) {
     return;
@@ -369,32 +391,10 @@ function validateScopeSource(parsed) {
   );
 }
 
-function readNextValue(argv, token, nextIndex) {
-  const value = argv[nextIndex];
-  if (value === undefined) {
-    throw new DogmaParityNewFitsCliUsageError(`${token} requires a value.`);
-  }
-  if (String(value).trim().length === 0) {
-    throw new DogmaParityNewFitsCliUsageError(`${token} requires a non-empty value.`);
-  }
-  return String(value);
-}
-
-function formatRuntimeError(error) {
-  if (!error || typeof error !== "object") {
-    return "Unknown error";
-  }
-  const message =
-    typeof error.message === "string" && error.message.trim().length > 0
-      ? error.message.trim()
-      : "";
-  return message || "Unknown error";
-}
-
 async function shutdownSafely(shutdownPyfaFn, stderr) {
   try {
     await shutdownPyfaFn();
   } catch (error) {
-    stderr(`[dogma:parity:new-fits] fatal: ${formatRuntimeError(error)}`);
+    stderr(`[dogma:parity:new-fits] fatal: ${formatCliRuntimeError(error)}`);
   }
 }

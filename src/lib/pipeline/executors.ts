@@ -10,7 +10,7 @@ import {
   summarizeEvidence,
   type ShipPrediction
 } from "../intel";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 import { deriveShipCynoBaitEvidence, estimateShipCynoChance, evaluateCynoRisk, type CynoRisk } from "../cyno";
 import { deriveShipRolePills, type RolePillEvidence } from "../roles";
 import type { PillEvidence, PillEvidenceByName } from "../pillEvidence";

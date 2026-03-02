@@ -5,7 +5,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { FitCandidate } from "../lib/intel";
 import type { FitMetricResult } from "../lib/useFitMetrics";
-import type { PilotCard } from "../lib/usePilotIntelPipeline";
+import type { PilotCard } from "../lib/pilotDomain";
 import { PilotCardView } from "./PilotCardView";
 
 function pilot(overrides: Partial<PilotCard> = {}): PilotCard {
@@ -337,6 +337,46 @@ describe("PilotCardView", () => {
     expect(longPointPills).toHaveLength(2);
     for (const pill of longPointPills) {
       expect(pill.closest("a")?.getAttribute("href")).toBe(longPointEvidenceUrl);
+    }
+  });
+
+  it("delegates overview and likely-ships surfaces to extracted PilotCard subviews", async () => {
+    vi.resetModules();
+    const overviewSpy = vi.fn((props: { pilot: PilotCard }) => (
+      <section data-testid="pilot-card-overview-subview">{props.pilot.parsedEntry.pilotName}</section>
+    ));
+    const likelyShipsSpy = vi.fn((props: { pilot: PilotCard }) => (
+      <aside data-testid="pilot-card-likely-ships-subview">{props.pilot.parsedEntry.pilotName}</aside>
+    ));
+
+    vi.doMock("./pilotCardSubviews", () => ({
+      PilotCardOverviewSubview: overviewSpy,
+      PilotCardLikelyShipsSubview: likelyShipsSpy
+    }));
+
+    try {
+      const { PilotCardView: IsolatedPilotCardView } = await import("./PilotCardView");
+      const samplePilot = pilot({
+        status: "ready",
+        predictedShips: [{ shipTypeId: 456, shipName: "Onyx", probability: 80, source: "inferred", reason: [] }]
+      });
+      const unavailableMetrics: FitMetricResult = { status: "unavailable", key: "k", reason: "No dogma" };
+      render(
+        <IsolatedPilotCardView
+          pilot={samplePilot}
+          getFitMetrics={vi.fn((): FitMetricResult => unavailableMetrics)}
+        />
+      );
+
+      expect(screen.getByTestId("pilot-card-overview-subview")).toBeTruthy();
+      expect(screen.getByTestId("pilot-card-likely-ships-subview")).toBeTruthy();
+      expect(overviewSpy).toHaveBeenCalled();
+      expect(likelyShipsSpy).toHaveBeenCalled();
+      expect(overviewSpy.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ pilot: samplePilot }));
+      expect(likelyShipsSpy.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ pilot: samplePilot }));
+    } finally {
+      vi.doUnmock("./pilotCardSubviews");
+      vi.resetModules();
     }
   });
 });

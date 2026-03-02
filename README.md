@@ -276,6 +276,7 @@ Manual commands:
 npm run sde:sync
 npm run sde:compile
 npm run sde:prepare
+npm run check:artifact-consistency
 ```
 
 Behavior:
@@ -284,7 +285,13 @@ Behavior:
 - `sde:compile` compiles a runtime pack into:
   - `public/data/dogma-pack.<version>.json`
   - `public/data/dogma-manifest.json`
-- `prebuild` runs `sde:prepare` automatically
+  - retention metadata in `dogma-manifest.json` (`retention.policyVersion`, archive index path, runtime/archive counts)
+  - retention index in `data/sde/artifacts/dogma-pack-retention.json`
+  - archived historical packs in `data/sde/artifacts/dogma-packs/`
+  - runtime path boundary: only the active `dogma-pack.<version>.json` remains in `public/data/`
+- `prebuild` runs `sde:sync` then `sde:compile` automatically before `npm run build`
+- Set `EVE_HERMETIC_BUILD=1` to skip `sde:sync` and compile from local SDE artifacts only (for example, `EVE_HERMETIC_BUILD=1 npm run build`)
+- `check:artifact-consistency` is a read-only deterministic integrity check for local dogma artifacts. It verifies manifest/runtime-pack hash coherence, one-pack runtime boundary, retention index consistency, and archive hash coverage. The command exits non-zero on drift.
 
 Installer (`.exe`):
 
@@ -402,7 +409,9 @@ npm test -- --run -u
 - `npm run sde:compile` - compile runtime dogma pack
 - `npm run sde:prepare` - sync + compile dogma pack
 - `npm run sde:refresh` - alias of `sde:prepare`
+- `npm run check:artifact-consistency` - validate deterministic local SDE/dogma artifact consistency
 - `npm run build` - TypeScript build + Vite build
+- `EVE_HERMETIC_BUILD=1 npm run build` - hermetic build mode; skips network SDE sync during prebuild and uses local SDE artifacts
 - `npm run preview` - preview built web output
 - `npm run test` - run tests
 - `npm run test:watch` - test watch mode

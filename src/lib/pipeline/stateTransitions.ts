@@ -1,5 +1,5 @@
 import type { ParsedPilotInput } from "../../types";
-import type { PilotCard } from "../usePilotIntelPipeline";
+import type { PilotCard } from "../pilotDomain";
 
 export function createLoadingCard(entry: ParsedPilotInput): PilotCard {
   return {

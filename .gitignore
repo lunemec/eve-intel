@@ -38,6 +38,7 @@ temp/
 # Generated static dogma artifacts/cache
 data/sde/raw/
 data/sde/.manifest.json
+data/sde/artifacts/
 public/data/dogma-pack.*.json
 public/data/dogma-manifest.json
 

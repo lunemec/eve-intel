@@ -3,7 +3,7 @@
  */
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import type { PilotCard } from "./usePilotIntelPipeline";
+import type { PilotCard } from "./pilotDomain";
 import { useClearPilotCards } from "./useClearPilotCards";
 
 describe("useClearPilotCards", () => {

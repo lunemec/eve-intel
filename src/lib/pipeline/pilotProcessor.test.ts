@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { processPilotEntry } from "./pilotProcessor";
 import type { ParsedPilotInput } from "../../types";
-import type { PilotCard } from "../usePilotIntelPipeline";
 
 const ENTRY: ParsedPilotInput = {
   pilotName: "Pilot A",
@@ -11,11 +10,12 @@ const ENTRY: ParsedPilotInput = {
   explicitShip: "Eris"
 };
 
-function makeStageOneRow(): PilotCard {
+function makeErrorCard() {
   return {
     parsedEntry: ENTRY,
-    status: "ready",
-    fetchPhase: "enriching",
+    status: "error" as const,
+    fetchPhase: "error" as const,
+    error: "Failed to fetch pilot intel: boom",
     characterId: 101,
     characterName: "Pilot A",
     corporationId: 1001,
@@ -30,11 +30,10 @@ function makeStageOneRow(): PilotCard {
 }
 
 describe("pipeline/pilotProcessor", () => {
-  it("runs stage one and stage two and updates pilot card", async () => {
-    const updatePilotCard = vi.fn();
+  it("delegates single-pilot processing to breadth runtime pipeline", async () => {
     const logDebug = vi.fn();
     const onRetry = (_scope: string) => (_info: { status: number; attempt: number; delayMs: number }) => undefined;
-    const stageOneRow = makeStageOneRow();
+    const runBreadthPilotPipeline = vi.fn(async () => undefined);
 
     await processPilotEntry(
       {
@@ -48,55 +47,27 @@ describe("pipeline/pilotProcessor", () => {
         dogmaIndex: null,
         logDebug,
         isCancelled: () => false,
-        updatePilotCard,
+        updatePilotCard: vi.fn(),
         logError: vi.fn()
       },
       {
-        fetchAndPrepareStageOne: vi.fn(async () => ({
-          character: {
-            character_id: 101,
-            name: "Pilot A",
-            corporation_id: 1001,
-            alliance_id: 2002,
-            security_status: 2.1
-          },
-          stageOneRow,
-          stageOneDerived: {
-            predictedShips: [{ shipName: "Eris", probability: 100, source: "explicit" as const, reason: [] }],
-            fitCandidates: [],
-            cynoRisk: { potentialCyno: false, jumpAssociation: false, reasons: [] }
-          }
-        })),
-        fetchAndMergeStageTwoHistory: vi.fn(async () => ({
-          mergedInferenceKills: [],
-          mergedInferenceLosses: []
-        })),
-        enrichStageTwoRow: vi.fn(async () => ({
-          stageTwoRow: { ...stageOneRow, fetchPhase: "ready" as const },
-          namesById: new Map<number, string>()
-        })),
-        loadDerivedInferenceWithCache: vi.fn(async () => ({
-          predictedShips: [{ shipName: "Eris", probability: 100, source: "explicit" as const, reason: [] }],
-          fitCandidates: [{ shipTypeId: 22460, fitLabel: "Eris", confidence: 99, alternates: [] }],
-          cynoRisk: { potentialCyno: false, jumpAssociation: false, reasons: [] }
-        })),
-        ensureExplicitShipTypeId: vi.fn(async () => undefined),
+        runBreadthPilotPipeline,
         isAbortError: vi.fn(() => false),
         extractErrorMessage: vi.fn(() => "x"),
         createErrorCard: vi.fn()
       }
     );
 
-    expect(updatePilotCard).toHaveBeenCalledTimes(2);
-    expect(updatePilotCard).toHaveBeenLastCalledWith(
-      "Pilot A",
-      expect.objectContaining({ fetchPhase: "ready" })
+    expect(runBreadthPilotPipeline).toHaveBeenCalledTimes(1);
+    expect(runBreadthPilotPipeline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tasks: [{ entry: ENTRY, characterId: 101 }],
+        lookbackDays: 7,
+        topShips: 5,
+        maxPages: 20
+      })
     );
-    expect(logDebug).toHaveBeenCalledWith("Pilot stage 2 ready", {
-      pilot: "Pilot A",
-      predicted: 1,
-      fits: 1
-    });
+    expect(logDebug).not.toHaveBeenCalledWith("Pilot fetch failed", expect.anything());
   });
 
   it("ignores abort errors", async () => {
@@ -117,13 +88,9 @@ describe("pipeline/pilotProcessor", () => {
         logError: vi.fn()
       },
       {
-        fetchAndPrepareStageOne: vi.fn(async () => {
+        runBreadthPilotPipeline: vi.fn(async () => {
           throw new Error("abort");
         }),
-        fetchAndMergeStageTwoHistory: vi.fn(),
-        enrichStageTwoRow: vi.fn(),
-        loadDerivedInferenceWithCache: vi.fn(),
-        ensureExplicitShipTypeId: vi.fn(),
         isAbortError: vi.fn(() => true),
         extractErrorMessage: vi.fn(() => "abort"),
         createErrorCard: vi.fn()
@@ -135,11 +102,8 @@ describe("pipeline/pilotProcessor", () => {
 
   it("writes error card on non-abort errors", async () => {
     const updatePilotCard = vi.fn();
-    const errorCard = {
-      ...makeStageOneRow(),
-      status: "error" as const,
-      error: "Failed to fetch pilot intel: boom"
-    };
+    const errorCard = makeErrorCard();
+    const logError = vi.fn();
 
     await processPilotEntry(
       {
@@ -154,22 +118,19 @@ describe("pipeline/pilotProcessor", () => {
         logDebug: vi.fn(),
         isCancelled: () => false,
         updatePilotCard,
-        logError: vi.fn()
+        logError
       },
       {
-        fetchAndPrepareStageOne: vi.fn(async () => {
+        runBreadthPilotPipeline: vi.fn(async () => {
           throw new Error("boom");
         }),
-        fetchAndMergeStageTwoHistory: vi.fn(),
-        enrichStageTwoRow: vi.fn(),
-        loadDerivedInferenceWithCache: vi.fn(),
-        ensureExplicitShipTypeId: vi.fn(),
         isAbortError: vi.fn(() => false),
         extractErrorMessage: vi.fn(() => "boom"),
         createErrorCard: vi.fn(() => errorCard)
       }
     );
 
+    expect(logError).toHaveBeenCalledWith("Pilot intel fetch failed for Pilot A", expect.any(Error));
     expect(updatePilotCard).toHaveBeenCalledWith("Pilot A", errorCard);
   });
 });

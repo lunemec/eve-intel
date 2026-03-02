@@ -3,6 +3,7 @@ import {
   formatFetchZkillFitsUsage,
   parseFetchZkillFitsArgs
 } from "./args.mjs";
+import { formatCliRuntimeError, writeCliUsageError } from "../cli-utils.mjs";
 import { runFetchZkillFitPipeline } from "./pipeline.mjs";
 
 export async function runFetchZkillFitsCli(argv, dependencies = {}) {
@@ -16,10 +17,14 @@ export async function runFetchZkillFitsCli(argv, dependencies = {}) {
   try {
     parsed = parseArgsFn(argv);
   } catch (error) {
-    if (error instanceof FetchZkillFitsCliUsageError) {
-      stderr(error.message);
-      stderr("");
-      stderr(formatUsageFn());
+    if (
+      writeCliUsageError({
+        error,
+        UsageErrorClass: FetchZkillFitsCliUsageError,
+        stderr,
+        formatUsageFn
+      })
+    ) {
       return 2;
     }
     throw error;
@@ -37,20 +42,7 @@ export async function runFetchZkillFitsCli(argv, dependencies = {}) {
     );
     return 0;
   } catch (error) {
-    stderr(`[fetch-zkill-fits] fatal: ${formatRuntimeError(error)}`);
+    stderr(`[fetch-zkill-fits] fatal: ${formatCliRuntimeError(error)}`);
     return 1;
   }
-}
-
-function formatRuntimeError(error) {
-  if (!error || typeof error !== "object") {
-    return "Unknown error";
-  }
-
-  const message = typeof error.message === "string" && error.message.trim() ? error.message : "";
-  if (!message) {
-    return "Unknown error";
-  }
-
-  return message;
 }
