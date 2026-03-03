@@ -3,6 +3,10 @@
 All notable changes to this project are documented in this file.
 
 ## Unreleased
+- Fixed Windows prebuild npm invocation in `scripts/prebuild-sde.mjs` by resolving npm run calls through `process.execPath + npm_execpath` when available, preventing `spawnSync npm.cmd EINVAL` failures during desktop build/run and release flows.
+- Added regression coverage in `scripts/tests/prebuild-sde.npm-invocation.test.mjs` for Windows npm invocation resolution and default fallback behavior.
+
+## v0.3.5 - 2026-03-03
 - Hardened changelog workflow governance to require `## Unreleased` as the first changelog section, preventing in-flight release notes from being added directly under released version snapshots.
 - Migrated default Dogma parity runtime report output to `reports/local/dogma-parity-report.json`, updated follow-up baseline CLI/help defaults, and made open-items generation prefer the new local path with legacy fallback compatibility for explicit `reports/dogma-parity-report.json` consumers.
 - Untracked `reports/dogma-parity-report.json` and added an ignore rule so runtime parity-report writes no longer create repository diff noise.
@@ -53,6 +57,12 @@ All notable changes to this project are documented in this file.
 - Hardened paged history error handling in `src/lib/pipeline/breadthPipeline.ts` so per-pilot page-fetch failures now produce explicit error cards and stop only the failed pilot from further rounds instead of being silently swallowed.
 - Added regression coverage for the page-fetch rejection path and runtime-path delegation behavior in `src/lib/pipeline/breadthPipeline.test.ts` and `src/lib/pipeline/pilotProcessor.test.ts`.
 - Hardened breadth recompute-worker failure handling in `src/lib/pipeline/breadthPipeline.ts` so per-pilot recompute exceptions now emit deterministic pilot error cards plus debug telemetry (`Pilot recompute failed`) instead of being dropped by worker-settled promises; added regression coverage in `src/lib/pipeline/breadthPipeline.test.ts`.
+
+
+Boundary source:
+- Tagged commit `v0.3.4` (`f76300e`) used as lower boundary.
+- Current boundary marker commit `ff22f14` (`v0.3.5`) used as upper boundary because no `v0.3.5` tag exists yet.
+- Summarized from history in range `v0.3.4..ff22f14`.
 
 ## v0.3.4 - 2026-02-21
 - Added Tech I industrial haulers (including `Sigil`) to the cyno-capable hull whitelist in `src/lib/cyno.ts` so `Cyno` can render when same-hull losses contain industrial cyno module evidence, and added regression coverage in `src/lib/cyno.test.ts`.

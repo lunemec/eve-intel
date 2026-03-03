@@ -2,14 +2,14 @@ import { execFileSync } from "node:child_process";
 import {
   HERMETIC_SDE_BUILD_ENV,
   isHermeticSdeBuildEnabled,
+  resolveNpmRunInvocation,
   resolveSdePrebuildScripts
 } from "./lib/prebuild-sde.mjs";
 
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-
 function runNpmScript(scriptName) {
   console.log(`[prebuild] running npm run ${scriptName}`);
-  execFileSync(npmCommand, ["run", scriptName], {
+  const invocation = resolveNpmRunInvocation({ env: process.env });
+  execFileSync(invocation.command, [...invocation.args, scriptName], {
     stdio: "inherit",
     env: process.env
   });
