@@ -84,9 +84,20 @@ vi.mock("./lib/api/zkill", () => ({
   fetchRecentLosses: vi.fn(async () => [])
 }));
 
+vi.mock("./lib/fleetGroupingCache", async () => {
+  const actual = await vi.importActual<typeof import("./lib/fleetGroupingCache")>("./lib/fleetGroupingCache");
+  return {
+    ...actual,
+    loadFleetGroupingArtifact: vi.fn(async () => ({ artifact: null, stale: false })),
+    saveFleetGroupingArtifact: vi.fn(async () => undefined),
+    isFleetGroupingArtifactUsable: vi.fn(() => false)
+  };
+});
+
 describe("App paste flow", () => {
   beforeEach(() => {
     vi.stubGlobal("localStorage", createMemoryStorage());
+    vi.stubGlobal("indexedDB", undefined);
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
       value: vi.fn(),
       configurable: true
@@ -147,8 +158,10 @@ describe("App paste flow", () => {
       expect(screen.getAllByRole("heading", { name: /Likely Ships/i }).length).toBeGreaterThan(0);
     });
     expect(screen.getAllByText("A9tan").length).toBeGreaterThan(0);
-    expect(vi.mocked(fetchLatestKillsPage)).toHaveBeenCalled();
-    expect(vi.mocked(fetchLatestLossesPage)).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(vi.mocked(fetchLatestKillsPage)).toHaveBeenCalled();
+      expect(vi.mocked(fetchLatestLossesPage)).toHaveBeenCalled();
+    });
   });
 
   it("uses zKill dangerous metric for player threat and danger row", async () => {
@@ -212,7 +225,7 @@ describe("App paste flow", () => {
       }
     ] : []));
     vi.mocked(fetchCharacterStats).mockResolvedValueOnce(null);
-    vi.mocked(fetchCharacterPublic).mockResolvedValueOnce({
+    vi.mocked(fetchCharacterPublic).mockResolvedValue({
       character_id: 12345,
       corporation_id: 54321,
       alliance_id: 98765,

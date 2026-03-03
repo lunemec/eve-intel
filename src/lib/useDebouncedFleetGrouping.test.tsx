@@ -47,7 +47,7 @@ describe("useDebouncedFleetGrouping", () => {
   it("collapses burst updates into one regroup recompute inside the 1s window", () => {
     const sortPilotCardsForFleetView = vi.fn((cards: PilotCard[]) => cards.slice());
     const deriveGroupPresentationByPilotId = vi.fn(() => new Map());
-    const deps: DebouncedFleetGroupingDeps = {
+    const deps: Partial<DebouncedFleetGroupingDeps> = {
       sortPilotCardsForFleetView,
       deriveGroupPresentationByPilotId
     };
@@ -87,7 +87,7 @@ describe("useDebouncedFleetGrouping", () => {
   it("recomputes from the freshest pilot-card state when debounce flushes", () => {
     const sortPilotCardsForFleetView = vi.fn((cards: PilotCard[]) => cards.slice());
     const deriveGroupPresentationByPilotId = vi.fn(() => new Map());
-    const deps: DebouncedFleetGroupingDeps = {
+    const deps: Partial<DebouncedFleetGroupingDeps> = {
       sortPilotCardsForFleetView,
       deriveGroupPresentationByPilotId
     };
