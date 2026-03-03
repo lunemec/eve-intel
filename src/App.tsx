@@ -18,10 +18,9 @@ import { useCacheWipeAction } from "./lib/useCacheWipeAction";
 import { useDesktopWindowControls } from "./lib/useDesktopWindowControls";
 import {
   deriveAppViewModel,
-  deriveGroupPresentationByPilotId,
-  sortPilotCardsForFleetView,
   type GroupPresentation
 } from "./lib/appViewModel";
+import { useDebouncedFleetGrouping } from "./lib/useDebouncedFleetGrouping";
 import { useClearPilotCards } from "./lib/useClearPilotCards";
 import { useManualEntryHandlers } from "./lib/useManualEntryHandlers";
 import { useAppPreferences } from "./lib/useAppPreferences";
@@ -54,8 +53,7 @@ export default function App() {
   });
   useDebugSectionAutoScroll({ debugEnabled, debugSectionRef });
 
-  const sortedPilotCards = sortPilotCardsForFleetView(pilotCards);
-  const groupPresentationByPilotId = deriveGroupPresentationByPilotId(sortedPilotCards);
+  const { sortedPilotCards, groupPresentationByPilotId } = useDebouncedFleetGrouping(pilotCards);
   const { copyableFleetCount, globalLoadProgress, showGlobalLoad } = deriveAppViewModel(sortedPilotCards);
   const { onMinimize, onToggleMaximize, onClose, onRestartToUpdate } = useDesktopWindowControls();
   const clearPilotCards = useClearPilotCards({ setPilotCards });

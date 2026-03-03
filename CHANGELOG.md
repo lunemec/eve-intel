@@ -19,6 +19,8 @@ All notable changes to this project are documented in this file.
 - Added Step-6 regression coverage in `src/components/FleetSummary.test.tsx`, `src/components/PilotCardView.test.tsx`, and `src/lib/appViewModel.test.ts` for grouped/suggested hook rendering plus existing Fleet/Solo row-click interaction behavior.
 - Implemented Step-7 deterministic group palette plumbing by adding stable hash-based `colorIndex` assignment in `src/lib/fleetGrouping.ts`, deriving `groupColorToken` values in `src/lib/appViewModel.ts`, and introducing EVE-style grouped tint/accent selectors plus suggested opacity styling in `src/styles.css`.
 - Added Step-7 regression coverage in `src/lib/fleetGrouping.test.ts`, `src/lib/appViewModel.test.ts`, and new stylesheet contract tests in `src/styles.groupingPalette.test.ts` for deterministic color mapping and grouped/suggested style-token hooks.
+- Implemented Step-8 debounced regroup recompute by introducing `useDebouncedFleetGrouping` in `src/lib/useDebouncedFleetGrouping.ts` and routing `src/App.tsx` grouped ordering/presentation derivation through a 1-second debounce window while continuing to render live pilot-card data.
+- Added Step-8 fake-timer regression coverage in `src/lib/useDebouncedFleetGrouping.test.tsx` for burst-update recompute collapse within `1s` and latest-state debounce flush correctness.
 
 ## v0.3.5 - 2026-03-03
 - Hardened changelog workflow governance to require `## Unreleased` as the first changelog section, preventing in-flight release notes from being added directly under released version snapshots.
