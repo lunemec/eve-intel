@@ -284,6 +284,169 @@ describe("fleetGrouping", () => {
     ]);
     expect(outputB.groups.map((group) => group.groupId)).toEqual(outputA.groups.map((group) => group.groupId));
   });
+
+  it("deduplicates globally and preserves multi-source links for repeated candidates", () => {
+    const selectedAlpha = 8101;
+    const selectedBravo = 8102;
+    const duplicateCandidate = 9100;
+    const alphaUnique = 9101;
+    const bravoUnique = 9102;
+
+    const output = computeFleetGrouping({
+      selectedPilotIds: [selectedAlpha, selectedBravo],
+      pilotCardsById: new Map([
+        [
+          selectedAlpha,
+          pilotCard(
+            selectedAlpha,
+            "Alpha Anchor",
+            buildAnchorCoFlyKills({
+              anchorId: selectedAlpha,
+              totalKills: 12,
+              startKillmailId: 81000,
+              candidateSharedKills: [
+                { candidateId: duplicateCandidate, sharedKillCount: 12 },
+                { candidateId: alphaUnique, sharedKillCount: 11 }
+              ]
+            })
+          )
+        ],
+        [
+          selectedBravo,
+          pilotCard(
+            selectedBravo,
+            "Bravo Anchor",
+            buildAnchorCoFlyKills({
+              anchorId: selectedBravo,
+              totalKills: 12,
+              startKillmailId: 82000,
+              candidateSharedKills: [
+                { candidateId: duplicateCandidate, sharedKillCount: 12 },
+                { candidateId: bravoUnique, sharedKillCount: 11 }
+              ]
+            })
+          )
+        ]
+      ]),
+      allKnownPilotNamesById: new Map([
+        [duplicateCandidate, "Common Wing"],
+        [alphaUnique, "Alpha Wing"],
+        [bravoUnique, "Bravo Wing"]
+      ]),
+      nowMs: 700
+    });
+
+    expect(output.suggestions.map((suggestion) => suggestion.characterId)).toEqual([
+      alphaUnique,
+      bravoUnique,
+      duplicateCandidate
+    ]);
+
+    const duplicate = output.suggestions.find((suggestion) => suggestion.characterId === duplicateCandidate);
+    expect(duplicate).toMatchObject({
+      characterId: duplicateCandidate,
+      sourcePilotIds: [selectedAlpha, selectedBravo],
+      strongestRatio: 1,
+      strongestSharedKillCount: 12,
+      eligible: true
+    });
+  });
+
+  it("applies per-selected caps before global cap and downshifts to 2 suggestions per selected pilot", () => {
+    const selectedPilotIds = [8201, 8202, 8203, 8204];
+    const pilotCardsById = new Map<number, PilotCard>();
+    const allKnownPilotNamesById = new Map<number, string>();
+
+    for (const [anchorIndex, anchorId] of selectedPilotIds.entries()) {
+      const candidateIds = [1, 2, 3].map((offset) => anchorId * 10 + offset);
+      pilotCardsById.set(
+        anchorId,
+        pilotCard(
+          anchorId,
+          `Anchor ${anchorIndex + 1}`,
+          buildAnchorCoFlyKills({
+            anchorId,
+            totalKills: 20,
+            startKillmailId: 83000 + anchorIndex * 1000,
+            candidateSharedKills: [
+              { candidateId: candidateIds[0], sharedKillCount: 20 },
+              { candidateId: candidateIds[1], sharedKillCount: 19 },
+              { candidateId: candidateIds[2], sharedKillCount: 18 }
+            ]
+          })
+        )
+      );
+
+      allKnownPilotNamesById.set(candidateIds[0], `A${anchorIndex + 1} Top One`);
+      allKnownPilotNamesById.set(candidateIds[1], `A${anchorIndex + 1} Top Two`);
+      allKnownPilotNamesById.set(candidateIds[2], `A${anchorIndex + 1} Trimmed Three`);
+    }
+
+    const output = computeFleetGrouping({
+      selectedPilotIds,
+      pilotCardsById,
+      allKnownPilotNamesById,
+      nowMs: 800
+    });
+
+    expect(output.suggestions).toHaveLength(8);
+    expect(output.suggestions.length).toBeLessThanOrEqual(10);
+
+    const suggestionIdSet = new Set(output.suggestions.map((suggestion) => suggestion.characterId));
+    for (const anchorId of selectedPilotIds) {
+      expect(suggestionIdSet.has(anchorId * 10 + 1)).toBe(true);
+      expect(suggestionIdSet.has(anchorId * 10 + 2)).toBe(true);
+      expect(suggestionIdSet.has(anchorId * 10 + 3)).toBe(false);
+    }
+  });
+
+  it("downshifts to 1 suggestion per selected pilot when cap 2 still exceeds the global cap", () => {
+    const selectedPilotIds = [8301, 8302, 8303, 8304, 8305, 8306];
+    const pilotCardsById = new Map<number, PilotCard>();
+    const allKnownPilotNamesById = new Map<number, string>();
+
+    for (const [anchorIndex, anchorId] of selectedPilotIds.entries()) {
+      const candidateIds = [1, 2, 3].map((offset) => anchorId * 10 + offset);
+      pilotCardsById.set(
+        anchorId,
+        pilotCard(
+          anchorId,
+          `Anchor ${anchorIndex + 1}`,
+          buildAnchorCoFlyKills({
+            anchorId,
+            totalKills: 20,
+            startKillmailId: 86000 + anchorIndex * 1000,
+            candidateSharedKills: [
+              { candidateId: candidateIds[0], sharedKillCount: 20 },
+              { candidateId: candidateIds[1], sharedKillCount: 19 },
+              { candidateId: candidateIds[2], sharedKillCount: 18 }
+            ]
+          })
+        )
+      );
+
+      allKnownPilotNamesById.set(candidateIds[0], `B${anchorIndex + 1} Top One`);
+      allKnownPilotNamesById.set(candidateIds[1], `B${anchorIndex + 1} Trimmed Two`);
+      allKnownPilotNamesById.set(candidateIds[2], `B${anchorIndex + 1} Trimmed Three`);
+    }
+
+    const output = computeFleetGrouping({
+      selectedPilotIds,
+      pilotCardsById,
+      allKnownPilotNamesById,
+      nowMs: 900
+    });
+
+    expect(output.suggestions).toHaveLength(6);
+    expect(output.suggestions.length).toBeLessThanOrEqual(10);
+
+    const suggestionIdSet = new Set(output.suggestions.map((suggestion) => suggestion.characterId));
+    for (const anchorId of selectedPilotIds) {
+      expect(suggestionIdSet.has(anchorId * 10 + 1)).toBe(true);
+      expect(suggestionIdSet.has(anchorId * 10 + 2)).toBe(false);
+      expect(suggestionIdSet.has(anchorId * 10 + 3)).toBe(false);
+    }
+  });
 });
 
 function pilotCard(characterId: number, pilotName: string, inferenceKills: ZkillKillmail[]): PilotCard {
@@ -319,4 +482,21 @@ function killmailSeries(startKillmailId: number, count: number, attackersForInde
   return Array.from({ length: count }, (_, index) =>
     killmail(startKillmailId + index, attackersForIndex(index))
   );
+}
+
+function buildAnchorCoFlyKills(params: {
+  anchorId: number;
+  totalKills: number;
+  startKillmailId: number;
+  candidateSharedKills: Array<{ candidateId: number; sharedKillCount: number }>;
+}): ZkillKillmail[] {
+  return Array.from({ length: params.totalKills }, (_, index) => {
+    const attackers = [params.anchorId];
+    for (const candidate of params.candidateSharedKills) {
+      if (index < candidate.sharedKillCount) {
+        attackers.push(candidate.candidateId);
+      }
+    }
+    return killmail(params.startKillmailId + index, attackers);
+  });
 }

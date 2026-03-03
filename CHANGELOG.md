@@ -11,6 +11,8 @@ All notable changes to this project are documented in this file.
 - Added Step-2 regression coverage in `src/lib/fleetGrouping.test.ts` for strict ratio boundaries (`79.9%`/`80.0%` fail, `80.1%` pass), shared-kill visibility gating (`9` fail, `10` pass), and per-selected scoping to prevent fleet-wide co-fly bleed.
 - Implemented Step-3 grouping/ranking in `src/lib/fleetGrouping.ts` by building threshold-qualified graph links into connected components, suppressing suggested-only components, computing weighted-confidence ordering, and emitting deterministic grouped pilot ordering with selected-before-suggested intra-group sorting.
 - Added Step-3 regression coverage in `src/lib/fleetGrouping.test.ts` for connected-component formation (`A-B-C` chaining), suggested-only component suppression invariants, and deterministic alphabetical tie-break ordering across equal-strength groups.
+- Implemented Step-4 adaptive suggestion caps in `src/lib/fleetGrouping.ts` by applying per-selected ranking/caps (`3 -> 2 -> 1`), global character-ID dedupe with preserved multi-source links, and deterministic global trimming to keep visible suggestions within the max-10 contract.
+- Added Step-4 regression coverage in `src/lib/fleetGrouping.test.ts` for global dedupe/link preservation, per-selected-before-global cap precedence, and adaptive cap downshift behavior to `2` then `1`.
 
 ## v0.3.5 - 2026-03-03
 - Hardened changelog workflow governance to require `## Unreleased` as the first changelog section, preventing in-flight release notes from being added directly under released version snapshots.
