@@ -3,6 +3,10 @@
 This document defines repository expectations for changelog maintenance, robustness, and change quality.
 
 ## Changelog Maintenance
+- `CHANGELOG.md` must keep `## Unreleased` as the first changelog section after intro text.
+- In-flight changes are added under `## Unreleased`.
+- Versioned sections (`## vX.Y.Z - YYYY-MM-DD`) are immutable historical release snapshots.
+- During a release cut, move or duplicate `## Unreleased` notes into the new versioned section, then reset `## Unreleased`.
 - `CHANGELOG.md` must be kept up to date for every version.
 - Summaries must be derived from git history between versions. Prefer tagged ranges, for example: `git log <previous_tag>..<current_tag> --oneline`.
 - Entries should be concise, user-facing, and grouped by version.
