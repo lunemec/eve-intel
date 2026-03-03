@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ZkillKillmail } from "./api/zkill";
 import type { PilotCard } from "./pilotDomain";
 import {
+  deriveGroupPresentationByPilotId,
   deriveAppViewModel,
   sortPilotCardsByDanger,
   sortPilotCardsForFleetView
@@ -140,6 +141,54 @@ describe("sortPilotCardsForFleetView", () => {
       "Zulu Pilot",
       "Alpha Pilot"
     ]);
+  });
+});
+
+describe("deriveGroupPresentationByPilotId", () => {
+  it("marks grouped pilots with shared group id and ungrouped pilots explicitly", () => {
+    const alphaId = 4001;
+    const bravoId = 4002;
+    const zuluId = 4003;
+    const rows = [
+      pilot({
+        characterId: alphaId,
+        characterName: "Alpha Pilot",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "Alpha Pilot" },
+        stats: { danger: 80 } as PilotCard["stats"],
+        inferenceKills: killmailSeries(9100, 12, () => [alphaId, bravoId])
+      }),
+      pilot({
+        characterId: bravoId,
+        characterName: "Bravo Pilot",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "Bravo Pilot" },
+        stats: { danger: 70 } as PilotCard["stats"],
+        inferenceKills: []
+      }),
+      pilot({
+        characterId: zuluId,
+        characterName: "Zulu Pilot",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "Zulu Pilot" },
+        stats: { danger: 10 } as PilotCard["stats"],
+        inferenceKills: []
+      })
+    ];
+
+    const presentationByPilotId = deriveGroupPresentationByPilotId(rows);
+    const alphaPresentation = presentationByPilotId.get(alphaId);
+    const bravoPresentation = presentationByPilotId.get(bravoId);
+    const zuluPresentation = presentationByPilotId.get(zuluId);
+
+    expect(alphaPresentation?.groupId).toBeTruthy();
+    expect(bravoPresentation?.groupId).toBe(alphaPresentation?.groupId);
+    expect(alphaPresentation?.isUngrouped).toBe(false);
+    expect(bravoPresentation?.isUngrouped).toBe(false);
+    expect(alphaPresentation?.isGreyedSuggestion).toBe(false);
+    expect(bravoPresentation?.isGreyedSuggestion).toBe(false);
+
+    expect(zuluPresentation).toEqual({
+      isGreyedSuggestion: false,
+      isUngrouped: true
+    });
   });
 });
 

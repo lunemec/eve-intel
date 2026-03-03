@@ -504,13 +504,77 @@ describe("FleetSummary", () => {
     expect(screen.queryByLabelText("Neut")).toBeNull();
   });
 
-  it("does not trigger row anchor-scroll when Fleet/Solo pills are clicked", () => {
-    const smoothScrollSpy = vi.spyOn(appUtils, "smoothScrollToElement").mockImplementation(() => {});
+  it("adds grouped and suggested class hooks to fleet summary rows", () => {
+    const groupedPilotId = 5001;
+    const suggestedPilotId = 5002;
+    const groupPresentationByPilotId = new Map([
+      [
+        groupedPilotId,
+        {
+          groupId: "fleet-group-v1-a",
+          isGreyedSuggestion: false,
+          isUngrouped: false
+        }
+      ],
+      [
+        suggestedPilotId,
+        {
+          groupId: "fleet-group-v1-a",
+          isGreyedSuggestion: true,
+          isUngrouped: false
+        }
+      ]
+    ]);
+
     const { container } = render(
       <FleetSummary
         pilotCards={[
           pilot({
-            characterId: 123,
+            characterId: groupedPilotId,
+            characterName: "Grouped Pilot",
+            parsedEntry: {
+              ...pilot().parsedEntry,
+              pilotName: "Grouped Pilot",
+              sourceLine: "Grouped Pilot"
+            },
+            predictedShips: [{ shipTypeId: 456, shipName: "Onyx", probability: 82, source: "inferred", reason: [] }]
+          }),
+          pilot({
+            characterId: suggestedPilotId,
+            characterName: "Suggested Pilot",
+            parsedEntry: {
+              ...pilot().parsedEntry,
+              pilotName: "Suggested Pilot",
+              sourceLine: "Suggested Pilot"
+            },
+            predictedShips: [{ shipTypeId: 457, shipName: "Rapier", probability: 61, source: "inferred", reason: [] }]
+          })
+        ]}
+        copyableFleetCount={2}
+        setNetworkNotice={vi.fn()}
+        logDebug={vi.fn()}
+        groupPresentationByPilotId={groupPresentationByPilotId}
+      />
+    );
+
+    const rows = container.querySelectorAll(".fleet-summary-line");
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.classList.contains("is-grouped")).toBe(true);
+    expect(rows[0]?.classList.contains("is-suggested")).toBe(false);
+    expect(rows[0]?.getAttribute("data-group-id")).toBe("fleet-group-v1-a");
+    expect(rows[1]?.classList.contains("is-grouped")).toBe(true);
+    expect(rows[1]?.classList.contains("is-suggested")).toBe(true);
+    expect(rows[1]?.getAttribute("data-group-id")).toBe("fleet-group-v1-a");
+  });
+
+  it("does not trigger row anchor-scroll when Fleet/Solo pills are clicked", () => {
+    const smoothScrollSpy = vi.spyOn(appUtils, "smoothScrollToElement").mockImplementation(() => {});
+    const groupedPilotId = 123;
+    const { container } = render(
+      <FleetSummary
+        pilotCards={[
+          pilot({
+            characterId: groupedPilotId,
             characterName: "Fleet Pilot",
             stats: { soloRatio: 2 } as PilotCard["stats"],
             predictedShips: [{ shipTypeId: 456, shipName: "Onyx", probability: 82, source: "inferred", reason: [] }]
@@ -519,6 +583,18 @@ describe("FleetSummary", () => {
         copyableFleetCount={1}
         setNetworkNotice={vi.fn()}
         logDebug={vi.fn()}
+        groupPresentationByPilotId={
+          new Map([
+            [
+              groupedPilotId,
+              {
+                groupId: "fleet-group-v1-fleet",
+                isGreyedSuggestion: false,
+                isUngrouped: false
+              }
+            ]
+          ])
+        }
       />
     );
 
@@ -528,6 +604,8 @@ describe("FleetSummary", () => {
 
     const row = container.querySelector(".fleet-summary-line");
     expect(row).toBeTruthy();
+    expect(row?.classList.contains("is-grouped")).toBe(true);
+    expect(container.querySelector(".fleet-col-alerts .risk-style-fleet")?.textContent).toBe("Fleet");
     fireEvent.click(row!);
     expect(smoothScrollSpy).toHaveBeenCalledTimes(1);
     smoothScrollSpy.mockClear();

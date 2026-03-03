@@ -16,7 +16,12 @@ import { useParsedPaste } from "./lib/useParsedPaste";
 import { useDebugSectionAutoScroll } from "./lib/useDebugSectionAutoScroll";
 import { useCacheWipeAction } from "./lib/useCacheWipeAction";
 import { useDesktopWindowControls } from "./lib/useDesktopWindowControls";
-import { deriveAppViewModel, sortPilotCardsForFleetView } from "./lib/appViewModel";
+import {
+  deriveAppViewModel,
+  deriveGroupPresentationByPilotId,
+  sortPilotCardsForFleetView,
+  type GroupPresentation
+} from "./lib/appViewModel";
 import { useClearPilotCards } from "./lib/useClearPilotCards";
 import { useManualEntryHandlers } from "./lib/useManualEntryHandlers";
 import { useAppPreferences } from "./lib/useAppPreferences";
@@ -50,6 +55,7 @@ export default function App() {
   useDebugSectionAutoScroll({ debugEnabled, debugSectionRef });
 
   const sortedPilotCards = sortPilotCardsForFleetView(pilotCards);
+  const groupPresentationByPilotId = deriveGroupPresentationByPilotId(sortedPilotCards);
   const { copyableFleetCount, globalLoadProgress, showGlobalLoad } = deriveAppViewModel(sortedPilotCards);
   const { onMinimize, onToggleMaximize, onClose, onRestartToUpdate } = useDesktopWindowControls();
   const clearPilotCards = useClearPilotCards({ setPilotCards });
@@ -117,6 +123,7 @@ export default function App() {
               copyableFleetCount={copyableFleetCount}
               setNetworkNotice={setNetworkNotice}
               logDebug={logDebug}
+              groupPresentationByPilotId={groupPresentationByPilotId}
             />
           ) : null}
           <section className="cards">
@@ -125,6 +132,7 @@ export default function App() {
                 key={pilot.parsedEntry.pilotName.toLowerCase()}
                 pilot={pilot}
                 getFitMetrics={getFitMetrics}
+                groupPresentation={resolveGroupPresentation(groupPresentationByPilotId, pilot.characterId)}
               />
             ))}
           </section>
@@ -172,4 +180,14 @@ export default function App() {
       <footer className="app-version">v{APP_VERSION}</footer>
     </main>
   );
+}
+
+function resolveGroupPresentation(
+  groupPresentationByPilotId: ReadonlyMap<number, GroupPresentation>,
+  characterId: number | undefined
+): GroupPresentation | undefined {
+  if (typeof characterId !== "number" || !Number.isInteger(characterId) || characterId <= 0) {
+    return undefined;
+  }
+  return groupPresentationByPilotId.get(characterId);
 }

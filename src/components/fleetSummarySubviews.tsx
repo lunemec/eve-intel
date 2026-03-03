@@ -1,3 +1,4 @@
+import type { GroupPresentation } from "../lib/appViewModel";
 import type { PilotCard } from "../lib/pilotDomain";
 import { renderShipPills } from "./shipPillRender";
 import {
@@ -70,9 +71,10 @@ export function FleetSummaryHeaderSubview(props: {
 
 export function FleetSummaryRowSubview(props: {
   pilot: PilotCard;
+  groupPresentation?: GroupPresentation;
   scrollDurationMs?: number;
 }): JSX.Element {
-  const { pilot, scrollDurationMs } = props;
+  const { pilot, groupPresentation, scrollDurationMs } = props;
   const detailAnchorId = pilotDetailAnchorId(pilot);
   const topShip = pilot.predictedShips[0];
   const secondShip = pilot.predictedShips[1];
@@ -98,10 +100,21 @@ export function FleetSummaryRowSubview(props: {
       rolePills: (ship.rolePills ?? []).filter((pill) => FLEET_SUMMARY_ALLOWED_ROLE_PILLS.has(pill))
     }));
   const engagementStyle = engagementStyleFromSoloRatio(pilot.stats?.soloRatio);
+  const rowClassName = [
+    "fleet-summary-line",
+    "fleet-summary-grid",
+    topShipCyno ? "cyno-highlight" : "",
+    groupPresentation?.groupId ? "is-grouped" : "",
+    groupPresentation?.isGreyedSuggestion ? "is-suggested" : ""
+  ]
+    .filter((className) => className.length > 0)
+    .join(" ");
 
   return (
     <li
-      className={`fleet-summary-line fleet-summary-grid${topShipCyno ? " cyno-highlight" : ""}`}
+      className={rowClassName}
+      data-group-id={groupPresentation?.groupId}
+      data-group-color-token={groupPresentation?.groupColorToken}
       onClick={(event) => {
         const target = event.target as HTMLElement;
         if (target.closest("a, button, [data-prevent-row-click='true']")) {

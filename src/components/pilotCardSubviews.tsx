@@ -1,4 +1,5 @@
 import { formatFitAsEft } from "../lib/eft";
+import type { GroupPresentation } from "../lib/appViewModel";
 import {
   formatEhp,
   formatIsk,
@@ -144,10 +145,23 @@ export type PilotCardFitMetricsResolver = (
 export function PilotCardOverviewSubview(props: {
   pilot: PilotCard;
   engagementStylePill: JSX.Element | null;
+  groupPresentation?: GroupPresentation;
 }): JSX.Element {
-  const { pilot, engagementStylePill } = props;
+  const { pilot, engagementStylePill, groupPresentation } = props;
+  const overviewClassName = [
+    "player-card",
+    threatClass(pilot.stats?.danger),
+    groupPresentation?.groupId ? "is-grouped" : "",
+    groupPresentation?.isGreyedSuggestion ? "is-suggested" : ""
+  ]
+    .filter((className) => className.length > 0)
+    .join(" ");
   return (
-    <div className={`player-card ${threatClass(pilot.stats?.danger)}`}>
+    <div
+      className={overviewClassName}
+      data-group-id={groupPresentation?.groupId}
+      data-group-color-token={groupPresentation?.groupColorToken}
+    >
       <div className="player-card-header">
         <div className="player-avatar" aria-hidden="true">
           {pilot.characterId ? (

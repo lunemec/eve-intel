@@ -2,6 +2,13 @@ import { aggregatePilotProgress } from "./appUtils";
 import { computeFleetGrouping } from "./fleetGrouping";
 import type { PilotCard } from "./pilotDomain";
 
+export type GroupPresentation = {
+  groupId?: string;
+  groupColorToken?: string;
+  isGreyedSuggestion: boolean;
+  isUngrouped: boolean;
+};
+
 export function deriveAppViewModel(pilotCards: PilotCard[]): {
   copyableFleetCount: number;
   globalLoadProgress: number;
@@ -23,6 +30,88 @@ export function sortPilotCardsByDanger(pilotCards: PilotCard[]): PilotCard[] {
 }
 
 export function sortPilotCardsForFleetView(pilotCards: PilotCard[]): PilotCard[] {
+  const groupingSeed = buildFleetGroupingSeed(pilotCards);
+  if (groupingSeed.pilotCardsById.size === 0) {
+    return groupingSeed.fallbackOrder;
+  }
+  const grouping = computeFleetGrouping({
+    selectedPilotIds: groupingSeed.selectedPilotIds,
+    pilotCardsById: groupingSeed.pilotCardsById,
+    allKnownPilotNamesById: groupingSeed.allKnownPilotNamesById,
+    nowMs: 0
+  });
+  if (grouping.orderedPilotIds.length === 0) {
+    return groupingSeed.fallbackOrder;
+  }
+
+  const orderedPilotCards: PilotCard[] = [];
+  const includedPilotIds = new Set<number>();
+  for (const pilotId of grouping.orderedPilotIds) {
+    const pilot = groupingSeed.pilotCardsById.get(pilotId);
+    if (!pilot || includedPilotIds.has(pilotId)) {
+      continue;
+    }
+    orderedPilotCards.push(pilot);
+    includedPilotIds.add(pilotId);
+  }
+
+  for (const pilot of groupingSeed.fallbackOrder) {
+    const pilotId = toValidPilotId(pilot.characterId);
+    if (pilotId !== null && includedPilotIds.has(pilotId)) {
+      continue;
+    }
+    orderedPilotCards.push(pilot);
+  }
+
+  return orderedPilotCards;
+}
+
+export function deriveGroupPresentationByPilotId(pilotCards: PilotCard[]): Map<number, GroupPresentation> {
+  const groupingSeed = buildFleetGroupingSeed(pilotCards);
+  if (groupingSeed.pilotCardsById.size === 0) {
+    return new Map();
+  }
+
+  const grouping = computeFleetGrouping({
+    selectedPilotIds: groupingSeed.selectedPilotIds,
+    pilotCardsById: groupingSeed.pilotCardsById,
+    allKnownPilotNamesById: groupingSeed.allKnownPilotNamesById,
+    nowMs: 0
+  });
+
+  const presentationByPilotId = new Map<number, GroupPresentation>();
+  const selectedPilotIdSet = new Set(groupingSeed.selectedPilotIds);
+  for (const group of grouping.groups) {
+    const suggestedPilotIdSet = new Set(group.suggestedPilotIds);
+    for (const memberPilotId of group.memberPilotIds) {
+      const isSuggested = suggestedPilotIdSet.has(memberPilotId) && !selectedPilotIdSet.has(memberPilotId);
+      presentationByPilotId.set(memberPilotId, {
+        groupId: group.groupId,
+        isGreyedSuggestion: isSuggested,
+        isUngrouped: false
+      });
+    }
+  }
+
+  for (const selectedPilotId of groupingSeed.selectedPilotIds) {
+    if (presentationByPilotId.has(selectedPilotId)) {
+      continue;
+    }
+    presentationByPilotId.set(selectedPilotId, {
+      isGreyedSuggestion: false,
+      isUngrouped: true
+    });
+  }
+
+  return presentationByPilotId;
+}
+
+function buildFleetGroupingSeed(pilotCards: PilotCard[]): {
+  fallbackOrder: PilotCard[];
+  selectedPilotIds: number[];
+  pilotCardsById: Map<number, PilotCard>;
+  allKnownPilotNamesById: Map<number, string>;
+} {
   const fallbackOrder = sortPilotCardsByDanger(pilotCards);
   const pilotCardsById = new Map<number, PilotCard>();
   const allKnownPilotNamesById = new Map<number, string>();
@@ -43,40 +132,12 @@ export function sortPilotCardsForFleetView(pilotCards: PilotCard[]): PilotCard[]
     }
   }
 
-  if (pilotCardsById.size === 0) {
-    return fallbackOrder;
-  }
-
-  const grouping = computeFleetGrouping({
+  return {
+    fallbackOrder,
     selectedPilotIds,
     pilotCardsById,
-    allKnownPilotNamesById,
-    nowMs: 0
-  });
-  if (grouping.orderedPilotIds.length === 0) {
-    return fallbackOrder;
-  }
-
-  const orderedPilotCards: PilotCard[] = [];
-  const includedPilotIds = new Set<number>();
-  for (const pilotId of grouping.orderedPilotIds) {
-    const pilot = pilotCardsById.get(pilotId);
-    if (!pilot || includedPilotIds.has(pilotId)) {
-      continue;
-    }
-    orderedPilotCards.push(pilot);
-    includedPilotIds.add(pilotId);
-  }
-
-  for (const pilot of fallbackOrder) {
-    const pilotId = toValidPilotId(pilot.characterId);
-    if (pilotId !== null && includedPilotIds.has(pilotId)) {
-      continue;
-    }
-    orderedPilotCards.push(pilot);
-  }
-
-  return orderedPilotCards;
+    allKnownPilotNamesById
+  };
 }
 
 function comparePilotCardsByDanger(a: PilotCard, b: PilotCard): number {

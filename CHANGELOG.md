@@ -15,6 +15,8 @@ All notable changes to this project are documented in this file.
 - Added Step-4 regression coverage in `src/lib/fleetGrouping.test.ts` for global dedupe/link preservation, per-selected-before-global cap precedence, and adaptive cap downshift behavior to `2` then `1`.
 - Implemented Step-5 App view-model ordering integration by adding `sortPilotCardsForFleetView` in `src/lib/appViewModel.ts` to prefer `fleetGrouping` `orderedPilotIds` with deterministic danger-sort fallback, and wired `src/App.tsx` to use the grouped-aware shared list for both Fleet Summary and pilot cards.
 - Added Step-5 regression coverage in `src/lib/appViewModel.test.ts` for grouped-order precedence over danger sorting and fallback-to-danger behavior when grouping emits no order.
+- Implemented Step-6 group presentation plumbing by adding shared `GroupPresentation` metadata derivation in `src/lib/appViewModel.ts` and wiring `src/App.tsx`, `src/components/FleetSummary.tsx`, `src/components/fleetSummarySubviews.tsx`, `src/components/PilotCardView.tsx`, and `src/components/pilotCardSubviews.tsx` to pass deterministic grouped/suggested class/data hooks without changing layout structure.
+- Added Step-6 regression coverage in `src/components/FleetSummary.test.tsx`, `src/components/PilotCardView.test.tsx`, and `src/lib/appViewModel.test.ts` for grouped/suggested hook rendering plus existing Fleet/Solo row-click interaction behavior.
 
 ## v0.3.5 - 2026-03-03
 - Hardened changelog workflow governance to require `## Unreleased` as the first changelog section, preventing in-flight release notes from being added directly under released version snapshots.

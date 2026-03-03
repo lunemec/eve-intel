@@ -268,6 +268,47 @@ describe("PilotCardView", () => {
     expect(fleetPill?.getAttribute("title")?.length).toBeGreaterThan(10);
   });
 
+  it("adds grouped and suggested class hooks without changing engagement badge behavior", () => {
+    const metrics: FitMetricResult = { status: "unavailable", key: "k", reason: "No dogma" };
+    const { container } = render(
+      <PilotCardView
+        pilot={pilot({
+          characterId: 123,
+          characterName: "Suggested Pilot",
+          status: "ready",
+          stats: {
+            kills: 100,
+            losses: 20,
+            kdRatio: 5,
+            solo: 3,
+            soloRatio: 3,
+            iskDestroyed: 1_000_000,
+            iskLost: 500_000,
+            iskRatio: 2,
+            danger: 60,
+            avgGangSize: 3.6,
+            gangRatio: 98
+          }
+        })}
+        getFitMetrics={vi.fn(() => metrics)}
+        groupPresentation={{
+          groupId: "fleet-group-v1-a",
+          isGreyedSuggestion: true,
+          isUngrouped: false
+        }}
+      />
+    );
+
+    const card = container.querySelector(".pilot-card");
+    const overview = container.querySelector(".player-card");
+    expect(card?.classList.contains("is-grouped")).toBe(true);
+    expect(card?.classList.contains("is-suggested")).toBe(true);
+    expect(card?.getAttribute("data-group-id")).toBe("fleet-group-v1-a");
+    expect(overview?.classList.contains("is-grouped")).toBe(true);
+    expect(overview?.classList.contains("is-suggested")).toBe(true);
+    expect(screen.getAllByText("Fleet").length).toBeGreaterThan(0);
+  });
+
   it("does not render Cyno Capable pill in likely ships", () => {
     const metrics: FitMetricResult = { status: "unavailable", key: "k", reason: "No dogma" };
     render(
