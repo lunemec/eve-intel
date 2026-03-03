@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
+import type { ZkillKillmail } from "./api/zkill";
 import {
   buildFleetGroupingSourceSignature,
   computeFleetGrouping,
   createEmptyFleetGroupingState,
   stableFleetGroupId
 } from "./fleetGrouping";
+import type { PilotCard } from "./pilotDomain";
 
-describe("fleetGrouping skeleton", () => {
+describe("fleetGrouping", () => {
   it("creates stable empty state payload", () => {
     const state = createEmptyFleetGroupingState({
       generatedAtMs: 123,
@@ -58,4 +60,151 @@ describe("fleetGrouping skeleton", () => {
       sourceSignature: "fleet-grouping-v1|selected:3,9"
     });
   });
+
+  it("enforces strict ratio boundary (>80%) for visible suggestions", () => {
+    const anchorId = 1001;
+    const candidate799 = 2001;
+    const candidate800 = 2002;
+    const candidate801 = 2003;
+
+    const kills = Array.from({ length: 1000 }, (_, index) => {
+      const attackers = [anchorId];
+      if (index < 799) {
+        attackers.push(candidate799);
+      }
+      if (index < 800) {
+        attackers.push(candidate800);
+      }
+      if (index < 801) {
+        attackers.push(candidate801);
+      }
+      return killmail(index + 1, attackers);
+    });
+
+    const output = computeFleetGrouping({
+      selectedPilotIds: [anchorId],
+      pilotCardsById: new Map([[anchorId, pilotCard(anchorId, "Anchor One", kills)]]),
+      allKnownPilotNamesById: new Map([
+        [candidate799, "Cand 79.9"],
+        [candidate800, "Cand 80.0"],
+        [candidate801, "Cand 80.1"]
+      ]),
+      nowMs: 100
+    });
+
+    expect(output.suggestions.map((row) => row.characterId)).toEqual([candidate801]);
+
+    const byCandidateId = new Map(output.state.suggestions.map((row) => [row.characterId, row]));
+    expect(byCandidateId.get(candidate799)).toMatchObject({
+      characterId: candidate799,
+      strongestRatio: 0.799,
+      strongestSharedKillCount: 799,
+      eligible: false
+    });
+    expect(byCandidateId.get(candidate800)).toMatchObject({
+      characterId: candidate800,
+      strongestRatio: 0.8,
+      strongestSharedKillCount: 800,
+      eligible: false
+    });
+    expect(byCandidateId.get(candidate801)).toMatchObject({
+      characterId: candidate801,
+      strongestRatio: 0.801,
+      strongestSharedKillCount: 801,
+      eligible: true
+    });
+  });
+
+  it("requires at least 10 shared killmails for visibility even when ratio passes", () => {
+    const anchorId = 3001;
+    const candidate9 = 3002;
+    const candidate10 = 3003;
+
+    const kills = Array.from({ length: 10 }, (_, index) =>
+      killmail(index + 1, [anchorId, ...(index < 9 ? [candidate9] : []), candidate10])
+    );
+
+    const output = computeFleetGrouping({
+      selectedPilotIds: [anchorId],
+      pilotCardsById: new Map([[anchorId, pilotCard(anchorId, "Anchor Two", kills)]]),
+      allKnownPilotNamesById: new Map([
+        [candidate9, "Cand Shared9"],
+        [candidate10, "Cand Shared10"]
+      ]),
+      nowMs: 200
+    });
+
+    expect(output.suggestions.map((row) => row.characterId)).toEqual([candidate10]);
+
+    const byCandidateId = new Map(output.state.suggestions.map((row) => [row.characterId, row]));
+    expect(byCandidateId.get(candidate9)).toMatchObject({
+      characterId: candidate9,
+      strongestRatio: 0.9,
+      strongestSharedKillCount: 9,
+      eligible: false
+    });
+    expect(byCandidateId.get(candidate10)).toMatchObject({
+      characterId: candidate10,
+      strongestRatio: 1,
+      strongestSharedKillCount: 10,
+      eligible: true
+    });
+  });
+
+  it("keeps co-fly extraction scoped per selected pilot (no fleet-wide bleed)", () => {
+    const selectedAlpha = 4001;
+    const selectedBravo = 4002;
+    const candidate = 4999;
+
+    const alphaKills = Array.from({ length: 10 }, (_, index) => killmail(index + 1, [selectedAlpha, candidate]));
+    const bravoKills = Array.from({ length: 100 }, (_, index) => killmail(1000 + index + 1, [selectedBravo]));
+
+    const output = computeFleetGrouping({
+      selectedPilotIds: [selectedAlpha, selectedBravo],
+      pilotCardsById: new Map([
+        [selectedAlpha, pilotCard(selectedAlpha, "Selected Alpha", alphaKills)],
+        [selectedBravo, pilotCard(selectedBravo, "Selected Bravo", bravoKills)]
+      ]),
+      allKnownPilotNamesById: new Map([[candidate, "Scoped Candidate"]]),
+      nowMs: 300
+    });
+
+    expect(output.suggestions).toHaveLength(1);
+    expect(output.suggestions[0]).toMatchObject({
+      characterId: candidate,
+      sourcePilotIds: [selectedAlpha],
+      strongestRatio: 1,
+      strongestSharedKillCount: 10,
+      eligible: true
+    });
+  });
 });
+
+function pilotCard(characterId: number, pilotName: string, inferenceKills: ZkillKillmail[]): PilotCard {
+  return {
+    parsedEntry: {
+      pilotName,
+      sourceLine: pilotName,
+      parseConfidence: 1,
+      shipSource: "inferred"
+    },
+    status: "ready",
+    characterId,
+    characterName: pilotName,
+    predictedShips: [],
+    fitCandidates: [],
+    kills: [],
+    losses: [],
+    inferenceKills,
+    inferenceLosses: []
+  };
+}
+
+function killmail(killmailId: number, attackerCharacterIds: number[]): ZkillKillmail {
+  return {
+    killmail_id: killmailId,
+    killmail_time: `2026-01-${String((killmailId % 28) + 1).padStart(2, "0")}T00:00:00Z`,
+    victim: {},
+    attackers: attackerCharacterIds.map((characterId) => ({ character_id: characterId }))
+  };
+}
