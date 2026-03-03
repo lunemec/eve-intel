@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
+import type { ZkillKillmail } from "./api/zkill";
 import type { PilotCard } from "./pilotDomain";
-import { deriveAppViewModel, sortPilotCardsByDanger } from "./appViewModel";
+import {
+  deriveAppViewModel,
+  sortPilotCardsByDanger,
+  sortPilotCardsForFleetView
+} from "./appViewModel";
 
 function pilot(overrides: Partial<PilotCard> = {}): PilotCard {
   return {
@@ -83,3 +88,66 @@ describe("sortPilotCardsByDanger", () => {
     expect(sorted.map((row) => row.parsedEntry.pilotName)).toEqual(["Alpha", "bravo"]);
   });
 });
+
+describe("sortPilotCardsForFleetView", () => {
+  it("prefers grouped ordering when grouping produces ordered pilot ids", () => {
+    const alphaId = 2001;
+    const zuluId = 2002;
+    const rows = [
+      pilot({
+        characterId: zuluId,
+        characterName: "Zulu Pilot",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "Zulu Pilot" },
+        stats: { danger: 95 } as PilotCard["stats"],
+        inferenceKills: []
+      }),
+      pilot({
+        characterId: alphaId,
+        characterName: "Alpha Pilot",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "Alpha Pilot" },
+        stats: { danger: 5 } as PilotCard["stats"],
+        inferenceKills: killmailSeries(9000, 12, () => [alphaId, zuluId])
+      })
+    ];
+
+    const ordered = sortPilotCardsForFleetView(rows);
+    expect(ordered.map((row) => row.characterName ?? row.parsedEntry.pilotName)).toEqual([
+      "Alpha Pilot",
+      "Zulu Pilot"
+    ]);
+  });
+
+  it("falls back to danger ordering when grouping has no ordered ids", () => {
+    const rows = [
+      pilot({
+        characterId: 3001,
+        characterName: "Zulu Pilot",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "Zulu Pilot" },
+        stats: { danger: 90 } as PilotCard["stats"],
+        inferenceKills: []
+      }),
+      pilot({
+        characterId: 3002,
+        characterName: "Alpha Pilot",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "Alpha Pilot" },
+        stats: { danger: 25 } as PilotCard["stats"],
+        inferenceKills: []
+      })
+    ];
+
+    const ordered = sortPilotCardsForFleetView(rows);
+    expect(ordered.map((row) => row.characterName ?? row.parsedEntry.pilotName)).toEqual([
+      "Zulu Pilot",
+      "Alpha Pilot"
+    ]);
+  });
+});
+
+function killmailSeries(startKillmailId: number, count: number, attackersForIndex: (index: number) => number[]): ZkillKillmail[] {
+  return Array.from({ length: count }, (_, index) => ({
+    killmail_id: startKillmailId + index,
+    killmail_time: `2026-01-${String((index % 28) + 1).padStart(2, "0")}T00:00:00Z`,
+    victim: {},
+    attackers: attackersForIndex(index).map((characterId) => ({ character_id: characterId }))
+  }));
+}

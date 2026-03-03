@@ -16,7 +16,7 @@ import { useParsedPaste } from "./lib/useParsedPaste";
 import { useDebugSectionAutoScroll } from "./lib/useDebugSectionAutoScroll";
 import { useCacheWipeAction } from "./lib/useCacheWipeAction";
 import { useDesktopWindowControls } from "./lib/useDesktopWindowControls";
-import { deriveAppViewModel, sortPilotCardsByDanger } from "./lib/appViewModel";
+import { deriveAppViewModel, sortPilotCardsForFleetView } from "./lib/appViewModel";
 import { useClearPilotCards } from "./lib/useClearPilotCards";
 import { useManualEntryHandlers } from "./lib/useManualEntryHandlers";
 import { useAppPreferences } from "./lib/useAppPreferences";
@@ -49,7 +49,7 @@ export default function App() {
   });
   useDebugSectionAutoScroll({ debugEnabled, debugSectionRef });
 
-  const sortedPilotCards = sortPilotCardsByDanger(pilotCards);
+  const sortedPilotCards = sortPilotCardsForFleetView(pilotCards);
   const { copyableFleetCount, globalLoadProgress, showGlobalLoad } = deriveAppViewModel(sortedPilotCards);
   const { onMinimize, onToggleMaximize, onClose, onRestartToUpdate } = useDesktopWindowControls();
   const clearPilotCards = useClearPilotCards({ setPilotCards });

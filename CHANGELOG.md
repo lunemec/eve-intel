@@ -13,6 +13,8 @@ All notable changes to this project are documented in this file.
 - Added Step-3 regression coverage in `src/lib/fleetGrouping.test.ts` for connected-component formation (`A-B-C` chaining), suggested-only component suppression invariants, and deterministic alphabetical tie-break ordering across equal-strength groups.
 - Implemented Step-4 adaptive suggestion caps in `src/lib/fleetGrouping.ts` by applying per-selected ranking/caps (`3 -> 2 -> 1`), global character-ID dedupe with preserved multi-source links, and deterministic global trimming to keep visible suggestions within the max-10 contract.
 - Added Step-4 regression coverage in `src/lib/fleetGrouping.test.ts` for global dedupe/link preservation, per-selected-before-global cap precedence, and adaptive cap downshift behavior to `2` then `1`.
+- Implemented Step-5 App view-model ordering integration by adding `sortPilotCardsForFleetView` in `src/lib/appViewModel.ts` to prefer `fleetGrouping` `orderedPilotIds` with deterministic danger-sort fallback, and wired `src/App.tsx` to use the grouped-aware shared list for both Fleet Summary and pilot cards.
+- Added Step-5 regression coverage in `src/lib/appViewModel.test.ts` for grouped-order precedence over danger sorting and fallback-to-danger behavior when grouping emits no order.
 
 ## v0.3.5 - 2026-03-03
 - Hardened changelog workflow governance to require `## Unreleased` as the first changelog section, preventing in-flight release notes from being added directly under released version snapshots.
