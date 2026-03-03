@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { hydrateBaseCards, runBreadthPilotPipeline, runPagedHistoryRounds } from "./breadthPipeline";
+import {
+  hydrateBaseCards,
+  runBreadthPilotPipeline,
+  runPagedHistoryRounds,
+  type ResolvedPilotTask
+} from "./breadthPipeline";
 import type { ParsedPilotInput } from "../../types";
 import type { PilotCard } from "../pilotDomain";
 import type { ZkillKillmail } from "../api/zkill";
@@ -47,6 +52,7 @@ function makePilotState(entry: ParsedPilotInput, characterId: number, danger: nu
   return {
     entry,
     characterId,
+    priority: "selected" as const,
     danger,
     threatTier: danger > 75 ? "high" as const : "normal" as const,
     nextKillsPage: 1,
@@ -163,6 +169,239 @@ describe("pipeline/breadthPipeline", () => {
       "Pilot B",
       expect.objectContaining({ status: "error", fetchPhase: "error" })
     );
+  });
+
+  it("dispatches selected hydration tasks before suggested tasks when selected queue is full", async () => {
+    const updatePilotCard = vi.fn();
+    const selectedIds = [111, 112, 113, 114, 115];
+    const suggestedId = 901;
+    const selectedEntries = selectedIds.map((id) => ({
+      pilotName: `Selected ${id}`,
+      sourceLine: `Selected ${id}`,
+      parseConfidence: 1,
+      shipSource: "inferred" as const
+    }));
+    const suggestedEntry: ParsedPilotInput = {
+      pilotName: "Suggested 901",
+      sourceLine: "Suggested 901",
+      parseConfidence: 1,
+      shipSource: "inferred"
+    };
+
+    const started: number[] = [];
+    const deferredByCharacterId = new Map<number, ReturnType<typeof createDeferred<{ character_id: number; name: string; corporation_id: number }>>>();
+    for (const id of selectedIds) {
+      deferredByCharacterId.set(id, createDeferred<{ character_id: number; name: string; corporation_id: number }>());
+    }
+
+    const tasks: ResolvedPilotTask[] = [
+      { entry: suggestedEntry, characterId: suggestedId, priority: "suggested" },
+      ...selectedEntries.map((entry, index) => ({
+        entry,
+        characterId: selectedIds[index],
+        priority: "selected" as const
+      }))
+    ];
+
+    const runPromise = hydrateBaseCards(
+      {
+        tasks,
+        lookbackDays: 7,
+        topShips: 5,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard,
+        logDebug: vi.fn(),
+        logError: vi.fn()
+      },
+      {
+        fetchCharacterPublic: vi.fn(async (characterId: number) => {
+          started.push(characterId);
+          const deferred = deferredByCharacterId.get(characterId);
+          if (deferred) {
+            return deferred.promise;
+          }
+          return {
+            character_id: characterId,
+            name: `Pilot ${characterId}`,
+            corporation_id: 10_000 + characterId
+          };
+        }),
+        fetchCharacterStats: vi.fn(async () => ({ kills: 1, losses: 0 })),
+        resolveUniverseNames: vi.fn(async () => new Map<number, string>()),
+        derivePilotStats: vi.fn(() => ({
+          kills: 1,
+          losses: 0,
+          kdRatio: 1,
+          solo: 0,
+          soloRatio: 0,
+          iskDestroyed: 0,
+          iskLost: 0,
+          iskRatio: 0,
+          danger: 0
+        })),
+        mergePilotStats: vi.fn(({ zkillStats }) => ({
+          kills: zkillStats?.kills ?? 0,
+          losses: zkillStats?.losses ?? 0,
+          kdRatio: 1,
+          solo: 0,
+          soloRatio: 0,
+          iskDestroyed: 0,
+          iskLost: 0,
+          iskRatio: 0,
+          danger: 0
+        })),
+        buildStageOneRow: vi.fn((params: { entry: ParsedPilotInput; characterId: number }) =>
+          makeStageOneRow(params.entry, params.characterId)
+        ),
+        createErrorCard: vi.fn((entry: ParsedPilotInput, error: string) => ({
+          ...makeStageOneRow(entry, 0),
+          status: "error" as const,
+          fetchPhase: "error" as const,
+          error
+        })),
+        fetchLatestKillsPage: vi.fn(),
+        fetchLatestLossesPage: vi.fn(),
+        mergeKillmailLists: vi.fn(),
+        collectStageNameResolutionIds: vi.fn(),
+        resolveNamesSafely: vi.fn(),
+        buildStageTwoRow: vi.fn(),
+        recomputeDerivedInference: vi.fn(),
+        ensureExplicitShipTypeId: vi.fn(),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    await Promise.resolve();
+    expect(started.slice(0, 4)).toEqual([111, 112, 113, 114]);
+    expect(started).not.toContain(suggestedId);
+
+    deferredByCharacterId.get(111)?.resolve({
+      character_id: 111,
+      name: "Selected 111",
+      corporation_id: 10_111
+    });
+    for (let attempt = 0; attempt < 8 && started.length < 5; attempt += 1) {
+      await Promise.resolve();
+    }
+    expect(started.slice(0, 5)).toEqual([111, 112, 113, 114, 115]);
+
+    for (const id of selectedIds.slice(1)) {
+      deferredByCharacterId.get(id)?.resolve({
+        character_id: id,
+        name: `Selected ${id}`,
+        corporation_id: 10_000 + id
+      });
+    }
+
+    await runPromise;
+    expect(started[started.length - 1]).toBe(suggestedId);
+  });
+
+  it("allows suggested hydration tasks to run concurrently when selected queue has spare capacity", async () => {
+    const updatePilotCard = vi.fn();
+    const selectedId = 211;
+    const suggestedId = 902;
+    const selectedEntry: ParsedPilotInput = {
+      pilotName: "Selected 211",
+      sourceLine: "Selected 211",
+      parseConfidence: 1,
+      shipSource: "inferred"
+    };
+    const suggestedEntry: ParsedPilotInput = {
+      pilotName: "Suggested 902",
+      sourceLine: "Suggested 902",
+      parseConfidence: 1,
+      shipSource: "inferred"
+    };
+    const selectedDeferred = createDeferred<{ character_id: number; name: string; corporation_id: number }>();
+    const started: number[] = [];
+
+    const tasks: ResolvedPilotTask[] = [
+      { entry: suggestedEntry, characterId: suggestedId, priority: "suggested" },
+      { entry: selectedEntry, characterId: selectedId, priority: "selected" }
+    ];
+
+    const runPromise = hydrateBaseCards(
+      {
+        tasks,
+        lookbackDays: 7,
+        topShips: 5,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard,
+        logDebug: vi.fn(),
+        logError: vi.fn()
+      },
+      {
+        fetchCharacterPublic: vi.fn(async (characterId: number) => {
+          started.push(characterId);
+          if (characterId === selectedId) {
+            return selectedDeferred.promise;
+          }
+          return {
+            character_id: characterId,
+            name: `Pilot ${characterId}`,
+            corporation_id: 10_000 + characterId
+          };
+        }),
+        fetchCharacterStats: vi.fn(async () => ({ kills: 1, losses: 0 })),
+        resolveUniverseNames: vi.fn(async () => new Map<number, string>()),
+        derivePilotStats: vi.fn(() => ({
+          kills: 1,
+          losses: 0,
+          kdRatio: 1,
+          solo: 0,
+          soloRatio: 0,
+          iskDestroyed: 0,
+          iskLost: 0,
+          iskRatio: 0,
+          danger: 0
+        })),
+        mergePilotStats: vi.fn(({ zkillStats }) => ({
+          kills: zkillStats?.kills ?? 0,
+          losses: zkillStats?.losses ?? 0,
+          kdRatio: 1,
+          solo: 0,
+          soloRatio: 0,
+          iskDestroyed: 0,
+          iskLost: 0,
+          iskRatio: 0,
+          danger: 0
+        })),
+        buildStageOneRow: vi.fn((params: { entry: ParsedPilotInput; characterId: number }) =>
+          makeStageOneRow(params.entry, params.characterId)
+        ),
+        createErrorCard: vi.fn((entry: ParsedPilotInput, error: string) => ({
+          ...makeStageOneRow(entry, 0),
+          status: "error" as const,
+          fetchPhase: "error" as const,
+          error
+        })),
+        fetchLatestKillsPage: vi.fn(),
+        fetchLatestLossesPage: vi.fn(),
+        mergeKillmailLists: vi.fn(),
+        collectStageNameResolutionIds: vi.fn(),
+        resolveNamesSafely: vi.fn(),
+        buildStageTwoRow: vi.fn(),
+        recomputeDerivedInference: vi.fn(),
+        ensureExplicitShipTypeId: vi.fn(),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    await Promise.resolve();
+    expect(started[0]).toBe(selectedId);
+    expect(started).toContain(suggestedId);
+
+    selectedDeferred.resolve({
+      character_id: selectedId,
+      name: "Selected 211",
+      corporation_id: 10_211
+    });
+    await runPromise;
   });
 
   it("applies usable processed snapshot immediately during base hydration", async () => {

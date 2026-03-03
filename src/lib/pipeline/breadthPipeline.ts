@@ -42,11 +42,13 @@ import {
 export type ResolvedPilotTask = {
   entry: ParsedPilotInput;
   characterId: number;
+  priority?: "selected" | "suggested";
 };
 
 type PilotBreadthState = {
   entry: ParsedPilotInput;
   characterId: number;
+  priority: "selected" | "suggested";
   character: CharacterPublic;
   stageOneRow: PilotCard;
   danger: number;
@@ -174,7 +176,11 @@ export async function hydrateBaseCards(
   deps: BreadthDeps = DEFAULT_DEPS
 ): Promise<PilotBreadthState[]> {
   const states: PilotBreadthState[] = [];
-  await runWithConcurrency(params.tasks, Math.max(1, PILOT_PROCESS_CONCURRENCY), async (task) => {
+  await runWithPriorityConcurrency(
+    params.tasks,
+    Math.max(1, PILOT_PROCESS_CONCURRENCY),
+    (task) => task.priority,
+    async (task) => {
     if (params.isCancelled()) {
       return;
     }
@@ -266,6 +272,7 @@ export async function hydrateBaseCards(
       states.push({
         entry: task.entry,
         characterId: task.characterId,
+        priority: normalizeTaskPriority(task.priority),
         character,
         stageOneRow: stageOneForPipeline,
         danger: stats.danger,
@@ -298,7 +305,8 @@ export async function hydrateBaseCards(
         deps.createErrorCard(task.entry, `Failed to fetch pilot intel: ${message}`)
       );
     }
-  });
+    }
+  );
 
   return states;
 }
@@ -578,7 +586,11 @@ async function runRoundBatch(
   >
 ): Promise<number> {
   let roundNewRows = 0;
-  await runWithConcurrency(pilots, Math.max(1, ZKILL_PAGE_ROUND_CONCURRENCY), async (pilot) => {
+  await runWithPriorityConcurrency(
+    pilots,
+    Math.max(1, ZKILL_PAGE_ROUND_CONCURRENCY),
+    (pilot) => pilot.priority,
+    async (pilot) => {
     if (params.isCancelled() || !hasRemainingPages(pilot, params.maxPages)) {
       return;
     }
@@ -599,7 +611,8 @@ async function runRoundBatch(
         deps.createErrorCard(pilot.entry, `Failed to fetch pilot intel: ${message}`)
       );
     }
-  });
+    }
+  );
   return roundNewRows;
 }
 
@@ -712,6 +725,55 @@ async function runWithConcurrency<T>(
   });
 
   await Promise.allSettled(workers);
+}
+
+async function runWithPriorityConcurrency<T>(
+  items: T[],
+  concurrency: number,
+  getPriority: (item: T) => "selected" | "suggested" | undefined,
+  runItem: (item: T) => Promise<void>
+): Promise<void> {
+  if (items.length === 0) {
+    return;
+  }
+
+  const selected: T[] = [];
+  const suggested: T[] = [];
+  for (const item of items) {
+    if (normalizeTaskPriority(getPriority(item)) === "suggested") {
+      suggested.push(item);
+    } else {
+      selected.push(item);
+    }
+  }
+
+  let selectedIndex = 0;
+  let suggestedIndex = 0;
+  const workerCount = Math.min(concurrency, items.length);
+
+  const workers = Array.from({ length: workerCount }, async () => {
+    while (true) {
+      if (selectedIndex < selected.length) {
+        const current = selected[selectedIndex];
+        selectedIndex += 1;
+        await runItem(current);
+        continue;
+      }
+      if (suggestedIndex < suggested.length) {
+        const current = suggested[suggestedIndex];
+        suggestedIndex += 1;
+        await runItem(current);
+        continue;
+      }
+      return;
+    }
+  });
+
+  await Promise.allSettled(workers);
+}
+
+function normalizeTaskPriority(priority: "selected" | "suggested" | undefined): "selected" | "suggested" {
+  return priority === "suggested" ? "suggested" : "selected";
 }
 
 function buildPilotMaterialSignature(params: {

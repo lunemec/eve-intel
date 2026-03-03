@@ -21,6 +21,8 @@ All notable changes to this project are documented in this file.
 - Added Step-7 regression coverage in `src/lib/fleetGrouping.test.ts`, `src/lib/appViewModel.test.ts`, and new stylesheet contract tests in `src/styles.groupingPalette.test.ts` for deterministic color mapping and grouped/suggested style-token hooks.
 - Implemented Step-8 debounced regroup recompute by introducing `useDebouncedFleetGrouping` in `src/lib/useDebouncedFleetGrouping.ts` and routing `src/App.tsx` grouped ordering/presentation derivation through a 1-second debounce window while continuing to render live pilot-card data.
 - Added Step-8 fake-timer regression coverage in `src/lib/useDebouncedFleetGrouping.test.tsx` for burst-update recompute collapse within `1s` and latest-state debounce flush correctness.
+- Implemented Step-9 low-priority suggestion scheduling lane in `src/lib/pipeline/breadthPipeline.ts` by adding selected-vs-suggested task priority metadata, dispatching selected work first during base hydration and paged fetch rounds, and allowing suggested work to consume only spare concurrency.
+- Added Step-9 scheduler regression coverage in `src/lib/pipeline/breadthPipeline.test.ts` for selected-first dispatch with mixed queues and concurrent suggested dispatch when selected queue capacity has spare workers; updated `src/lib/pipeline/tasking.ts` and `src/lib/pipeline/tasking.test.ts` to tag pasted-entry tasks as `priority: "selected"`.
 
 ## v0.3.5 - 2026-03-03
 - Hardened changelog workflow governance to require `## Unreleased` as the first changelog section, preventing in-flight release notes from being added directly under released version snapshots.

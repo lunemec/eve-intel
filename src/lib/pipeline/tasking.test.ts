@@ -19,6 +19,6 @@ const ENTRY_B: ParsedPilotInput = {
 describe("pipeline/tasking", () => {
   it("maps entries to only those with resolved ids", () => {
     const tasks = buildResolvedPilotTasks([ENTRY_A, ENTRY_B], new Map([["pilot b", 202]]));
-    expect(tasks).toEqual([{ entry: ENTRY_B, characterId: 202 }]);
+    expect(tasks).toEqual([{ entry: ENTRY_B, characterId: 202, priority: "selected" }]);
   });
 });
