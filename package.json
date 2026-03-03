@@ -1,6 +1,6 @@
 {
   "name": "eve-intel-browser",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "private": true,
   "main": "electron/main.cjs",
   "type": "module",
@@ -42,7 +42,7 @@
     "release:github": "node scripts/publish-github-release.mjs",
     "release:github:full": "node scripts/publish-github-release.mjs --full",
     "release:github:win": "npm run desktop:dist:win && npm run release:github",
-    "preview:fleet-grouping": "vite --open /previews/fleet-grouping.html"
+    "preview:fleet-grouping": "vite --config vite.fleet-grouping-preview.config.ts"
   },
   "dependencies": {
     "electron-updater": "^6.6.2",

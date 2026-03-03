@@ -390,7 +390,20 @@ body {
 .cards {
   margin-top: 14px;
   display: grid;
-  gap: 12px;
+  gap: 0;
+}
+
+.cards > .pilot-card {
+  margin-top: 12px;
+}
+
+.cards > .pilot-card:first-child {
+  margin-top: 0;
+}
+
+.cards > .pilot-card.is-grouped.group-run-middle,
+.cards > .pilot-card.is-grouped.group-run-end {
+  margin-top: 0;
 }
 
 .fleet-summary {
@@ -513,23 +526,42 @@ body {
 }
 
 .fleet-summary-line.is-grouped {
-  border-radius: 4px;
+  border-left: 2px solid var(--group-accent);
+  border-right: 2px solid var(--group-accent);
+  padding-left: 6px;
   padding-right: 6px;
 }
 
 .fleet-summary-line.is-grouped:not(.cyno-highlight) {
   background: linear-gradient(90deg, var(--group-tint) 0%, #00000000 74%);
-  box-shadow: inset 0 0 0 1px var(--group-ring), inset -2px 0 0 var(--group-accent);
 }
 
 .fleet-summary-line.is-grouped.cyno-highlight {
-  box-shadow: inset 0 0 0 1px #5b1f1f66, inset -2px 0 0 var(--group-accent);
+  border-left-color: var(--group-accent);
+  border-radius: 0;
 }
 
-.fleet-summary-line.is-suggested,
+.fleet-summary-line.is-grouped.group-run-start,
+.fleet-summary-line.is-grouped.group-run-single {
+  border-top: 2px solid var(--group-accent);
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.fleet-summary-line.is-grouped.group-run-end,
+.fleet-summary-line.is-grouped.group-run-single {
+  border-bottom: 2px solid var(--group-accent);
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.fleet-summary-line.is-suggested {
+  opacity: 0.58;
+}
+
 .pilot-card.is-suggested,
 .player-card.is-suggested {
-  opacity: 0.58;
+  opacity: 0.79;
 }
 
 .pilot-card.is-suggested .player-card.is-suggested {
@@ -688,7 +720,27 @@ body {
 .pilot-card.is-grouped .player-card,
 .player-card.is-grouped {
   background-image: linear-gradient(140deg, var(--group-tint) 0%, #00000000 58%);
-  box-shadow: 0 4px 12px #0000004d, inset 0 0 0 1px var(--group-ring), inset -2px 0 0 var(--group-accent);
+  box-shadow: 0 4px 12px #0000004d;
+}
+
+.pilot-card.is-grouped {
+  border-left: 2px solid var(--group-accent);
+  border-right: 2px solid var(--group-accent);
+  padding: 8px 10px;
+}
+
+.pilot-card.is-grouped.group-run-start,
+.pilot-card.is-grouped.group-run-single {
+  border-top: 2px solid var(--group-accent);
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.pilot-card.is-grouped.group-run-end,
+.pilot-card.is-grouped.group-run-single {
+  border-bottom: 2px solid var(--group-accent);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
 .player-card {

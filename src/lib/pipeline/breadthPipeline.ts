@@ -557,13 +557,53 @@ function buildRoundBatch(
   pilots: PilotBreadthState[],
   tier: "all" | "high" = "all"
 ): PilotBreadthState[] {
-  return pilots.filter((pilot) => {
-    const pilotTier = pilot.threatTier ?? classifyThreat(pilot.danger ?? pilot.stageOneRow.stats?.danger);
-    if (tier === "high" && pilotTier !== "high") {
-      return false;
-    }
-    return true;
-  });
+  return pilots
+    .filter((pilot) => {
+      const pilotTier = pilot.threatTier ?? classifyThreat(pilot.danger ?? pilot.stageOneRow.stats?.danger);
+      if (tier === "high" && pilotTier !== "high") {
+        return false;
+      }
+      return true;
+    })
+    .sort(comparePilotFetchOrder);
+}
+
+function comparePilotFetchOrder(a: PilotBreadthState, b: PilotBreadthState): number {
+  const dangerCompare = compareDangerForScheduling(a, b);
+  if (dangerCompare !== 0) {
+    return dangerCompare;
+  }
+  const nameCompare = a.entry.pilotName.localeCompare(b.entry.pilotName, undefined, { sensitivity: "base" });
+  if (nameCompare !== 0) {
+    return nameCompare;
+  }
+  return a.characterId - b.characterId;
+}
+
+function compareDangerForScheduling(a: PilotBreadthState, b: PilotBreadthState): number {
+  const aDanger = resolvePilotDangerForScheduling(a);
+  const bDanger = resolvePilotDangerForScheduling(b);
+  if (Number.isFinite(aDanger) && Number.isFinite(bDanger) && aDanger !== bDanger) {
+    return bDanger - aDanger;
+  }
+  if (Number.isFinite(aDanger) && !Number.isFinite(bDanger)) {
+    return -1;
+  }
+  if (!Number.isFinite(aDanger) && Number.isFinite(bDanger)) {
+    return 1;
+  }
+  return 0;
+}
+
+function resolvePilotDangerForScheduling(pilot: PilotBreadthState): number {
+  if (Number.isFinite(pilot.danger)) {
+    return pilot.danger;
+  }
+  const fallbackDanger = pilot.stageOneRow.stats?.danger;
+  if (Number.isFinite(fallbackDanger)) {
+    return Number(fallbackDanger);
+  }
+  return Number.NEGATIVE_INFINITY;
 }
 
 async function runRoundBatch(

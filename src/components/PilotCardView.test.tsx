@@ -294,16 +294,24 @@ describe("PilotCardView", () => {
         groupPresentation={{
           groupId: "fleet-group-v1-a",
           isGreyedSuggestion: true,
-          isUngrouped: false
+          isUngrouped: false,
+          suggestionStrongestRatio: 0.829,
+          suggestionStrongestSharedKillCount: 83,
+          suggestionStrongestWindowKillCount: 100,
+          suggestionStrongestSourcePilotId: 5001,
+          suggestionStrongestSourcePilotName: "Grouped Pilot"
         }}
+        groupRunPosition="single"
       />
     );
 
     const card = container.querySelector(".pilot-card");
     const overview = container.querySelector(".player-card");
     expect(card?.classList.contains("is-grouped")).toBe(true);
+    expect(card?.classList.contains("group-run-single")).toBe(true);
     expect(card?.classList.contains("is-suggested")).toBe(true);
     expect(card?.getAttribute("data-group-id")).toBe("fleet-group-v1-a");
+    expect(card?.getAttribute("title")).toBe("This pilot is on 83 kills with Grouped Pilot (82.9% of last 100 kills).");
     expect(overview?.classList.contains("is-grouped")).toBe(true);
     expect(overview?.classList.contains("is-suggested")).toBe(true);
     expect(screen.getAllByText("Fleet").length).toBeGreaterThan(0);

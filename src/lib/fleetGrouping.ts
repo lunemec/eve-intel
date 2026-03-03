@@ -3,7 +3,10 @@ import type { PilotCard } from "./pilotDomain";
 export const FLEET_GROUPING_VERSION = 1 as const;
 export const CO_FLY_RATIO_THRESHOLD = 0.8;
 export const CO_FLY_SHARED_KILL_THRESHOLD = 10;
+export const CO_FLY_RECENT_KILL_WINDOW_MIN = 10;
+export const CO_FLY_RECENT_KILL_WINDOW_MAX = 100;
 export const FLEET_GROUP_PALETTE_SIZE = 6;
+const HIGH_CONTRAST_COLOR_ORDER = [0, 3, 1, 4, 2, 5] as const;
 const DEFAULT_PER_SELECTED_SUGGESTION_CAP = 3;
 const ADAPTIVE_PER_SELECTED_SUGGESTION_CAPS = [DEFAULT_PER_SELECTED_SUGGESTION_CAP, 2, 1] as const;
 const GLOBAL_SUGGESTION_CAP = 10;
@@ -12,7 +15,7 @@ export type CoFlyEvidence = {
   anchorPilotId: number;
   candidatePilotId: number;
   sharedKillCount: number;
-  evaluatedKillCount: number;
+  windowKillCount: number;
   ratio: number;
 };
 
@@ -20,8 +23,10 @@ export type SuggestedPilot = {
   characterId: number;
   name: string;
   sourcePilotIds: number[];
+  strongestSourcePilotId?: number;
   strongestRatio: number;
   strongestSharedKillCount: number;
+  strongestWindowKillCount: number;
   eligible: boolean;
 };
 
@@ -169,9 +174,14 @@ function extractCoFlyEvidence(params: {
     if (inferenceKills.length === 0) {
       continue;
     }
+    const windowKillCount = Math.min(inferenceKills.length, CO_FLY_RECENT_KILL_WINDOW_MAX);
+    if (windowKillCount <= 0) {
+      continue;
+    }
+    const recentKills = inferenceKills.slice(0, windowKillCount);
 
     const sharedKillCountByCandidateId = new Map<number, number>();
-    for (const killmail of inferenceKills) {
+    for (const killmail of recentKills) {
       const uniqueCandidateIds = new Set<number>();
       for (const attacker of killmail.attackers ?? []) {
         const candidateId = attacker.character_id;
@@ -191,8 +201,8 @@ function extractCoFlyEvidence(params: {
         anchorPilotId,
         candidatePilotId,
         sharedKillCount,
-        evaluatedKillCount: inferenceKills.length,
-        ratio: sharedKillCount / inferenceKills.length
+        windowKillCount,
+        ratio: sharedKillCount / windowKillCount
       });
     }
   }
@@ -216,8 +226,10 @@ function buildSuggestedPilots(params: {
       characterId: number;
       name: string;
       sourcePilotIds: Set<number>;
+      strongestSourcePilotId: number;
       strongestRatio: number;
       strongestSharedKillCount: number;
+      strongestWindowKillCount: number;
       eligible: boolean;
     }
   >();
@@ -237,8 +249,10 @@ function buildSuggestedPilots(params: {
           pilotCardsById: params.pilotCardsById
         }),
         sourcePilotIds: new Set<number>(),
+        strongestSourcePilotId: evidence.anchorPilotId,
         strongestRatio: evidence.ratio,
         strongestSharedKillCount: evidence.sharedKillCount,
+        strongestWindowKillCount: evidence.windowKillCount,
         eligible: false
       };
       suggestionsByCharacterId.set(evidence.candidatePilotId, suggestion);
@@ -247,10 +261,15 @@ function buildSuggestedPilots(params: {
     suggestion.sourcePilotIds.add(evidence.anchorPilotId);
     if (
       evidence.ratio > suggestion.strongestRatio ||
-      (evidence.ratio === suggestion.strongestRatio && evidence.sharedKillCount > suggestion.strongestSharedKillCount)
+      (evidence.ratio === suggestion.strongestRatio &&
+        (evidence.sharedKillCount > suggestion.strongestSharedKillCount ||
+          (evidence.sharedKillCount === suggestion.strongestSharedKillCount &&
+            evidence.windowKillCount > suggestion.strongestWindowKillCount)))
     ) {
+      suggestion.strongestSourcePilotId = evidence.anchorPilotId;
       suggestion.strongestRatio = evidence.ratio;
       suggestion.strongestSharedKillCount = evidence.sharedKillCount;
+      suggestion.strongestWindowKillCount = evidence.windowKillCount;
     }
     if (meetsSuggestionVisibilityThreshold(evidence)) {
       suggestion.eligible = true;
@@ -262,8 +281,10 @@ function buildSuggestedPilots(params: {
       characterId: suggestion.characterId,
       name: suggestion.name,
       sourcePilotIds: [...suggestion.sourcePilotIds].sort((a, b) => a - b),
+      strongestSourcePilotId: suggestion.strongestSourcePilotId,
       strongestRatio: suggestion.strongestRatio,
       strongestSharedKillCount: suggestion.strongestSharedKillCount,
+      strongestWindowKillCount: suggestion.strongestWindowKillCount,
       eligible: suggestion.eligible
     }))
     .sort((left, right) => left.name.localeCompare(right.name, "en", { sensitivity: "base" }) || left.characterId - right.characterId);
@@ -312,10 +333,16 @@ function collectRankedEligibleCandidatesByAnchorId(params: {
   coFlyEvidence: CoFlyEvidence[];
   allKnownPilotNamesById: Map<number, string>;
   pilotCardsById: Map<number, PilotCard>;
-}): Map<number, Array<{ characterId: number; name: string; ratio: number; sharedKillCount: number }>> {
+}): Map<
+  number,
+  Array<{ characterId: number; name: string; ratio: number; sharedKillCount: number; windowKillCount: number; sourcePilotId: number }>
+> {
   const strongestEligibleEvidenceByAnchorId = new Map<
     number,
-    Map<number, { characterId: number; name: string; ratio: number; sharedKillCount: number }>
+    Map<
+      number,
+      { characterId: number; name: string; ratio: number; sharedKillCount: number; windowKillCount: number; sourcePilotId: number }
+    >
   >();
 
   for (const evidence of params.coFlyEvidence) {
@@ -331,7 +358,10 @@ function collectRankedEligibleCandidatesByAnchorId(params: {
 
     let strongestForAnchor = strongestEligibleEvidenceByAnchorId.get(evidence.anchorPilotId);
     if (!strongestForAnchor) {
-      strongestForAnchor = new Map<number, { characterId: number; name: string; ratio: number; sharedKillCount: number }>();
+      strongestForAnchor = new Map<
+        number,
+        { characterId: number; name: string; ratio: number; sharedKillCount: number; windowKillCount: number; sourcePilotId: number }
+      >();
       strongestEligibleEvidenceByAnchorId.set(evidence.anchorPilotId, strongestForAnchor);
     }
 
@@ -344,20 +374,24 @@ function collectRankedEligibleCandidatesByAnchorId(params: {
     if (
       !existing ||
       evidence.ratio > existing.ratio ||
-      (evidence.ratio === existing.ratio && evidence.sharedKillCount > existing.sharedKillCount)
+      (evidence.ratio === existing.ratio &&
+        (evidence.sharedKillCount > existing.sharedKillCount ||
+          (evidence.sharedKillCount === existing.sharedKillCount && evidence.windowKillCount > existing.windowKillCount)))
     ) {
       strongestForAnchor.set(evidence.candidatePilotId, {
         characterId: evidence.candidatePilotId,
         name,
         ratio: evidence.ratio,
-        sharedKillCount: evidence.sharedKillCount
+        sharedKillCount: evidence.sharedKillCount,
+        windowKillCount: evidence.windowKillCount,
+        sourcePilotId: evidence.anchorPilotId
       });
     }
   }
 
   const rankedCandidatesByAnchorId = new Map<
     number,
-    Array<{ characterId: number; name: string; ratio: number; sharedKillCount: number }>
+    Array<{ characterId: number; name: string; ratio: number; sharedKillCount: number; windowKillCount: number; sourcePilotId: number }>
   >();
   for (const anchorPilotId of params.selectedPilotIds) {
     const candidatesById = strongestEligibleEvidenceByAnchorId.get(anchorPilotId);
@@ -378,7 +412,7 @@ function dedupeSuggestionsForPerSelectedCap(params: {
   selectedPilotIds: number[];
   rankedCandidatesByAnchorId: Map<
     number,
-    Array<{ characterId: number; name: string; ratio: number; sharedKillCount: number }>
+    Array<{ characterId: number; name: string; ratio: number; sharedKillCount: number; windowKillCount: number; sourcePilotId: number }>
   >;
   perSelectedCap: number;
 }): SuggestedPilot[] {
@@ -388,8 +422,10 @@ function dedupeSuggestionsForPerSelectedCap(params: {
       characterId: number;
       name: string;
       sourcePilotIds: Set<number>;
+      strongestSourcePilotId: number;
       strongestRatio: number;
       strongestSharedKillCount: number;
+      strongestWindowKillCount: number;
     }
   >();
 
@@ -406,8 +442,10 @@ function dedupeSuggestionsForPerSelectedCap(params: {
           characterId: candidate.characterId,
           name: candidate.name,
           sourcePilotIds: new Set<number>(),
+          strongestSourcePilotId: candidate.sourcePilotId,
           strongestRatio: candidate.ratio,
-          strongestSharedKillCount: candidate.sharedKillCount
+          strongestSharedKillCount: candidate.sharedKillCount,
+          strongestWindowKillCount: candidate.windowKillCount
         };
         dedupedByCharacterId.set(candidate.characterId, dedupedSuggestion);
       }
@@ -416,10 +454,14 @@ function dedupeSuggestionsForPerSelectedCap(params: {
       if (
         candidate.ratio > dedupedSuggestion.strongestRatio ||
         (candidate.ratio === dedupedSuggestion.strongestRatio &&
-          candidate.sharedKillCount > dedupedSuggestion.strongestSharedKillCount)
+          (candidate.sharedKillCount > dedupedSuggestion.strongestSharedKillCount ||
+            (candidate.sharedKillCount === dedupedSuggestion.strongestSharedKillCount &&
+              candidate.windowKillCount > dedupedSuggestion.strongestWindowKillCount)))
       ) {
+        dedupedSuggestion.strongestSourcePilotId = candidate.sourcePilotId;
         dedupedSuggestion.strongestRatio = candidate.ratio;
         dedupedSuggestion.strongestSharedKillCount = candidate.sharedKillCount;
+        dedupedSuggestion.strongestWindowKillCount = candidate.windowKillCount;
       }
     }
   }
@@ -428,19 +470,22 @@ function dedupeSuggestionsForPerSelectedCap(params: {
     characterId: suggestion.characterId,
     name: suggestion.name,
     sourcePilotIds: [...suggestion.sourcePilotIds].sort((leftPilotId, rightPilotId) => leftPilotId - rightPilotId),
+    strongestSourcePilotId: suggestion.strongestSourcePilotId,
     strongestRatio: suggestion.strongestRatio,
     strongestSharedKillCount: suggestion.strongestSharedKillCount,
+    strongestWindowKillCount: suggestion.strongestWindowKillCount,
     eligible: true
   }));
 }
 
 function compareSuggestionCandidatesForPerSelectedCap(
-  leftCandidate: { characterId: number; name: string; ratio: number; sharedKillCount: number },
-  rightCandidate: { characterId: number; name: string; ratio: number; sharedKillCount: number }
+  leftCandidate: { characterId: number; name: string; ratio: number; sharedKillCount: number; windowKillCount: number },
+  rightCandidate: { characterId: number; name: string; ratio: number; sharedKillCount: number; windowKillCount: number }
 ): number {
   return (
     rightCandidate.ratio - leftCandidate.ratio ||
     rightCandidate.sharedKillCount - leftCandidate.sharedKillCount ||
+    rightCandidate.windowKillCount - leftCandidate.windowKillCount ||
     leftCandidate.name.localeCompare(rightCandidate.name, "en", { sensitivity: "base" }) ||
     leftCandidate.characterId - rightCandidate.characterId
   );
@@ -450,6 +495,7 @@ function compareSuggestionsForGlobalTrim(leftSuggestion: SuggestedPilot, rightSu
   return (
     rightSuggestion.strongestRatio - leftSuggestion.strongestRatio ||
     rightSuggestion.strongestSharedKillCount - leftSuggestion.strongestSharedKillCount ||
+    rightSuggestion.strongestWindowKillCount - leftSuggestion.strongestWindowKillCount ||
     leftSuggestion.name.localeCompare(rightSuggestion.name, "en", { sensitivity: "base" }) ||
     leftSuggestion.characterId - rightSuggestion.characterId
   );
@@ -482,7 +528,11 @@ function resolvePilotName(params: {
 }
 
 function meetsSuggestionVisibilityThreshold(evidence: CoFlyEvidence): boolean {
-  return evidence.ratio > CO_FLY_RATIO_THRESHOLD && evidence.sharedKillCount >= CO_FLY_SHARED_KILL_THRESHOLD;
+  return (
+    evidence.windowKillCount >= CO_FLY_RECENT_KILL_WINDOW_MIN &&
+    evidence.ratio > CO_FLY_RATIO_THRESHOLD &&
+    evidence.sharedKillCount >= CO_FLY_SHARED_KILL_THRESHOLD
+  );
 }
 
 function buildFleetGroups(params: {
@@ -561,7 +611,7 @@ function buildFleetGroups(params: {
       selectedPilotIds,
       suggestedPilotIds,
       weightedConfidence: totalWeight > 0 ? weightedRatioSum / totalWeight : 0,
-      colorIndex: stableFleetGroupColorIndex(groupId)
+      colorIndex: 0
     });
   }
 
@@ -592,6 +642,7 @@ function buildFleetGroups(params: {
       orderedPilotIds: []
     };
   }
+  assignGroupColorIndicesByDisplayOrder(groups);
 
   const groupedPilotIds = new Set<number>();
   const orderedPilotIds: number[] = [];
@@ -762,4 +813,37 @@ function buildGroupAlphabeticalSortKey(
 
 function meetsGroupingRelationThreshold(evidence: CoFlyEvidence): boolean {
   return meetsSuggestionVisibilityThreshold(evidence);
+}
+
+function assignGroupColorIndicesByDisplayOrder(groups: FleetGroup[]): void {
+  const colorOrder = buildHighContrastColorOrder(FLEET_GROUP_PALETTE_SIZE);
+  if (colorOrder.length === 0) {
+    for (const group of groups) {
+      group.colorIndex = 0;
+    }
+    return;
+  }
+  for (let index = 0; index < groups.length; index += 1) {
+    groups[index].colorIndex = colorOrder[index % colorOrder.length] ?? 0;
+  }
+}
+
+function buildHighContrastColorOrder(paletteSize: number): number[] {
+  if (!Number.isInteger(paletteSize) || paletteSize <= 0) {
+    return [0];
+  }
+  if (paletteSize === HIGH_CONTRAST_COLOR_ORDER.length) {
+    return [...HIGH_CONTRAST_COLOR_ORDER];
+  }
+
+  const colorOrder: number[] = [];
+  const midpoint = Math.floor(paletteSize / 2);
+  for (let index = 0; index < midpoint; index += 1) {
+    colorOrder.push(index);
+    colorOrder.push(index + midpoint);
+  }
+  if (paletteSize % 2 !== 0) {
+    colorOrder.push(paletteSize - 1);
+  }
+  return colorOrder;
 }

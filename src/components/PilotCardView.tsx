@@ -1,5 +1,6 @@
 import { memo } from "react";
 import type { GroupPresentation } from "../lib/appViewModel";
+import type { GroupRunPosition } from "../lib/groupRuns";
 import { engagementStyleFromSoloRatio, engagementStyleTitle } from "../lib/presentation";
 import { pilotDetailAnchorId } from "../lib/appUtils";
 import type { PilotCard } from "../lib/pilotDomain";
@@ -8,11 +9,13 @@ import {
   PilotCardOverviewSubview,
   type PilotCardFitMetricsResolver
 } from "./pilotCardSubviews";
+import { buildSuggestionHoverTitle } from "./suggestionHoverTitle";
 
 type PilotCardViewProps = {
   pilot: PilotCard;
   getFitMetrics: PilotCardFitMetricsResolver;
   groupPresentation?: GroupPresentation;
+  groupRunPosition?: GroupRunPosition;
 };
 
 function engagementStylePill(pilot: PilotCard): JSX.Element | null {
@@ -32,10 +35,12 @@ function engagementStylePill(pilot: PilotCard): JSX.Element | null {
 }
 
 export const PilotCardView = memo(function PilotCardView(props: PilotCardViewProps) {
-  const { pilot, getFitMetrics, groupPresentation } = props;
+  const { pilot, getFitMetrics, groupPresentation, groupRunPosition } = props;
+  const suggestionHoverTitle = buildSuggestionHoverTitle(groupPresentation);
   const cardClassName = [
     "pilot-card",
     groupPresentation?.groupId ? "is-grouped" : "",
+    groupPresentation?.groupId && groupRunPosition ? `group-run-${groupRunPosition}` : "",
     groupPresentation?.isGreyedSuggestion ? "is-suggested" : ""
   ]
     .filter((className) => className.length > 0)
@@ -46,6 +51,7 @@ export const PilotCardView = memo(function PilotCardView(props: PilotCardViewPro
       id={pilotDetailAnchorId(pilot)}
       data-group-id={groupPresentation?.groupId}
       data-group-color-token={groupPresentation?.groupColorToken}
+      title={suggestionHoverTitle}
     >
       <PilotCardOverviewSubview
         pilot={pilot}

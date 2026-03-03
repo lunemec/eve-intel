@@ -3,13 +3,27 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const PREVIEW_FILE = path.join(process.cwd(), "public", "previews", "fleet-grouping.html");
+const PREVIEW_VITE_CONFIG_FILE = path.join(
+  process.cwd(),
+  "vite.fleet-grouping-preview.config.ts"
+);
 
 describe("fleet grouping preview artifact", () => {
-  it("exposes an npm script to open the static preview page", async () => {
+  it("exposes an npm script that serves fleet grouping preview at root", async () => {
     const packageJsonPath = path.join(process.cwd(), "package.json");
     const packageJson = JSON.parse(await readFile(packageJsonPath, "utf8"));
 
-    expect(packageJson.scripts["preview:fleet-grouping"]).toBe("vite --open /previews/fleet-grouping.html");
+    expect(packageJson.scripts["preview:fleet-grouping"]).toBe(
+      "vite --config vite.fleet-grouping-preview.config.ts"
+    );
+  });
+
+  it("defines a vite config that routes root requests to the preview artifact", async () => {
+    const viteConfig = await readFile(PREVIEW_VITE_CONFIG_FILE, "utf8");
+
+    expect(viteConfig).toContain("/previews/fleet-grouping.html");
+    expect(viteConfig).toContain('pathname !== "/"');
+    expect(viteConfig).toContain('pathname !== "/index.html"');
   });
 
   it("includes required grouped and suggested visual scenarios", async () => {

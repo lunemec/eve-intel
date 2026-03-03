@@ -183,11 +183,29 @@ function normalizePresentationEntries(
 function normalizeGroupPresentation(presentation: GroupPresentation): GroupPresentation {
   const groupId = normalizeOptionalString(presentation.groupId);
   const groupColorToken = normalizeOptionalString(presentation.groupColorToken);
+  const suggestionStrongestRatio = normalizeOptionalRatio(presentation.suggestionStrongestRatio);
+  const suggestionStrongestSharedKillCount = normalizeOptionalPositiveInteger(
+    presentation.suggestionStrongestSharedKillCount
+  );
+  const suggestionStrongestWindowKillCount = normalizeOptionalPositiveInteger(
+    presentation.suggestionStrongestWindowKillCount
+  );
+  const suggestionStrongestSourcePilotId = normalizeOptionalPositiveInteger(
+    presentation.suggestionStrongestSourcePilotId
+  );
+  const suggestionStrongestSourcePilotName = normalizeOptionalString(
+    presentation.suggestionStrongestSourcePilotName
+  );
   return {
     ...(groupId ? { groupId } : {}),
     ...(groupColorToken ? { groupColorToken } : {}),
     isGreyedSuggestion: Boolean(presentation.isGreyedSuggestion),
-    isUngrouped: Boolean(presentation.isUngrouped)
+    isUngrouped: Boolean(presentation.isUngrouped),
+    ...(suggestionStrongestRatio !== undefined ? { suggestionStrongestRatio } : {}),
+    ...(suggestionStrongestSharedKillCount !== undefined ? { suggestionStrongestSharedKillCount } : {}),
+    ...(suggestionStrongestWindowKillCount !== undefined ? { suggestionStrongestWindowKillCount } : {}),
+    ...(suggestionStrongestSourcePilotId !== undefined ? { suggestionStrongestSourcePilotId } : {}),
+    ...(suggestionStrongestSourcePilotName ? { suggestionStrongestSourcePilotName } : {})
   };
 }
 
@@ -197,6 +215,23 @@ function normalizeOptionalString(value: string | undefined): string | undefined 
   }
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : undefined;
+}
+
+function normalizeOptionalRatio(value: number | undefined): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return undefined;
+  }
+  if (value < 0 || value > 1) {
+    return undefined;
+  }
+  return value;
+}
+
+function normalizeOptionalPositiveInteger(value: number | undefined): number | undefined {
+  if (typeof value !== "number" || !Number.isInteger(value) || value <= 0) {
+    return undefined;
+  }
+  return value;
 }
 
 function toValidPilotId(value: number | undefined): number | null {

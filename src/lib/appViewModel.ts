@@ -7,6 +7,11 @@ export type GroupPresentation = {
   groupColorToken?: string;
   isGreyedSuggestion: boolean;
   isUngrouped: boolean;
+  suggestionStrongestRatio?: number;
+  suggestionStrongestSharedKillCount?: number;
+  suggestionStrongestWindowKillCount?: number;
+  suggestionStrongestSourcePilotId?: number;
+  suggestionStrongestSourcePilotName?: string;
 };
 
 const GROUP_COLOR_TOKEN_PREFIX = "fleet-group-color";
@@ -80,6 +85,9 @@ export function deriveGroupPresentationByPilotId(pilotCards: PilotCard[]): Map<n
     allKnownPilotNamesById: groupingSeed.allKnownPilotNamesById,
     nowMs: 0
   });
+  const suggestionByPilotId = new Map(
+    grouping.suggestions.map((suggestion) => [suggestion.characterId, suggestion])
+  );
 
   const presentationByPilotId = new Map<number, GroupPresentation>();
   const selectedPilotIdSet = new Set(groupingSeed.selectedPilotIds);
@@ -88,11 +96,29 @@ export function deriveGroupPresentationByPilotId(pilotCards: PilotCard[]): Map<n
     const suggestedPilotIdSet = new Set(group.suggestedPilotIds);
     for (const memberPilotId of group.memberPilotIds) {
       const isSuggested = suggestedPilotIdSet.has(memberPilotId) && !selectedPilotIdSet.has(memberPilotId);
+      const suggestion = isSuggested ? suggestionByPilotId.get(memberPilotId) : undefined;
+      const strongestSourcePilotId = suggestion?.strongestSourcePilotId ?? suggestion?.sourcePilotIds[0];
+      const strongestSourcePilotName = strongestSourcePilotId
+        ? resolvePilotNameById({
+            pilotId: strongestSourcePilotId,
+            allKnownPilotNamesById: groupingSeed.allKnownPilotNamesById,
+            pilotCardsById: groupingSeed.pilotCardsById
+          })
+        : undefined;
       presentationByPilotId.set(memberPilotId, {
         groupId: group.groupId,
         groupColorToken,
         isGreyedSuggestion: isSuggested,
-        isUngrouped: false
+        isUngrouped: false,
+        ...(isSuggested && suggestion
+          ? {
+              suggestionStrongestRatio: suggestion.strongestRatio,
+              suggestionStrongestSharedKillCount: suggestion.strongestSharedKillCount,
+              suggestionStrongestWindowKillCount: suggestion.strongestWindowKillCount,
+              suggestionStrongestSourcePilotId: strongestSourcePilotId,
+              suggestionStrongestSourcePilotName: strongestSourcePilotName
+            }
+          : {})
       });
     }
   }
@@ -184,4 +210,20 @@ function groupColorTokenForIndex(colorIndex: number): string {
     return `${GROUP_COLOR_TOKEN_PREFIX}-0`;
   }
   return `${GROUP_COLOR_TOKEN_PREFIX}-${colorIndex}`;
+}
+
+function resolvePilotNameById(params: {
+  pilotId: number;
+  allKnownPilotNamesById: Map<number, string>;
+  pilotCardsById: Map<number, PilotCard>;
+}): string | undefined {
+  const knownName = params.allKnownPilotNamesById.get(params.pilotId);
+  if (knownName && knownName.trim().length > 0) {
+    return knownName;
+  }
+  const pilotCardName = params.pilotCardsById.get(params.pilotId)?.characterName;
+  if (pilotCardName && pilotCardName.trim().length > 0) {
+    return pilotCardName;
+  }
+  return undefined;
 }

@@ -786,6 +786,54 @@ describe("pipeline/breadthPipeline", () => {
     expect(updatePilotCard).toHaveBeenCalledWith("Pilot B", expect.objectContaining({ fetchPhase: "ready" }));
   });
 
+  it("orders page fetches by descending danger so highest threats start first", async () => {
+    const updatePilotCard = vi.fn();
+    const pilotLow = makePilotState(ENTRY_A, 301, 20);
+    const pilotHigh = makePilotState(ENTRY_B, 302, 95);
+    const pilotMid = makePilotState(ENTRY_C, 303, 60);
+    const fetchLatestKillsPage = vi.fn(async () => []);
+
+    await runPagedHistoryRounds(
+      {
+        pilots: [pilotLow, pilotHigh, pilotMid],
+        lookbackDays: 7,
+        topShips: 5,
+        maxPages: 1,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard,
+        logDebug: vi.fn()
+      },
+      {
+        fetchCharacterPublic: vi.fn(),
+        fetchCharacterStats: vi.fn(),
+        resolveUniverseNames: vi.fn(),
+        derivePilotStats: vi.fn(),
+        mergePilotStats: vi.fn(),
+        buildStageOneRow: vi.fn(),
+        createErrorCard: vi.fn(),
+        fetchLatestKillsPage,
+        fetchLatestLossesPage: vi.fn(async () => []),
+        mergeKillmailLists: vi.fn((a: ZkillKillmail[], b: ZkillKillmail[]) => [...a, ...b]),
+        collectStageNameResolutionIds: vi.fn(() => []),
+        resolveNamesSafely: vi.fn(async () => new Map<number, string>()),
+        buildStageTwoRow: vi.fn((params: { stageOne: PilotCard }) => params.stageOne),
+        recomputeDerivedInference: vi.fn(async () => ({
+          predictedShips: [],
+          fitCandidates: [],
+          cynoRisk: { potentialCyno: false, jumpAssociation: false, reasons: [] }
+        })),
+        ensureExplicitShipTypeId: vi.fn(async () => undefined),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    expect(fetchLatestKillsPage).toHaveBeenCalledTimes(3);
+    const killCallCharacterIds = fetchLatestKillsPage.mock.calls.map((call) => Number((call as unknown[])[0]));
+    expect(killCallCharacterIds).toEqual([302, 303, 301]);
+  });
+
   it("applies per-pilot backpressure by waiting for kills page before losses page", async () => {
     const updatePilotCard = vi.fn();
     const pilotA = makePilotState(ENTRY_A, 301, 80);

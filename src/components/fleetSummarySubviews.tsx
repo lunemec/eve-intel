@@ -1,4 +1,5 @@
 import type { GroupPresentation } from "../lib/appViewModel";
+import type { GroupRunPosition } from "../lib/groupRuns";
 import type { PilotCard } from "../lib/pilotDomain";
 import { renderShipPills } from "./shipPillRender";
 import {
@@ -18,6 +19,7 @@ import {
   killmailZkillUrl,
   shipIconUrl
 } from "../lib/links";
+import { buildSuggestionHoverTitle } from "./suggestionHoverTitle";
 
 const DEFAULT_SCROLL_DURATION_MS = 120;
 const FLEET_SUMMARY_ALLOWED_ROLE_PILLS = new Set(["HIC", "Bubble", "Dictor"]);
@@ -72,9 +74,10 @@ export function FleetSummaryHeaderSubview(props: {
 export function FleetSummaryRowSubview(props: {
   pilot: PilotCard;
   groupPresentation?: GroupPresentation;
+  groupRunPosition?: GroupRunPosition;
   scrollDurationMs?: number;
 }): JSX.Element {
-  const { pilot, groupPresentation, scrollDurationMs } = props;
+  const { pilot, groupPresentation, groupRunPosition, scrollDurationMs } = props;
   const detailAnchorId = pilotDetailAnchorId(pilot);
   const topShip = pilot.predictedShips[0];
   const secondShip = pilot.predictedShips[1];
@@ -100,11 +103,13 @@ export function FleetSummaryRowSubview(props: {
       rolePills: (ship.rolePills ?? []).filter((pill) => FLEET_SUMMARY_ALLOWED_ROLE_PILLS.has(pill))
     }));
   const engagementStyle = engagementStyleFromSoloRatio(pilot.stats?.soloRatio);
+  const suggestionHoverTitle = buildSuggestionHoverTitle(groupPresentation);
   const rowClassName = [
     "fleet-summary-line",
     "fleet-summary-grid",
     topShipCyno ? "cyno-highlight" : "",
     groupPresentation?.groupId ? "is-grouped" : "",
+    groupPresentation?.groupId && groupRunPosition ? `group-run-${groupRunPosition}` : "",
     groupPresentation?.isGreyedSuggestion ? "is-suggested" : ""
   ]
     .filter((className) => className.length > 0)
@@ -115,6 +120,7 @@ export function FleetSummaryRowSubview(props: {
       className={rowClassName}
       data-group-id={groupPresentation?.groupId}
       data-group-color-token={groupPresentation?.groupColorToken}
+      title={suggestionHoverTitle}
       onClick={(event) => {
         const target = event.target as HTMLElement;
         if (target.closest("a, button, [data-prevent-row-click='true']")) {

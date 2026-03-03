@@ -521,7 +521,12 @@ describe("FleetSummary", () => {
         {
           groupId: "fleet-group-v1-a",
           isGreyedSuggestion: true,
-          isUngrouped: false
+          isUngrouped: false,
+          suggestionStrongestRatio: 0.829,
+          suggestionStrongestSharedKillCount: 83,
+          suggestionStrongestWindowKillCount: 100,
+          suggestionStrongestSourcePilotId: groupedPilotId,
+          suggestionStrongestSourcePilotName: "Grouped Pilot"
         }
       ]
     ]);
@@ -560,11 +565,14 @@ describe("FleetSummary", () => {
     const rows = container.querySelectorAll(".fleet-summary-line");
     expect(rows).toHaveLength(2);
     expect(rows[0]?.classList.contains("is-grouped")).toBe(true);
+    expect(rows[0]?.classList.contains("group-run-start")).toBe(true);
     expect(rows[0]?.classList.contains("is-suggested")).toBe(false);
     expect(rows[0]?.getAttribute("data-group-id")).toBe("fleet-group-v1-a");
     expect(rows[1]?.classList.contains("is-grouped")).toBe(true);
+    expect(rows[1]?.classList.contains("group-run-end")).toBe(true);
     expect(rows[1]?.classList.contains("is-suggested")).toBe(true);
     expect(rows[1]?.getAttribute("data-group-id")).toBe("fleet-group-v1-a");
+    expect(rows[1]?.getAttribute("title")).toBe("This pilot is on 83 kills with Grouped Pilot (82.9% of last 100 kills).");
   });
 
   it("does not trigger row anchor-scroll when Fleet/Solo pills are clicked", () => {

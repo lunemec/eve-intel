@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   deriveGroupPresentationByPilotId,
   sortPilotCardsByDanger,
@@ -6,7 +6,15 @@ import {
   type GroupPresentation
 } from "./appViewModel";
 import {
+  CO_FLY_RATIO_THRESHOLD,
+  CO_FLY_RECENT_KILL_WINDOW_MAX,
+  CO_FLY_RECENT_KILL_WINDOW_MIN,
+  computeFleetGrouping,
+  type SuggestedPilot
+} from "./fleetGrouping";
+import {
   buildFleetGroupingArtifactSourceSignature,
+  type FleetGroupingCacheArtifact,
   isFleetGroupingArtifactUsable,
   loadFleetGroupingArtifact,
   materializeGroupPresentationByPilotId,
@@ -40,11 +48,14 @@ export function useDebouncedFleetGrouping(
   options: {
     debounceMs?: number;
     deps?: Partial<DebouncedFleetGroupingDeps>;
+    logDebug?: (message: string, data?: unknown) => void;
   } = {}
 ): {
   sortedPilotCards: PilotCard[];
   groupPresentationByPilotId: ReadonlyMap<number, GroupPresentation>;
+  fleetSummaryGroupPresentationByPilotId: ReadonlyMap<number, GroupPresentation>;
 } {
+  const logDebug = options.logDebug;
   const debounceMs = normalizeDebounceMs(options.debounceMs);
   const deps = useMemo(
     () => ({ ...DEFAULT_DEPS, ...(options.deps ?? {}) }),
@@ -54,6 +65,7 @@ export function useDebouncedFleetGrouping(
   const [debouncedPilotCards, setDebouncedPilotCards] = useState<PilotCard[]>(pilotCards);
   const [cachedOrderedPilotIds, setCachedOrderedPilotIds] = useState<number[]>([]);
   const [cachedPresentationByPilotId, setCachedPresentationByPilotId] = useState<ReadonlyMap<number, GroupPresentation>>(new Map());
+  const previousGroupingDiagnosticRef = useRef<FleetGroupingDiagnosticSnapshot | null>(null);
   const selectedPilotIds = useMemo(() => collectSelectedPilotIds(pilotCards), [pilotCards]);
   const selectedPilotIdsKey = useMemo(() => selectedPilotIds.join(","), [selectedPilotIds]);
   const sourceSignature = useMemo(
@@ -94,6 +106,24 @@ export function useDebouncedFleetGrouping(
         if (cancelled) {
           return;
         }
+        const cacheOutcome = describeArtifactCacheOutcome({
+          artifact: cached.artifact,
+          selectedPilotIds: selectedPilotIdsForCache,
+          sourceSignature
+        });
+        if (logDebug) {
+          logDebug(
+            cacheOutcome.usable ? "Fleet grouping artifact cache hit" : "Fleet grouping artifact cache miss",
+            {
+              selectedPilots: selectedPilotIdsForCache.length,
+              stale: cached.stale,
+              reason: cacheOutcome.reason,
+              artifactSelectedPilots: cached.artifact?.selectedPilotIds.length ?? 0,
+              artifactOrderedPilots: cached.artifact?.orderedPilotIds.length ?? 0,
+              sourceSignature: summarizeSourceSignature(sourceSignature)
+            }
+          );
+        }
         if (
           !deps.isFleetGroupingArtifactUsable(cached.artifact, {
             selectedPilotIds: selectedPilotIdsForCache,
@@ -115,9 +145,16 @@ export function useDebouncedFleetGrouping(
             : nextPresentationByPilotId
         );
       })
-      .catch(() => {
+      .catch((error) => {
         if (cancelled) {
           return;
+        }
+        if (logDebug) {
+          logDebug("Fleet grouping artifact cache load failed", {
+            selectedPilots: selectedPilotIdsForCache.length,
+            sourceSignature: summarizeSourceSignature(sourceSignature),
+            error: error instanceof Error ? error.message : String(error)
+          });
         }
         setCachedOrderedPilotIds((previous) => (previous.length === 0 ? previous : []));
         setCachedPresentationByPilotId((previous) => (previous.size === 0 ? previous : new Map()));
@@ -126,7 +163,7 @@ export function useDebouncedFleetGrouping(
     return () => {
       cancelled = true;
     };
-  }, [deps, selectedPilotIdsKey, sourceSignature]);
+  }, [deps, logDebug, selectedPilotIdsKey, sourceSignature]);
 
   const fallbackOrder = useMemo(() => sortPilotCardsByDanger(pilotCards), [pilotCards]);
   const debouncedSortedPilotCards = useMemo(
@@ -179,6 +216,37 @@ export function useDebouncedFleetGrouping(
     () => filterPresentationToCurrentPilots(effectivePresentationByPilotId, currentPilotIdSet),
     [currentPilotIdSet, effectivePresentationByPilotId]
   );
+  const fleetSummaryGroupPresentationByPilotId = effectivePresentationByPilotId;
+
+  useEffect(() => {
+    if (!logDebug) {
+      return;
+    }
+
+    const currentSnapshot = buildFleetGroupingDiagnosticSnapshot({
+      pilotCards: debouncedPilotCards,
+      sourceSignature: debouncedSourceSignature
+    });
+    const previousSnapshot = previousGroupingDiagnosticRef.current;
+    if (!previousSnapshot) {
+      previousGroupingDiagnosticRef.current = currentSnapshot;
+      logDebug("Fleet grouping diagnostics baseline", {
+        selectedPilots: currentSnapshot.selectedPilotIds.length,
+        groups: currentSnapshot.groups.length,
+        visibleSuggestions: currentSnapshot.visibleSuggestions.length,
+        internalSuggestions: currentSnapshot.internalSuggestions.length,
+        sourceSignature: summarizeSourceSignature(currentSnapshot.sourceSignature)
+      });
+      return;
+    }
+
+    const delta = buildFleetGroupingDiagnosticDelta(previousSnapshot, currentSnapshot);
+    previousGroupingDiagnosticRef.current = currentSnapshot;
+    if (!delta) {
+      return;
+    }
+    logDebug("Fleet grouping recompute delta", delta);
+  }, [debouncedPilotCards, debouncedSourceSignature, logDebug]);
 
   useEffect(() => {
     if (debouncedSelectedPilotIdsKey.length === 0) {
@@ -203,7 +271,8 @@ export function useDebouncedFleetGrouping(
 
   return {
     sortedPilotCards,
-    groupPresentationByPilotId
+    groupPresentationByPilotId,
+    fleetSummaryGroupPresentationByPilotId
   };
 }
 
@@ -287,7 +356,7 @@ function collectSelectedPilotIds(pilotCards: PilotCard[]): number[] {
   return [...ids].sort((a, b) => a - b);
 }
 
-function arrayEquals(left: number[], right: number[]): boolean {
+function arrayEquals<T>(left: T[], right: T[]): boolean {
   if (left.length !== right.length) {
     return false;
   }
@@ -315,7 +384,12 @@ function presentationMapEquals(
       leftPresentation.groupId !== rightPresentation.groupId ||
       leftPresentation.groupColorToken !== rightPresentation.groupColorToken ||
       leftPresentation.isGreyedSuggestion !== rightPresentation.isGreyedSuggestion ||
-      leftPresentation.isUngrouped !== rightPresentation.isUngrouped
+      leftPresentation.isUngrouped !== rightPresentation.isUngrouped ||
+      leftPresentation.suggestionStrongestRatio !== rightPresentation.suggestionStrongestRatio ||
+      leftPresentation.suggestionStrongestSharedKillCount !== rightPresentation.suggestionStrongestSharedKillCount ||
+      leftPresentation.suggestionStrongestWindowKillCount !== rightPresentation.suggestionStrongestWindowKillCount ||
+      leftPresentation.suggestionStrongestSourcePilotId !== rightPresentation.suggestionStrongestSourcePilotId ||
+      leftPresentation.suggestionStrongestSourcePilotName !== rightPresentation.suggestionStrongestSourcePilotName
     ) {
       return false;
     }
@@ -337,6 +411,375 @@ function filterPresentationToCurrentPilots(
     }
   }
   return filtered;
+}
+
+type ArtifactCacheOutcome = {
+  usable: boolean;
+  reason: "usable" | "missing-artifact" | "version-mismatch" | "selected-mismatch" | "source-signature-mismatch";
+};
+
+type PilotEvidenceSnapshot = {
+  pilotId: number;
+  inferenceKillCount: number;
+  inferenceLossCount: number;
+  killmailHead: number[];
+  lossmailHead: number[];
+};
+
+type FleetGroupingDiagnosticSnapshot = {
+  sourceSignature: string;
+  selectedPilotIds: number[];
+  selectedPilotIdSet: ReadonlySet<number>;
+  selectedEvidence: PilotEvidenceSnapshot[];
+  groups: Array<{
+    groupId: string;
+    memberPilotIds: number[];
+    selectedPilotIds: number[];
+    suggestedPilotIds: number[];
+  }>;
+  visibleSuggestions: SuggestedPilot[];
+  visibleSuggestionById: ReadonlyMap<number, SuggestedPilot>;
+  internalSuggestions: SuggestedPilot[];
+  internalSuggestionById: ReadonlyMap<number, SuggestedPilot>;
+};
+
+function describeArtifactCacheOutcome(params: {
+  artifact: FleetGroupingCacheArtifact | null;
+  selectedPilotIds: number[];
+  sourceSignature: string;
+}): ArtifactCacheOutcome {
+  if (!params.artifact) {
+    return { usable: false, reason: "missing-artifact" };
+  }
+  if (params.artifact.version !== 1) {
+    return { usable: false, reason: "version-mismatch" };
+  }
+  const expectedSelectedPilotIds = normalizePilotIdsForDiagnostics(params.selectedPilotIds);
+  if (!arrayEquals(params.artifact.selectedPilotIds, expectedSelectedPilotIds)) {
+    return { usable: false, reason: "selected-mismatch" };
+  }
+  if (params.artifact.sourceSignature !== params.sourceSignature) {
+    return { usable: false, reason: "source-signature-mismatch" };
+  }
+  return { usable: true, reason: "usable" };
+}
+
+function buildFleetGroupingDiagnosticSnapshot(params: {
+  pilotCards: PilotCard[];
+  sourceSignature: string;
+}): FleetGroupingDiagnosticSnapshot {
+  const selectedPilotIds = collectSelectedPilotIds(params.pilotCards);
+  const selectedPilotIdSet = new Set<number>(selectedPilotIds);
+  const pilotCardsById = new Map<number, PilotCard>();
+  const allKnownPilotNamesById = new Map<number, string>();
+  for (const pilot of params.pilotCards) {
+    const pilotId = toValidPilotId(pilot.characterId);
+    if (pilotId === null) {
+      continue;
+    }
+    if (!pilotCardsById.has(pilotId)) {
+      pilotCardsById.set(pilotId, pilot);
+    }
+    const resolvedName = (pilot.characterName ?? pilot.parsedEntry.pilotName).trim();
+    if (resolvedName.length > 0) {
+      allKnownPilotNamesById.set(pilotId, resolvedName);
+    }
+  }
+
+  const selectedEvidence = selectedPilotIds.map((pilotId) => {
+    const pilot = pilotCardsById.get(pilotId);
+    return {
+      pilotId,
+      inferenceKillCount: pilot?.inferenceKills.length ?? 0,
+      inferenceLossCount: pilot?.inferenceLosses.length ?? 0,
+      killmailHead: collectKillmailHead(pilot?.inferenceKills ?? []),
+      lossmailHead: collectKillmailHead(pilot?.inferenceLosses ?? [])
+    };
+  });
+
+  if (selectedPilotIds.length === 0) {
+    return {
+      sourceSignature: params.sourceSignature,
+      selectedPilotIds,
+      selectedPilotIdSet,
+      selectedEvidence,
+      groups: [],
+      visibleSuggestions: [],
+      visibleSuggestionById: new Map(),
+      internalSuggestions: [],
+      internalSuggestionById: new Map()
+    };
+  }
+
+  const grouping = computeFleetGrouping({
+    selectedPilotIds,
+    pilotCardsById,
+    allKnownPilotNamesById,
+    nowMs: 0
+  });
+  return {
+    sourceSignature: params.sourceSignature,
+    selectedPilotIds,
+    selectedPilotIdSet,
+    selectedEvidence,
+    groups: grouping.groups.map((group) => ({
+      groupId: group.groupId,
+      memberPilotIds: group.memberPilotIds.slice(),
+      selectedPilotIds: group.selectedPilotIds.slice(),
+      suggestedPilotIds: group.suggestedPilotIds.slice()
+    })),
+    visibleSuggestions: grouping.suggestions,
+    visibleSuggestionById: indexSuggestionsByCharacterId(grouping.suggestions),
+    internalSuggestions: grouping.state.suggestions,
+    internalSuggestionById: indexSuggestionsByCharacterId(grouping.state.suggestions)
+  };
+}
+
+function buildFleetGroupingDiagnosticDelta(
+  previousSnapshot: FleetGroupingDiagnosticSnapshot,
+  currentSnapshot: FleetGroupingDiagnosticSnapshot
+): Record<string, unknown> | null {
+  const previousGroupIds = previousSnapshot.groups.map((group) => group.groupId);
+  const currentGroupIds = currentSnapshot.groups.map((group) => group.groupId);
+  const addedGroupIds = currentGroupIds.filter((groupId) => !previousGroupIds.includes(groupId));
+  const removedGroupIds = previousGroupIds.filter((groupId) => !currentGroupIds.includes(groupId));
+  const groupOrderChanged =
+    previousGroupIds.length === currentGroupIds.length && !arrayEquals(previousGroupIds, currentGroupIds);
+
+  const previousVisibleIds = previousSnapshot.visibleSuggestions.map((suggestion) => suggestion.characterId);
+  const currentVisibleIds = currentSnapshot.visibleSuggestions.map((suggestion) => suggestion.characterId);
+  const addedVisibleSuggestionIds = currentVisibleIds.filter((pilotId) => !previousVisibleIds.includes(pilotId));
+  const removedVisibleSuggestionIds = previousVisibleIds.filter((pilotId) => !currentVisibleIds.includes(pilotId));
+
+  const addedVisibleSuggestions = addedVisibleSuggestionIds.map((pilotId) => {
+    const suggestion = currentSnapshot.visibleSuggestionById.get(pilotId);
+    return formatSuggestionDebug(suggestion);
+  });
+  const removedVisibleSuggestions = removedVisibleSuggestionIds.map((pilotId) =>
+    classifyRemovedVisibleSuggestion({
+      characterId: pilotId,
+      previousSnapshot,
+      currentSnapshot
+    })
+  );
+
+  const selectedPilotEvidenceChanges = buildSelectedEvidenceChanges(previousSnapshot, currentSnapshot);
+  const sourceSignatureChanged = previousSnapshot.sourceSignature !== currentSnapshot.sourceSignature;
+  const internalSuggestionCountChanged =
+    previousSnapshot.internalSuggestions.length !== currentSnapshot.internalSuggestions.length;
+  const visibleSuggestionOrderChanged =
+    previousVisibleIds.length === currentVisibleIds.length && !arrayEquals(previousVisibleIds, currentVisibleIds);
+
+  if (
+    !sourceSignatureChanged &&
+    addedGroupIds.length === 0 &&
+    removedGroupIds.length === 0 &&
+    !groupOrderChanged &&
+    addedVisibleSuggestions.length === 0 &&
+    removedVisibleSuggestions.length === 0 &&
+    !internalSuggestionCountChanged &&
+    !visibleSuggestionOrderChanged &&
+    selectedPilotEvidenceChanges.length === 0
+  ) {
+    return null;
+  }
+
+  return {
+    selectedPilots: currentSnapshot.selectedPilotIds.length,
+    sourceSignature: {
+      changed: sourceSignatureChanged,
+      previous: summarizeSourceSignature(previousSnapshot.sourceSignature),
+      current: summarizeSourceSignature(currentSnapshot.sourceSignature)
+    },
+    groups: {
+      before: previousSnapshot.groups.length,
+      after: currentSnapshot.groups.length,
+      addedGroupIds: addedGroupIds.slice(0, 10),
+      removedGroupIds: removedGroupIds.slice(0, 10),
+      orderChanged: groupOrderChanged
+    },
+    visibleSuggestions: {
+      before: previousSnapshot.visibleSuggestions.length,
+      after: currentSnapshot.visibleSuggestions.length,
+      added: addedVisibleSuggestions.slice(0, 12),
+      removed: removedVisibleSuggestions.slice(0, 12),
+      orderChanged: visibleSuggestionOrderChanged
+    },
+    internalSuggestionCount: {
+      before: previousSnapshot.internalSuggestions.length,
+      after: currentSnapshot.internalSuggestions.length
+    },
+    selectedPilotEvidenceChanges: selectedPilotEvidenceChanges.slice(0, 12)
+  };
+}
+
+function buildSelectedEvidenceChanges(
+  previousSnapshot: FleetGroupingDiagnosticSnapshot,
+  currentSnapshot: FleetGroupingDiagnosticSnapshot
+): Array<Record<string, unknown>> {
+  const previousByPilotId = new Map(previousSnapshot.selectedEvidence.map((entry) => [entry.pilotId, entry]));
+  const currentByPilotId = new Map(currentSnapshot.selectedEvidence.map((entry) => [entry.pilotId, entry]));
+  const pilotIds = normalizePilotIdsForDiagnostics([
+    ...previousSnapshot.selectedPilotIds,
+    ...currentSnapshot.selectedPilotIds
+  ]);
+  const changes: Array<Record<string, unknown>> = [];
+
+  for (const pilotId of pilotIds) {
+    const previous = previousByPilotId.get(pilotId);
+    const current = currentByPilotId.get(pilotId);
+    if (!previous && current) {
+      changes.push({
+        pilotId,
+        reason: "pilot-added",
+        after: current
+      });
+      continue;
+    }
+    if (previous && !current) {
+      changes.push({
+        pilotId,
+        reason: "pilot-removed",
+        before: previous
+      });
+      continue;
+    }
+    if (!previous || !current) {
+      continue;
+    }
+    if (
+      previous.inferenceKillCount === current.inferenceKillCount &&
+      previous.inferenceLossCount === current.inferenceLossCount &&
+      arrayEquals(previous.killmailHead, current.killmailHead) &&
+      arrayEquals(previous.lossmailHead, current.lossmailHead)
+    ) {
+      continue;
+    }
+    changes.push({
+      pilotId,
+      reason: "killmail-head-changed",
+      before: previous,
+      after: current
+    });
+  }
+
+  return changes;
+}
+
+function classifyRemovedVisibleSuggestion(params: {
+  characterId: number;
+  previousSnapshot: FleetGroupingDiagnosticSnapshot;
+  currentSnapshot: FleetGroupingDiagnosticSnapshot;
+}): Record<string, unknown> {
+  const previousVisible = params.previousSnapshot.visibleSuggestionById.get(params.characterId);
+  const currentInternal = params.currentSnapshot.internalSuggestionById.get(params.characterId);
+
+  if (params.currentSnapshot.selectedPilotIdSet.has(params.characterId)) {
+    return {
+      ...formatSuggestionDebug(previousVisible),
+      reason: "promoted-to-selected"
+    };
+  }
+  if (!currentInternal) {
+    return {
+      ...formatSuggestionDebug(previousVisible),
+      reason: "no-current-cofly-evidence"
+    };
+  }
+  if (!currentInternal.eligible) {
+    return {
+      ...formatSuggestionDebug(previousVisible),
+      reason: "below-visibility-threshold",
+      currentStrongestRatio: currentInternal.strongestRatio,
+      currentStrongestSharedKillCount: currentInternal.strongestSharedKillCount,
+      currentStrongestWindowKillCount: currentInternal.strongestWindowKillCount,
+      currentSourcePilotIds: currentInternal.sourcePilotIds
+    };
+  }
+  return {
+    ...formatSuggestionDebug(previousVisible),
+    reason: "trimmed-by-adaptive-cap",
+    currentStrongestRatio: currentInternal.strongestRatio,
+    currentStrongestSharedKillCount: currentInternal.strongestSharedKillCount,
+    currentStrongestWindowKillCount: currentInternal.strongestWindowKillCount,
+    currentSourcePilotIds: currentInternal.sourcePilotIds
+  };
+}
+
+function formatSuggestionDebug(suggestion: SuggestedPilot | undefined): Record<string, unknown> {
+  if (!suggestion) {
+    return {};
+  }
+  return {
+    characterId: suggestion.characterId,
+    name: suggestion.name,
+    strongestRatio: suggestion.strongestRatio,
+    strongestSharedKillCount: suggestion.strongestSharedKillCount,
+    strongestWindowKillCount: suggestion.strongestWindowKillCount,
+    visibilityRatioThreshold: CO_FLY_RATIO_THRESHOLD,
+    visibilityWindowMinKills: CO_FLY_RECENT_KILL_WINDOW_MIN,
+    visibilityWindowMaxKills: CO_FLY_RECENT_KILL_WINDOW_MAX,
+    sourcePilotIds: suggestion.sourcePilotIds
+  };
+}
+
+function indexSuggestionsByCharacterId(suggestions: SuggestedPilot[]): ReadonlyMap<number, SuggestedPilot> {
+  const byCharacterId = new Map<number, SuggestedPilot>();
+  for (const suggestion of suggestions) {
+    if (!Number.isInteger(suggestion.characterId) || suggestion.characterId <= 0 || byCharacterId.has(suggestion.characterId)) {
+      continue;
+    }
+    byCharacterId.set(suggestion.characterId, suggestion);
+  }
+  return byCharacterId;
+}
+
+function collectKillmailHead(rows: PilotCard["inferenceKills"] | PilotCard["inferenceLosses"]): number[] {
+  const ids: number[] = [];
+  for (const row of rows) {
+    if (!Number.isInteger(row.killmail_id) || row.killmail_id <= 0) {
+      continue;
+    }
+    ids.push(row.killmail_id);
+    if (ids.length >= 4) {
+      break;
+    }
+  }
+  return ids;
+}
+
+function summarizeSourceSignature(sourceSignature: string): {
+  preview: string;
+  length: number;
+  hash: string;
+} {
+  const previewMax = 96;
+  return {
+    preview: sourceSignature.length <= previewMax
+      ? sourceSignature
+      : `${sourceSignature.slice(0, previewMax)}...`,
+    length: sourceSignature.length,
+    hash: stableHashHex(sourceSignature)
+  };
+}
+
+function stableHashHex(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function normalizePilotIdsForDiagnostics(pilotIds: number[]): number[] {
+  const ids = new Set<number>();
+  for (const pilotId of pilotIds) {
+    if (Number.isInteger(pilotId) && pilotId > 0) {
+      ids.add(pilotId);
+    }
+  }
+  return [...ids].sort((a, b) => a - b);
 }
 
 function toValidPilotId(value?: number): number | null {

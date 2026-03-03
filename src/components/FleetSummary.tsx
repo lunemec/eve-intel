@@ -1,5 +1,6 @@
 import { memo } from "react";
 import type { GroupPresentation } from "../lib/appViewModel";
+import { deriveGroupRunPositionsByIndex } from "../lib/groupRuns";
 import type { PilotCard } from "../lib/pilotDomain";
 import { FleetSummaryHeaderSubview, FleetSummaryRowSubview } from "./fleetSummarySubviews";
 
@@ -21,6 +22,7 @@ export const FleetSummary = memo(function FleetSummary(props: FleetSummaryProps)
     groupPresentationByPilotId,
     scrollDurationMs
   } = props;
+  const groupRunPositionsByIndex = deriveGroupRunPositionsByIndex(pilotCards, groupPresentationByPilotId);
   return (
     <section className="fleet-summary">
       <FleetSummaryHeaderSubview
@@ -30,11 +32,12 @@ export const FleetSummary = memo(function FleetSummary(props: FleetSummaryProps)
         logDebug={logDebug}
       />
       <ul className="fleet-summary-list">
-        {pilotCards.map((pilot) => (
+        {pilotCards.map((pilot, index) => (
           <FleetSummaryRowSubview
             key={`summary-${pilot.parsedEntry.pilotName.toLowerCase()}`}
             pilot={pilot}
             groupPresentation={resolveGroupPresentation(groupPresentationByPilotId, pilot.characterId)}
+            groupRunPosition={groupRunPositionsByIndex[index]}
             scrollDurationMs={scrollDurationMs}
           />
         ))}

@@ -71,22 +71,22 @@ describe("fleetGrouping", () => {
     });
   });
 
-  it("enforces strict ratio boundary (>80%) for visible suggestions", () => {
+  it("enforces strict ratio boundary (>80%) against the recent 100-kill window", () => {
     const anchorId = 1001;
-    const candidate799 = 2001;
-    const candidate800 = 2002;
-    const candidate801 = 2003;
+    const candidate79 = 2001;
+    const candidate80 = 2002;
+    const candidate81 = 2003;
 
     const kills = Array.from({ length: 1000 }, (_, index) => {
       const attackers = [anchorId];
-      if (index < 799) {
-        attackers.push(candidate799);
+      if (index < 79) {
+        attackers.push(candidate79);
       }
-      if (index < 800) {
-        attackers.push(candidate800);
+      if (index < 80) {
+        attackers.push(candidate80);
       }
-      if (index < 801) {
-        attackers.push(candidate801);
+      if (index < 81) {
+        attackers.push(candidate81);
       }
       return killmail(index + 1, attackers);
     });
@@ -95,32 +95,35 @@ describe("fleetGrouping", () => {
       selectedPilotIds: [anchorId],
       pilotCardsById: new Map([[anchorId, pilotCard(anchorId, "Anchor One", kills)]]),
       allKnownPilotNamesById: new Map([
-        [candidate799, "Cand 79.9"],
-        [candidate800, "Cand 80.0"],
-        [candidate801, "Cand 80.1"]
+        [candidate79, "Cand 79.0"],
+        [candidate80, "Cand 80.0"],
+        [candidate81, "Cand 81.0"]
       ]),
       nowMs: 100
     });
 
-    expect(output.suggestions.map((row) => row.characterId)).toEqual([candidate801]);
+    expect(output.suggestions.map((row) => row.characterId)).toEqual([candidate81]);
 
     const byCandidateId = new Map(output.state.suggestions.map((row) => [row.characterId, row]));
-    expect(byCandidateId.get(candidate799)).toMatchObject({
-      characterId: candidate799,
-      strongestRatio: 0.799,
-      strongestSharedKillCount: 799,
+    expect(byCandidateId.get(candidate79)).toMatchObject({
+      characterId: candidate79,
+      strongestRatio: 0.79,
+      strongestSharedKillCount: 79,
+      strongestWindowKillCount: 100,
       eligible: false
     });
-    expect(byCandidateId.get(candidate800)).toMatchObject({
-      characterId: candidate800,
+    expect(byCandidateId.get(candidate80)).toMatchObject({
+      characterId: candidate80,
       strongestRatio: 0.8,
-      strongestSharedKillCount: 800,
+      strongestSharedKillCount: 80,
+      strongestWindowKillCount: 100,
       eligible: false
     });
-    expect(byCandidateId.get(candidate801)).toMatchObject({
-      characterId: candidate801,
-      strongestRatio: 0.801,
-      strongestSharedKillCount: 801,
+    expect(byCandidateId.get(candidate81)).toMatchObject({
+      characterId: candidate81,
+      strongestRatio: 0.81,
+      strongestSharedKillCount: 81,
+      strongestWindowKillCount: 100,
       eligible: true
     });
   });
@@ -151,12 +154,14 @@ describe("fleetGrouping", () => {
       characterId: candidate9,
       strongestRatio: 0.9,
       strongestSharedKillCount: 9,
+      strongestWindowKillCount: 10,
       eligible: false
     });
     expect(byCandidateId.get(candidate10)).toMatchObject({
       characterId: candidate10,
       strongestRatio: 1,
       strongestSharedKillCount: 10,
+      strongestWindowKillCount: 10,
       eligible: true
     });
   });
@@ -216,9 +221,7 @@ describe("fleetGrouping", () => {
       suggestedPilotIds: [suggestedCharlie],
       weightedConfidence: 1
     });
-    expect(output.groups[0]?.colorIndex).toBe(
-      stableFleetGroupColorIndex(output.groups[0]?.groupId ?? "", FLEET_GROUP_PALETTE_SIZE)
-    );
+    expect(output.groups[0]?.colorIndex).toBe(0);
     expect(output.orderedPilotIds).toEqual([selectedAlpha, selectedBravo, suggestedCharlie]);
     expect(output.state.groups).toEqual(output.groups);
     expect(output.state.orderedPilotIds).toEqual(output.orderedPilotIds);
@@ -296,6 +299,32 @@ describe("fleetGrouping", () => {
       stableFleetGroupId([selectedZulu, suggestedZulu])
     ]);
     expect(outputB.groups.map((group) => group.groupId)).toEqual(outputA.groups.map((group) => group.groupId));
+  });
+
+  it("assigns adjacent groups to high-contrast palette slots", () => {
+    const selectedZulu = 9101;
+    const selectedAlpha = 9201;
+    const suggestedZulu = 9102;
+    const suggestedAlpha = 9202;
+
+    const zuluKills = killmailSeries(91000, 10, () => [selectedZulu, suggestedZulu]);
+    const alphaKills = killmailSeries(92000, 10, () => [selectedAlpha, suggestedAlpha]);
+
+    const output = computeFleetGrouping({
+      selectedPilotIds: [selectedZulu, selectedAlpha],
+      pilotCardsById: new Map([
+        [selectedZulu, pilotCard(selectedZulu, "Zulu Anchor", zuluKills)],
+        [selectedAlpha, pilotCard(selectedAlpha, "Alpha Anchor", alphaKills)]
+      ]),
+      allKnownPilotNamesById: new Map([
+        [suggestedZulu, "Zulu Wing"],
+        [suggestedAlpha, "Alpha Wing"]
+      ]),
+      nowMs: 1000
+    });
+
+    expect(output.groups).toHaveLength(2);
+    expect(output.groups.map((group) => group.colorIndex)).toEqual([0, 3]);
   });
 
   it("deduplicates globally and preserves multi-source links for repeated candidates", () => {
