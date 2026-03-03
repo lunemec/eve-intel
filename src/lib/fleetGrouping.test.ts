@@ -178,6 +178,112 @@ describe("fleetGrouping", () => {
       eligible: true
     });
   });
+
+  it("builds connected components and orders selected pilots before suggested pilots", () => {
+    const selectedAlpha = 5001;
+    const selectedBravo = 5002;
+    const suggestedCharlie = 5003;
+
+    const alphaKills = killmailSeries(50000, 12, () => [selectedAlpha, selectedBravo]);
+    const bravoKills = killmailSeries(51000, 12, () => [selectedBravo, suggestedCharlie]);
+
+    const output = computeFleetGrouping({
+      selectedPilotIds: [selectedBravo, selectedAlpha],
+      pilotCardsById: new Map([
+        [selectedBravo, pilotCard(selectedBravo, "Bravo Anchor", bravoKills)],
+        [selectedAlpha, pilotCard(selectedAlpha, "Alpha Anchor", alphaKills)]
+      ]),
+      allKnownPilotNamesById: new Map([[suggestedCharlie, "Charlie Wing"]]),
+      nowMs: 400
+    });
+
+    expect(output.suggestions.map((suggestion) => suggestion.characterId)).toEqual([suggestedCharlie]);
+    expect(output.groups).toHaveLength(1);
+    expect(output.groups[0]).toMatchObject({
+      groupId: stableFleetGroupId([selectedAlpha, selectedBravo, suggestedCharlie]),
+      memberPilotIds: [selectedAlpha, selectedBravo, suggestedCharlie],
+      selectedPilotIds: [selectedAlpha, selectedBravo],
+      suggestedPilotIds: [suggestedCharlie],
+      weightedConfidence: 1
+    });
+    expect(output.orderedPilotIds).toEqual([selectedAlpha, selectedBravo, suggestedCharlie]);
+    expect(output.state.groups).toEqual(output.groups);
+    expect(output.state.orderedPilotIds).toEqual(output.orderedPilotIds);
+  });
+
+  it("suppresses suggested-only components from displayed groups", () => {
+    const selectedAnchor = 6101;
+    const suggestedDelta = 6201;
+    const suggestedEcho = 6202;
+
+    const anchorKills = killmailSeries(62000, 12, () => [
+      selectedAnchor,
+      suggestedDelta,
+      suggestedEcho
+    ]);
+
+    const output = computeFleetGrouping({
+      selectedPilotIds: [selectedAnchor],
+      pilotCardsById: new Map([[selectedAnchor, pilotCard(selectedAnchor, "Anchor", anchorKills)]]),
+      allKnownPilotNamesById: new Map([
+        [suggestedDelta, "Delta Wing"],
+        [suggestedEcho, "Echo Wing"]
+      ]),
+      nowMs: 500
+    });
+
+    expect(output.groups).toHaveLength(1);
+    expect(output.groups[0]).toMatchObject({
+      memberPilotIds: [selectedAnchor, suggestedDelta, suggestedEcho],
+      selectedPilotIds: [selectedAnchor],
+      suggestedPilotIds: [suggestedDelta, suggestedEcho]
+    });
+    expect(output.groups.every((group) => group.selectedPilotIds.length > 0)).toBe(true);
+  });
+
+  it("uses deterministic alphabetical tie-breaks for equal-strength groups", () => {
+    const selectedZulu = 7101;
+    const selectedAlpha = 7201;
+    const suggestedZulu = 7102;
+    const suggestedAlpha = 7202;
+
+    const zuluKills = killmailSeries(71000, 10, () => [selectedZulu, suggestedZulu]);
+    const alphaKills = killmailSeries(72000, 10, () => [selectedAlpha, suggestedAlpha]);
+
+    const outputA = computeFleetGrouping({
+      selectedPilotIds: [selectedZulu, selectedAlpha],
+      pilotCardsById: new Map([
+        [selectedZulu, pilotCard(selectedZulu, "Zulu Anchor", zuluKills)],
+        [selectedAlpha, pilotCard(selectedAlpha, "Alpha Anchor", alphaKills)]
+      ]),
+      allKnownPilotNamesById: new Map([
+        [suggestedZulu, "Zulu Wing"],
+        [suggestedAlpha, "Alpha Wing"]
+      ]),
+      nowMs: 600
+    });
+
+    const outputB = computeFleetGrouping({
+      selectedPilotIds: [selectedAlpha, selectedZulu],
+      pilotCardsById: new Map([
+        [selectedAlpha, pilotCard(selectedAlpha, "Alpha Anchor", alphaKills)],
+        [selectedZulu, pilotCard(selectedZulu, "Zulu Anchor", zuluKills)]
+      ]),
+      allKnownPilotNamesById: new Map([
+        [suggestedAlpha, "Alpha Wing"],
+        [suggestedZulu, "Zulu Wing"]
+      ]),
+      nowMs: 601
+    });
+
+    expect(outputA.orderedPilotIds).toEqual([selectedAlpha, suggestedAlpha, selectedZulu, suggestedZulu]);
+    expect(outputB.orderedPilotIds).toEqual(outputA.orderedPilotIds);
+    expect(outputA.groups.map((group) => group.groupId)).toEqual([
+      stableFleetGroupId([selectedAlpha, suggestedAlpha]),
+      stableFleetGroupId([selectedZulu, suggestedZulu])
+    ]);
+    expect(outputB.groups.map((group) => group.groupId)).toEqual(outputA.groups.map((group) => group.groupId));
+  });
 });
 
 function pilotCard(characterId: number, pilotName: string, inferenceKills: ZkillKillmail[]): PilotCard {
@@ -207,4 +313,10 @@ function killmail(killmailId: number, attackerCharacterIds: number[]): ZkillKill
     victim: {},
     attackers: attackerCharacterIds.map((characterId) => ({ character_id: characterId }))
   };
+}
+
+function killmailSeries(startKillmailId: number, count: number, attackersForIndex: (index: number) => number[]): ZkillKillmail[] {
+  return Array.from({ length: count }, (_, index) =>
+    killmail(startKillmailId + index, attackersForIndex(index))
+  );
 }

@@ -9,6 +9,8 @@ All notable changes to this project are documented in this file.
 - Added focused red/green coverage in `src/lib/fleetGrouping.test.ts` for empty-state shape, signature normalization, deterministic group-id hashing, and stable skeleton output.
 - Implemented Step-2 co-fly extraction and thresholding in `src/lib/fleetGrouping.ts` by deriving per-selected attacker co-occurrence evidence from `inferenceKills`, tracking internal suggestion confidence (`strongestRatio`, `strongestSharedKillCount`, `sourcePilotIds`), and exposing only visible suggestions that pass `ratio > 80%` and `sharedKillCount >= 10`.
 - Added Step-2 regression coverage in `src/lib/fleetGrouping.test.ts` for strict ratio boundaries (`79.9%`/`80.0%` fail, `80.1%` pass), shared-kill visibility gating (`9` fail, `10` pass), and per-selected scoping to prevent fleet-wide co-fly bleed.
+- Implemented Step-3 grouping/ranking in `src/lib/fleetGrouping.ts` by building threshold-qualified graph links into connected components, suppressing suggested-only components, computing weighted-confidence ordering, and emitting deterministic grouped pilot ordering with selected-before-suggested intra-group sorting.
+- Added Step-3 regression coverage in `src/lib/fleetGrouping.test.ts` for connected-component formation (`A-B-C` chaining), suggested-only component suppression invariants, and deterministic alphabetical tie-break ordering across equal-strength groups.
 
 ## v0.3.5 - 2026-03-03
 - Hardened changelog workflow governance to require `## Unreleased` as the first changelog section, preventing in-flight release notes from being added directly under released version snapshots.

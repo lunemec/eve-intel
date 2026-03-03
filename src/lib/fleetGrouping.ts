@@ -81,6 +81,7 @@ export function stableFleetGroupId(memberPilotIds: number[]): string {
 
 export function computeFleetGrouping(input: FleetGroupingInput): FleetGroupingOutput {
   const selectedPilotIds = normalizePilotIds(input.selectedPilotIds);
+  const selectedPilotIdSet = new Set(selectedPilotIds);
   const sourceSignature = buildFleetGroupingSourceSignature(selectedPilotIds);
   const coFlyEvidence = extractCoFlyEvidence({
     selectedPilotIds,
@@ -88,21 +89,32 @@ export function computeFleetGrouping(input: FleetGroupingInput): FleetGroupingOu
   });
   const internalSuggestions = buildSuggestedPilots({
     coFlyEvidence,
+    selectedPilotIdSet,
     allKnownPilotNamesById: input.allKnownPilotNamesById,
     pilotCardsById: input.pilotCardsById
   });
   const visibleSuggestions = internalSuggestions.filter((suggestion) => suggestion.eligible);
+  const groupedOutput = buildFleetGroups({
+    selectedPilotIds,
+    selectedPilotIdSet,
+    coFlyEvidence,
+    visibleSuggestions,
+    allKnownPilotNamesById: input.allKnownPilotNamesById,
+    pilotCardsById: input.pilotCardsById
+  });
 
   const state = createEmptyFleetGroupingState({
     generatedAtMs: input.nowMs,
     sourceSignature
   });
   state.suggestions = internalSuggestions;
+  state.groups = groupedOutput.groups;
+  state.orderedPilotIds = groupedOutput.orderedPilotIds;
 
   return {
     state,
-    orderedPilotIds: [],
-    groups: [],
+    orderedPilotIds: groupedOutput.orderedPilotIds,
+    groups: groupedOutput.groups,
     suggestions: visibleSuggestions
   };
 }
@@ -174,6 +186,7 @@ function extractCoFlyEvidence(params: {
 
 function buildSuggestedPilots(params: {
   coFlyEvidence: CoFlyEvidence[];
+  selectedPilotIdSet: Set<number>;
   allKnownPilotNamesById: Map<number, string>;
   pilotCardsById: Map<number, PilotCard>;
 }): SuggestedPilot[] {
@@ -190,11 +203,15 @@ function buildSuggestedPilots(params: {
   >();
 
   for (const evidence of params.coFlyEvidence) {
+    if (params.selectedPilotIdSet.has(evidence.candidatePilotId)) {
+      continue;
+    }
+
     let suggestion = suggestionsByCharacterId.get(evidence.candidatePilotId);
     if (!suggestion) {
       suggestion = {
         characterId: evidence.candidatePilotId,
-        name: resolveSuggestedPilotName({
+        name: resolvePilotName({
           characterId: evidence.candidatePilotId,
           allKnownPilotNamesById: params.allKnownPilotNamesById,
           pilotCardsById: params.pilotCardsById
@@ -232,7 +249,7 @@ function buildSuggestedPilots(params: {
     .sort((left, right) => left.name.localeCompare(right.name, "en", { sensitivity: "base" }) || left.characterId - right.characterId);
 }
 
-function resolveSuggestedPilotName(params: {
+function resolvePilotName(params: {
   characterId: number;
   allKnownPilotNamesById: Map<number, string>;
   pilotCardsById: Map<number, PilotCard>;
@@ -252,4 +269,282 @@ function resolveSuggestedPilotName(params: {
 
 function meetsSuggestionVisibilityThreshold(evidence: CoFlyEvidence): boolean {
   return evidence.ratio > CO_FLY_RATIO_THRESHOLD && evidence.sharedKillCount >= CO_FLY_SHARED_KILL_THRESHOLD;
+}
+
+function buildFleetGroups(params: {
+  selectedPilotIds: number[];
+  selectedPilotIdSet: Set<number>;
+  coFlyEvidence: CoFlyEvidence[];
+  visibleSuggestions: SuggestedPilot[];
+  allKnownPilotNamesById: Map<number, string>;
+  pilotCardsById: Map<number, PilotCard>;
+}): { groups: FleetGroup[]; orderedPilotIds: number[] } {
+  const visiblePilotIdSet = new Set<number>(params.selectedPilotIds);
+  for (const suggestion of params.visibleSuggestions) {
+    visiblePilotIdSet.add(suggestion.characterId);
+  }
+
+  const qualifiedRelations = collectQualifiedRelations({
+    coFlyEvidence: params.coFlyEvidence,
+    visiblePilotIdSet
+  });
+  if (qualifiedRelations.length === 0) {
+    return {
+      groups: [],
+      orderedPilotIds: []
+    };
+  }
+
+  const adjacencyByPilotId = new Map<number, Set<number>>();
+  for (const relation of qualifiedRelations) {
+    linkPilots(adjacencyByPilotId, relation.leftPilotId, relation.rightPilotId);
+    linkPilots(adjacencyByPilotId, relation.rightPilotId, relation.leftPilotId);
+  }
+
+  const components = collectConnectedComponents(adjacencyByPilotId);
+  const groups: FleetGroup[] = [];
+  for (const componentPilotIds of components) {
+    const componentPilotIdSet = new Set(componentPilotIds);
+    const selectedPilotIds = componentPilotIds
+      .filter((pilotId) => params.selectedPilotIdSet.has(pilotId))
+      .sort((leftPilotId, rightPilotId) =>
+        comparePilotIdsByName(leftPilotId, rightPilotId, {
+          allKnownPilotNamesById: params.allKnownPilotNamesById,
+          pilotCardsById: params.pilotCardsById
+        })
+      );
+
+    if (selectedPilotIds.length === 0) {
+      continue;
+    }
+
+    const suggestedPilotIds = componentPilotIds
+      .filter((pilotId) => !params.selectedPilotIdSet.has(pilotId))
+      .sort((leftPilotId, rightPilotId) =>
+        comparePilotIdsByName(leftPilotId, rightPilotId, {
+          allKnownPilotNamesById: params.allKnownPilotNamesById,
+          pilotCardsById: params.pilotCardsById
+        })
+      );
+    const memberPilotIds = [...selectedPilotIds, ...suggestedPilotIds];
+
+    let weightedRatioSum = 0;
+    let totalWeight = 0;
+    for (const relation of qualifiedRelations) {
+      if (
+        componentPilotIdSet.has(relation.leftPilotId) &&
+        componentPilotIdSet.has(relation.rightPilotId)
+      ) {
+        weightedRatioSum += relation.ratio * relation.sharedKillCount;
+        totalWeight += relation.sharedKillCount;
+      }
+    }
+
+    groups.push({
+      groupId: stableFleetGroupId(memberPilotIds),
+      memberPilotIds,
+      selectedPilotIds,
+      suggestedPilotIds,
+      weightedConfidence: totalWeight > 0 ? weightedRatioSum / totalWeight : 0,
+      colorIndex: 0
+    });
+  }
+
+  groups.sort((leftGroup, rightGroup) => {
+    const confidenceDelta = rightGroup.weightedConfidence - leftGroup.weightedConfidence;
+    if (Math.abs(confidenceDelta) > 1e-12) {
+      return confidenceDelta;
+    }
+
+    const leftSortKey = buildGroupAlphabeticalSortKey(leftGroup.memberPilotIds, {
+      allKnownPilotNamesById: params.allKnownPilotNamesById,
+      pilotCardsById: params.pilotCardsById
+    });
+    const rightSortKey = buildGroupAlphabeticalSortKey(rightGroup.memberPilotIds, {
+      allKnownPilotNamesById: params.allKnownPilotNamesById,
+      pilotCardsById: params.pilotCardsById
+    });
+    const groupNameCompare = leftSortKey.localeCompare(rightSortKey, "en", { sensitivity: "base" });
+    if (groupNameCompare !== 0) {
+      return groupNameCompare;
+    }
+    return leftGroup.groupId.localeCompare(rightGroup.groupId, "en", { sensitivity: "base" });
+  });
+
+  if (groups.length === 0) {
+    return {
+      groups: [],
+      orderedPilotIds: []
+    };
+  }
+
+  const groupedPilotIds = new Set<number>();
+  const orderedPilotIds: number[] = [];
+  for (const group of groups) {
+    for (const memberPilotId of group.memberPilotIds) {
+      if (groupedPilotIds.has(memberPilotId)) {
+        continue;
+      }
+      groupedPilotIds.add(memberPilotId);
+      orderedPilotIds.push(memberPilotId);
+    }
+  }
+
+  const ungroupedSelectedPilotIds = params.selectedPilotIds
+    .filter((pilotId) => !groupedPilotIds.has(pilotId))
+    .sort((leftPilotId, rightPilotId) =>
+      comparePilotIdsByName(leftPilotId, rightPilotId, {
+        allKnownPilotNamesById: params.allKnownPilotNamesById,
+        pilotCardsById: params.pilotCardsById
+      })
+    );
+  orderedPilotIds.push(...ungroupedSelectedPilotIds);
+
+  return {
+    groups,
+    orderedPilotIds
+  };
+}
+
+function collectQualifiedRelations(params: {
+  coFlyEvidence: CoFlyEvidence[];
+  visiblePilotIdSet: Set<number>;
+}): Array<{
+  leftPilotId: number;
+  rightPilotId: number;
+  ratio: number;
+  sharedKillCount: number;
+}> {
+  const strongestRelationByPair = new Map<
+    string,
+    { leftPilotId: number; rightPilotId: number; ratio: number; sharedKillCount: number }
+  >();
+
+  for (const evidence of params.coFlyEvidence) {
+    if (!meetsGroupingRelationThreshold(evidence)) {
+      continue;
+    }
+    if (
+      !params.visiblePilotIdSet.has(evidence.anchorPilotId) ||
+      !params.visiblePilotIdSet.has(evidence.candidatePilotId)
+    ) {
+      continue;
+    }
+    if (evidence.anchorPilotId === evidence.candidatePilotId) {
+      continue;
+    }
+
+    const leftPilotId = Math.min(evidence.anchorPilotId, evidence.candidatePilotId);
+    const rightPilotId = Math.max(evidence.anchorPilotId, evidence.candidatePilotId);
+    const relationKey = `${leftPilotId}:${rightPilotId}`;
+    const existing = strongestRelationByPair.get(relationKey);
+    if (
+      !existing ||
+      evidence.ratio > existing.ratio ||
+      (evidence.ratio === existing.ratio && evidence.sharedKillCount > existing.sharedKillCount)
+    ) {
+      strongestRelationByPair.set(relationKey, {
+        leftPilotId,
+        rightPilotId,
+        ratio: evidence.ratio,
+        sharedKillCount: evidence.sharedKillCount
+      });
+    }
+  }
+
+  return [...strongestRelationByPair.values()].sort(
+    (left, right) =>
+      left.leftPilotId - right.leftPilotId || left.rightPilotId - right.rightPilotId
+  );
+}
+
+function linkPilots(adjacencyByPilotId: Map<number, Set<number>>, fromPilotId: number, toPilotId: number): void {
+  let neighbors = adjacencyByPilotId.get(fromPilotId);
+  if (!neighbors) {
+    neighbors = new Set<number>();
+    adjacencyByPilotId.set(fromPilotId, neighbors);
+  }
+  neighbors.add(toPilotId);
+}
+
+function collectConnectedComponents(adjacencyByPilotId: Map<number, Set<number>>): number[][] {
+  const visitedPilotIds = new Set<number>();
+  const components: number[][] = [];
+  const seedPilotIds = [...adjacencyByPilotId.keys()].sort((left, right) => left - right);
+
+  for (const seedPilotId of seedPilotIds) {
+    if (visitedPilotIds.has(seedPilotId)) {
+      continue;
+    }
+
+    const stack = [seedPilotId];
+    const component: number[] = [];
+    while (stack.length > 0) {
+      const currentPilotId = stack.pop();
+      if (typeof currentPilotId !== "number" || visitedPilotIds.has(currentPilotId)) {
+        continue;
+      }
+
+      visitedPilotIds.add(currentPilotId);
+      component.push(currentPilotId);
+
+      const neighbors = [...(adjacencyByPilotId.get(currentPilotId) ?? [])].sort(
+        (left, right) => right - left
+      );
+      for (const neighborPilotId of neighbors) {
+        if (!visitedPilotIds.has(neighborPilotId)) {
+          stack.push(neighborPilotId);
+        }
+      }
+    }
+    components.push(component);
+  }
+
+  return components;
+}
+
+function comparePilotIdsByName(
+  leftPilotId: number,
+  rightPilotId: number,
+  params: {
+    allKnownPilotNamesById: Map<number, string>;
+    pilotCardsById: Map<number, PilotCard>;
+  }
+): number {
+  const leftName = resolvePilotName({
+    characterId: leftPilotId,
+    allKnownPilotNamesById: params.allKnownPilotNamesById,
+    pilotCardsById: params.pilotCardsById
+  });
+  const rightName = resolvePilotName({
+    characterId: rightPilotId,
+    allKnownPilotNamesById: params.allKnownPilotNamesById,
+    pilotCardsById: params.pilotCardsById
+  });
+  return leftName.localeCompare(rightName, "en", { sensitivity: "base" }) || leftPilotId - rightPilotId;
+}
+
+function buildGroupAlphabeticalSortKey(
+  memberPilotIds: number[],
+  params: {
+    allKnownPilotNamesById: Map<number, string>;
+    pilotCardsById: Map<number, PilotCard>;
+  }
+): string {
+  const sortedMemberIds = [...memberPilotIds].sort((leftPilotId, rightPilotId) =>
+    comparePilotIdsByName(leftPilotId, rightPilotId, params)
+  );
+  return sortedMemberIds
+    .map((pilotId) =>
+      resolvePilotName({
+        characterId: pilotId,
+        allKnownPilotNamesById: params.allKnownPilotNamesById,
+        pilotCardsById: params.pilotCardsById
+      }).toLocaleLowerCase("en-US")
+    )
+    .join("|");
+}
+
+function meetsGroupingRelationThreshold(evidence: CoFlyEvidence): boolean {
+  return meetsSuggestionVisibilityThreshold(evidence);
 }
