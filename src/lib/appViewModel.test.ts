@@ -180,6 +180,8 @@ describe("deriveGroupPresentationByPilotId", () => {
 
     expect(alphaPresentation?.groupId).toBeTruthy();
     expect(bravoPresentation?.groupId).toBe(alphaPresentation?.groupId);
+    expect(alphaPresentation?.groupColorToken).toMatch(/^fleet-group-color-\d+$/);
+    expect(bravoPresentation?.groupColorToken).toBe(alphaPresentation?.groupColorToken);
     expect(alphaPresentation?.isUngrouped).toBe(false);
     expect(bravoPresentation?.isUngrouped).toBe(false);
     expect(alphaPresentation?.isGreyedSuggestion).toBe(false);

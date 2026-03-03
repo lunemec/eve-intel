@@ -3,6 +3,7 @@ import type { PilotCard } from "./pilotDomain";
 export const FLEET_GROUPING_VERSION = 1 as const;
 export const CO_FLY_RATIO_THRESHOLD = 0.8;
 export const CO_FLY_SHARED_KILL_THRESHOLD = 10;
+export const FLEET_GROUP_PALETTE_SIZE = 6;
 const DEFAULT_PER_SELECTED_SUGGESTION_CAP = 3;
 const ADAPTIVE_PER_SELECTED_SUGGESTION_CAPS = [DEFAULT_PER_SELECTED_SUGGESTION_CAP, 2, 1] as const;
 const GLOBAL_SUGGESTION_CAP = 10;
@@ -80,6 +81,16 @@ export function stableFleetGroupId(memberPilotIds: number[]): string {
   const normalizedIds = normalizePilotIds(memberPilotIds);
   const signature = normalizedIds.join(",");
   return `fleet-group-v1-${stableHashHex(signature)}`;
+}
+
+export function stableFleetGroupColorIndex(groupId: string, paletteSize = FLEET_GROUP_PALETTE_SIZE): number {
+  const normalizedPaletteSize = Number.isInteger(paletteSize) && paletteSize > 0 ? paletteSize : 1;
+  const suffixMatch = /([0-9a-f]{8})$/i.exec(groupId);
+  const parsedHash = suffixMatch ? Number.parseInt(suffixMatch[1], 16) : Number.parseInt(stableHashHex(groupId), 16);
+  if (!Number.isInteger(parsedHash) || parsedHash < 0) {
+    return 0;
+  }
+  return parsedHash % normalizedPaletteSize;
 }
 
 export function computeFleetGrouping(input: FleetGroupingInput): FleetGroupingOutput {
@@ -543,13 +554,14 @@ function buildFleetGroups(params: {
       }
     }
 
+    const groupId = stableFleetGroupId(memberPilotIds);
     groups.push({
-      groupId: stableFleetGroupId(memberPilotIds),
+      groupId,
       memberPilotIds,
       selectedPilotIds,
       suggestedPilotIds,
       weightedConfidence: totalWeight > 0 ? weightedRatioSum / totalWeight : 0,
-      colorIndex: 0
+      colorIndex: stableFleetGroupColorIndex(groupId)
     });
   }
 

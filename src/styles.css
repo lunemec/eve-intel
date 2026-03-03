@@ -470,6 +470,72 @@ body {
   padding-left: 6px;
 }
 
+[data-group-color-token] {
+  --group-accent: #7e8fa8;
+  --group-ring: #7e8fa855;
+  --group-tint: #7e8fa81e;
+}
+
+[data-group-color-token="fleet-group-color-0"] {
+  --group-accent: #c48d42;
+  --group-ring: #c48d4259;
+  --group-tint: #c48d4224;
+}
+
+[data-group-color-token="fleet-group-color-1"] {
+  --group-accent: #4f89c7;
+  --group-ring: #4f89c759;
+  --group-tint: #4f89c724;
+}
+
+[data-group-color-token="fleet-group-color-2"] {
+  --group-accent: #b65b4a;
+  --group-ring: #b65b4a59;
+  --group-tint: #b65b4a24;
+}
+
+[data-group-color-token="fleet-group-color-3"] {
+  --group-accent: #4f9f86;
+  --group-ring: #4f9f8659;
+  --group-tint: #4f9f8624;
+}
+
+[data-group-color-token="fleet-group-color-4"] {
+  --group-accent: #989f54;
+  --group-ring: #989f5459;
+  --group-tint: #989f5424;
+}
+
+[data-group-color-token="fleet-group-color-5"] {
+  --group-accent: #6d7ea8;
+  --group-ring: #6d7ea859;
+  --group-tint: #6d7ea824;
+}
+
+.fleet-summary-line.is-grouped {
+  border-radius: 4px;
+  padding-right: 6px;
+}
+
+.fleet-summary-line.is-grouped:not(.cyno-highlight) {
+  background: linear-gradient(90deg, var(--group-tint) 0%, #00000000 74%);
+  box-shadow: inset 0 0 0 1px var(--group-ring), inset -2px 0 0 var(--group-accent);
+}
+
+.fleet-summary-line.is-grouped.cyno-highlight {
+  box-shadow: inset 0 0 0 1px #5b1f1f66, inset -2px 0 0 var(--group-accent);
+}
+
+.fleet-summary-line.is-suggested,
+.pilot-card.is-suggested,
+.player-card.is-suggested {
+  opacity: 0.58;
+}
+
+.pilot-card.is-suggested .player-card.is-suggested {
+  opacity: 1;
+}
+
 .ship-summary-list li.cyno-highlight,
 .ship-column li.cyno-highlight {
   background: linear-gradient(90deg, #5b1f1f66 0%, #3a242400 72%);
@@ -617,6 +683,12 @@ body {
   display: grid;
   grid-template-columns: 1.25fr 2.3fr;
   gap: 12px;
+}
+
+.pilot-card.is-grouped .player-card,
+.player-card.is-grouped {
+  background-image: linear-gradient(140deg, var(--group-tint) 0%, #00000000 58%);
+  box-shadow: 0 4px 12px #0000004d, inset 0 0 0 1px var(--group-ring), inset -2px 0 0 var(--group-accent);
 }
 
 .player-card {

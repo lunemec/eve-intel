@@ -9,6 +9,8 @@ export type GroupPresentation = {
   isUngrouped: boolean;
 };
 
+const GROUP_COLOR_TOKEN_PREFIX = "fleet-group-color";
+
 export function deriveAppViewModel(pilotCards: PilotCard[]): {
   copyableFleetCount: number;
   globalLoadProgress: number;
@@ -82,11 +84,13 @@ export function deriveGroupPresentationByPilotId(pilotCards: PilotCard[]): Map<n
   const presentationByPilotId = new Map<number, GroupPresentation>();
   const selectedPilotIdSet = new Set(groupingSeed.selectedPilotIds);
   for (const group of grouping.groups) {
+    const groupColorToken = groupColorTokenForIndex(group.colorIndex);
     const suggestedPilotIdSet = new Set(group.suggestedPilotIds);
     for (const memberPilotId of group.memberPilotIds) {
       const isSuggested = suggestedPilotIdSet.has(memberPilotId) && !selectedPilotIdSet.has(memberPilotId);
       presentationByPilotId.set(memberPilotId, {
         groupId: group.groupId,
+        groupColorToken,
         isGreyedSuggestion: isSuggested,
         isUngrouped: false
       });
@@ -173,4 +177,11 @@ function toValidPilotId(value?: number): number | null {
     return null;
   }
   return value;
+}
+
+function groupColorTokenForIndex(colorIndex: number): string {
+  if (!Number.isInteger(colorIndex) || colorIndex < 0) {
+    return `${GROUP_COLOR_TOKEN_PREFIX}-0`;
+  }
+  return `${GROUP_COLOR_TOKEN_PREFIX}-${colorIndex}`;
 }

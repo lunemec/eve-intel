@@ -17,6 +17,8 @@ All notable changes to this project are documented in this file.
 - Added Step-5 regression coverage in `src/lib/appViewModel.test.ts` for grouped-order precedence over danger sorting and fallback-to-danger behavior when grouping emits no order.
 - Implemented Step-6 group presentation plumbing by adding shared `GroupPresentation` metadata derivation in `src/lib/appViewModel.ts` and wiring `src/App.tsx`, `src/components/FleetSummary.tsx`, `src/components/fleetSummarySubviews.tsx`, `src/components/PilotCardView.tsx`, and `src/components/pilotCardSubviews.tsx` to pass deterministic grouped/suggested class/data hooks without changing layout structure.
 - Added Step-6 regression coverage in `src/components/FleetSummary.test.tsx`, `src/components/PilotCardView.test.tsx`, and `src/lib/appViewModel.test.ts` for grouped/suggested hook rendering plus existing Fleet/Solo row-click interaction behavior.
+- Implemented Step-7 deterministic group palette plumbing by adding stable hash-based `colorIndex` assignment in `src/lib/fleetGrouping.ts`, deriving `groupColorToken` values in `src/lib/appViewModel.ts`, and introducing EVE-style grouped tint/accent selectors plus suggested opacity styling in `src/styles.css`.
+- Added Step-7 regression coverage in `src/lib/fleetGrouping.test.ts`, `src/lib/appViewModel.test.ts`, and new stylesheet contract tests in `src/styles.groupingPalette.test.ts` for deterministic color mapping and grouped/suggested style-token hooks.
 
 ## v0.3.5 - 2026-03-03
 - Hardened changelog workflow governance to require `## Unreleased` as the first changelog section, preventing in-flight release notes from being added directly under released version snapshots.

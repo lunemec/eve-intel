@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { ZkillKillmail } from "./api/zkill";
 import {
+  FLEET_GROUP_PALETTE_SIZE,
   buildFleetGroupingSourceSignature,
   computeFleetGrouping,
   createEmptyFleetGroupingState,
+  stableFleetGroupColorIndex,
   stableFleetGroupId
 } from "./fleetGrouping";
 import type { PilotCard } from "./pilotDomain";
@@ -38,6 +40,14 @@ describe("fleetGrouping", () => {
 
     expect(first).toBe(second);
     expect(first).toMatch(/^fleet-group-v1-[0-9a-f]{8}$/);
+  });
+
+  it("maps stable group hashes to deterministic palette indices", () => {
+    expect(stableFleetGroupColorIndex("fleet-group-v1-0000000a", FLEET_GROUP_PALETTE_SIZE)).toBe(4);
+    expect(stableFleetGroupColorIndex("fleet-group-v1-0000000a", 3)).toBe(1);
+    expect(stableFleetGroupColorIndex("fleet-group-v1-not-a-hex", FLEET_GROUP_PALETTE_SIZE)).toBe(
+      stableFleetGroupColorIndex("fleet-group-v1-not-a-hex", FLEET_GROUP_PALETTE_SIZE)
+    );
   });
 
   it("returns stable empty output from skeleton compute path", () => {
@@ -206,6 +216,9 @@ describe("fleetGrouping", () => {
       suggestedPilotIds: [suggestedCharlie],
       weightedConfidence: 1
     });
+    expect(output.groups[0]?.colorIndex).toBe(
+      stableFleetGroupColorIndex(output.groups[0]?.groupId ?? "", FLEET_GROUP_PALETTE_SIZE)
+    );
     expect(output.orderedPilotIds).toEqual([selectedAlpha, selectedBravo, suggestedCharlie]);
     expect(output.state.groups).toEqual(output.groups);
     expect(output.state.orderedPilotIds).toEqual(output.orderedPilotIds);
