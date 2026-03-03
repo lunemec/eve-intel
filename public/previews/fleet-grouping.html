@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fleet Grouping Preview</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+    <style>
+      .preview-root {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        gap: 20px;
+      }
+
+      .preview-intro {
+        border: 1px solid #2b3a4b;
+        border-radius: 8px;
+        background: #111920;
+        padding: 14px;
+      }
+
+      .preview-intro h1 {
+        margin: 0 0 8px;
+        font-size: 1.24rem;
+      }
+
+      .preview-intro p {
+        margin: 0;
+        color: #8ea4bc;
+      }
+
+      .preview-section {
+        border: 1px solid #2a394a;
+        border-radius: 8px;
+        background: #10171f;
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .preview-section h2 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .preview-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .preview-grid.two {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      }
+
+      .preview-surface {
+        margin: 0;
+        border: 1px solid #253547;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #0e151d;
+      }
+
+      .preview-surface .fleet-summary-line {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .preview-col-label {
+        color: #8ea4bc;
+        font-size: 0.76rem;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .preview-ship {
+        color: #d8e3f3;
+        font-weight: 600;
+      }
+
+      .preview-alert {
+        color: #c8d7eb;
+      }
+
+      .preview-note {
+        margin: 0;
+        color: #8ea4bc;
+        font-size: 0.84rem;
+      }
+
+      .preview-card-frame {
+        border: 1px solid #253547;
+        border-radius: 6px;
+        padding: 10px;
+        background: #0c1219;
+      }
+
+      .preview-card-frame .pilot-card {
+        max-width: 520px;
+      }
+
+      .preview-player-meta {
+        color: #9fb2c9;
+        font-size: 0.82rem;
+      }
+
+      .preview-cap-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .preview-cap-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        gap: 10px;
+        border: 1px solid #253547;
+        border-radius: 6px;
+        padding: 8px;
+        background: #0e151d;
+      }
+
+      .preview-cap-row strong {
+        color: #e4eefb;
+      }
+
+      .preview-chip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .preview-chip {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid #32465c;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 0.78rem;
+        color: #c6d7eb;
+        background: #1a2634;
+      }
+
+      .preview-narrow {
+        width: 400px;
+        max-width: 100%;
+        border: 1px dashed #38506a;
+        border-radius: 8px;
+        padding: 8px;
+      }
+
+      .preview-narrow .fleet-summary-grid,
+      .preview-narrow .fleet-summary-line {
+        grid-template-columns: 1fr;
+        row-gap: 4px;
+      }
+
+      .preview-narrow .pilot-card {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-footer {
+        color: #7f93a8;
+        font-size: 0.78rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="preview-root">
+      <header class="preview-intro">
+        <h1>Fleet Grouping And Suggestions Preview</h1>
+        <p>
+          Static artifact for reviewing grouped/suggested visual states without running the full app flow.
+          Launch with <code>npm run preview:fleet-grouping</code>.
+        </p>
+      </header>
+
+      <section class="preview-section" data-preview-scenario="single-group">
+        <h2>Single Group (Selected + Suggested)</h2>
+        <ul class="fleet-summary-list preview-surface">
+          <li
+            class="fleet-summary-line fleet-summary-grid is-grouped"
+            data-group-id="group-alpha"
+            data-group-color-token="fleet-group-color-1"
+          >
+            <span class="fleet-col fleet-col-pilot">
+              <span class="preview-col-label">Pilot</span>
+              <strong>Alpha One</strong>
+            </span>
+            <span class="fleet-col fleet-col-corporation">Corp Atlas</span>
+            <span class="fleet-col fleet-col-alliance">Alliance North</span>
+            <span class="fleet-col fleet-col-ship fleet-col-ship-primary">
+              <span class="preview-ship">Guardian</span>
+            </span>
+            <span class="fleet-col fleet-col-ship fleet-col-ship-secondary">
+              <span class="preview-ship">Basilisk</span>
+            </span>
+            <span class="fleet-col fleet-col-alerts"><span class="preview-alert">Fleet</span></span>
+          </li>
+          <li
+            class="fleet-summary-line fleet-summary-grid is-grouped"
+            data-group-id="group-alpha"
+            data-group-color-token="fleet-group-color-1"
+          >
+            <span class="fleet-col fleet-col-pilot"><span class="preview-col-label">Pilot</span><strong>Bravo Two</strong></span>
+            <span class="fleet-col fleet-col-corporation">Corp Atlas</span>
+            <span class="fleet-col fleet-col-alliance">Alliance North</span>
+            <span class="fleet-col fleet-col-ship fleet-col-ship-primary"><span class="preview-ship">Scimitar</span></span>
+            <span class="fleet-col fleet-col-ship fleet-col-ship-secondary"><span class="preview-ship">Oneiros</span></span>
+            <span class="fleet-col fleet-col-alerts"><span class="preview-alert">Fleet</span></span>
+          </li>
+          <li
+            class="fleet-summary-line fleet-summary-grid is-grouped is-suggested"
+            data-group-id="group-alpha"
+            data-group-color-token="fleet-group-color-1"
+          >
+            <span class="fleet-col fleet-col-pilot"><span class="preview-col-label">Pilot</span><strong>Charlie Wing</strong></span>
+            <span class="fleet-col fleet-col-corporation">Suggested</span>
+            <span class="fleet-col fleet-col-alliance">Shared 14/15</span>
+            <span class="fleet-col fleet-col-ship fleet-col-ship-primary"><span class="preview-ship">Logi Hull</span></span>
+            <span class="fleet-col fleet-col-ship fleet-col-ship-secondary"></span>
+            <span class="fleet-col fleet-col-alerts"><span class="preview-alert">Greyed</span></span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="preview-section" data-preview-scenario="multi-group">
+        <h2>Multiple Groups (Deterministic Color Tokens)</h2>
+        <div class="preview-grid two">
+          <ul class="fleet-summary-list preview-surface">
+            <li
+              class="fleet-summary-line fleet-summary-grid is-grouped"
+              data-group-id="group-amber"
+              data-group-color-token="fleet-group-color-0"
+            >
+              <span class="fleet-col fleet-col-pilot"><span class="preview-col-label">Pilot</span><strong>Delta Core</strong></span>
+              <span class="fleet-col fleet-col-corporation">Corp Ember</span>
+              <span class="fleet-col fleet-col-alliance">Alliance South</span>
+              <span class="fleet-col fleet-col-ship fleet-col-ship-primary"><span class="preview-ship">Abaddon</span></span>
+              <span class="fleet-col fleet-col-ship fleet-col-ship-secondary"></span>
+              <span class="fleet-col fleet-col-alerts"><span class="preview-alert">Anchor</span></span>
+            </li>
+            <li
+              class="fleet-summary-line fleet-summary-grid is-grouped is-suggested"
+              data-group-id="group-amber"
+              data-group-color-token="fleet-group-color-0"
+            >
+              <span class="fleet-col fleet-col-pilot"><span class="preview-col-label">Pilot</span><strong>Echo Link</strong></span>
+              <span class="fleet-col fleet-col-corporation">Suggested</span>
+              <span class="fleet-col fleet-col-alliance">Shared 11/12</span>
+              <span class="fleet-col fleet-col-ship fleet-col-ship-primary"><span class="preview-ship">Apocalypse</span></span>
+              <span class="fleet-col fleet-col-ship fleet-col-ship-secondary"></span>
+              <span class="fleet-col fleet-col-alerts"><span class="preview-alert">Low Priority</span></span>
+            </li>
+          </ul>
+
+          <ul class="fleet-summary-list preview-surface">
+            <li
+              class="fleet-summary-line fleet-summary-grid is-grouped"
+              data-group-id="group-teal"
+              data-group-color-token="fleet-group-color-3"
+            >
+              <span class="fleet-col fleet-col-pilot"><span class="preview-col-label">Pilot</span><strong>Foxtrot Beam</strong></span>
+              <span class="fleet-col fleet-col-corporation">Corp Tidal</span>
+              <span class="fleet-col fleet-col-alliance">Alliance East</span>
+              <span class="fleet-col fleet-col-ship fleet-col-ship-primary"><span class="preview-ship">Orthrus</span></span>
+              <span class="fleet-col fleet-col-ship fleet-col-ship-secondary"></span>
+              <span class="fleet-col fleet-col-alerts"><span class="preview-alert">Anchor</span></span>
+            </li>
+            <li
+              class="fleet-summary-line fleet-summary-grid is-grouped"
+              data-group-id="group-teal"
+              data-group-color-token="fleet-group-color-3"
+            >
+              <span class="fleet-col fleet-col-pilot"><span class="preview-col-label">Pilot</span><strong>Golf Drift</strong></span>
+              <span class="fleet-col fleet-col-corporation">Corp Tidal</span>
+              <span class="fleet-col fleet-col-alliance">Alliance East</span>
+              <span class="fleet-col fleet-col-ship fleet-col-ship-primary"><span class="preview-ship">Cynabal</span></span>
+              <span class="fleet-col fleet-col-ship fleet-col-ship-secondary"></span>
+              <span class="fleet-col fleet-col-alerts"><span class="preview-alert">Fleet</span></span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="preview-section" data-preview-scenario="ungrouped">
+        <h2>Ungrouped Neutral Rows</h2>
+        <ul class="fleet-summary-list preview-surface">
+          <li class="fleet-summary-line fleet-summary-grid">
+            <span class="fleet-col fleet-col-pilot"><span class="preview-col-label">Pilot</span><strong>Hotel Solo</strong></span>
+            <span class="fleet-col fleet-col-corporation">Corp Lone</span>
+            <span class="fleet-col fleet-col-alliance">No strong links yet</span>
+            <span class="fleet-col fleet-col-ship fleet-col-ship-primary"><span class="preview-ship">Rupture</span></span>
+            <span class="fleet-col fleet-col-ship fleet-col-ship-secondary"></span>
+            <span class="fleet-col fleet-col-alerts"><span class="preview-alert">Neutral</span></span>
+          </li>
+          <li class="fleet-summary-line fleet-summary-grid">
+            <span class="fleet-col fleet-col-pilot"><span class="preview-col-label">Pilot</span><strong>India Solo</strong></span>
+            <span class="fleet-col fleet-col-corporation">Corp Lone</span>
+            <span class="fleet-col fleet-col-alliance">Data pending</span>
+            <span class="fleet-col fleet-col-ship fleet-col-ship-primary"><span class="preview-ship">Myrmidon</span></span>
+            <span class="fleet-col fleet-col-ship fleet-col-ship-secondary"></span>
+            <span class="fleet-col fleet-col-alerts"><span class="preview-alert">Neutral</span></span>
+          </li>
+        </ul>
+      </section>
+
+      <section class="preview-section" data-preview-scenario="suggested-greyed">
+        <h2>Suggested Greyed Pilot Card</h2>
+        <p class="preview-note">Suggested cards remain interactive but use reduced opacity for lower emphasis.</p>
+        <div class="preview-card-frame">
+          <article
+            class="pilot-card is-grouped is-suggested"
+            data-group-id="group-ruby"
+            data-group-color-token="fleet-group-color-2"
+          >
+            <div
+              class="player-card threat-medium is-grouped is-suggested"
+              data-group-id="group-ruby"
+              data-group-color-token="fleet-group-color-2"
+            >
+              <div class="player-card-header">
+                <div class="player-info">
+                  <h2 class="player-name">Juliet Suggested</h2>
+                  <div class="preview-player-meta">Suggested by Alpha One and Bravo Two</div>
+                </div>
+                <div class="player-threat-stack">
+                  <div class="threat-indicator threat-medium">
+                    <div class="threat-score">63</div>
+                    <div class="threat-label">Medium</div>
+                  </div>
+                </div>
+              </div>
+              <div class="player-card-body">
+                <div class="stats-container">
+                  <div class="stats-column">
+                    <div class="stat-row"><span class="stat-label">Shared Kills:</span><span class="stat-value">12</span></div>
+                    <div class="stat-row"><span class="stat-label">Co-Fly Ratio:</span><span class="stat-value">92%</span></div>
+                  </div>
+                  <div class="stats-column">
+                    <div class="stat-row"><span class="stat-label">Source Anchors:</span><span class="stat-value">2</span></div>
+                    <div class="stat-row"><span class="stat-label">Queue Priority:</span><span class="stat-value">Suggested</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="preview-section" data-preview-scenario="cap-example">
+        <h2>Adaptive Suggestion Cap (3 -&gt; 2 -&gt; 1)</h2>
+        <div class="preview-cap-grid">
+          <div class="preview-cap-row">
+            <div><strong>Anchor Alpha</strong><br />Default per-anchor cap (3)</div>
+            <div class="preview-chip-list">
+              <span class="preview-chip">Wing-1</span><span class="preview-chip">Wing-2</span><span class="preview-chip">Wing-3</span>
+            </div>
+          </div>
+          <div class="preview-cap-row">
+            <div><strong>Anchor Bravo</strong><br />Global pressure reduces cap (2)</div>
+            <div class="preview-chip-list">
+              <span class="preview-chip">Wing-4</span><span class="preview-chip">Wing-5</span>
+            </div>
+          </div>
+          <div class="preview-cap-row">
+            <div><strong>Anchor Charlie</strong><br />Global pressure reduces cap (1)</div>
+            <div class="preview-chip-list">
+              <span class="preview-chip">Wing-6</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="preview-section" data-preview-scenario="narrow-width">
+        <h2>Narrow Width Example</h2>
+        <p class="preview-note">Forced narrow frame mirrors stacked mobile presentation for grouped and suggested rows/cards.</p>
+        <div class="preview-narrow">
+          <ul class="fleet-summary-list preview-surface">
+            <li
+              class="fleet-summary-line fleet-summary-grid is-grouped is-suggested"
+              data-group-id="group-mobile"
+              data-group-color-token="fleet-group-color-4"
+            >
+              <span class="fleet-col fleet-col-pilot"><strong>Kilo Mobile</strong></span>
+              <span class="fleet-col fleet-col-corporation">Suggested</span>
+              <span class="fleet-col fleet-col-alliance">Shared 10/10</span>
+              <span class="fleet-col fleet-col-ship fleet-col-ship-primary"><span class="preview-ship">Scythe</span></span>
+            </li>
+          </ul>
+          <div class="preview-card-frame" style="margin-top: 8px;">
+            <article
+              class="pilot-card is-grouped"
+              data-group-id="group-mobile"
+              data-group-color-token="fleet-group-color-4"
+            >
+              <div
+                class="player-card threat-low is-grouped"
+                data-group-id="group-mobile"
+                data-group-color-token="fleet-group-color-4"
+              >
+                <div class="player-card-header">
+                  <div class="player-info">
+                    <h2 class="player-name">Lima Narrow</h2>
+                    <div class="preview-player-meta">Selected pilot in compact layout</div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <footer class="preview-footer">
+        Preview artifact path: <code>public/previews/fleet-grouping.html</code>
+      </footer>
+    </main>
+  </body>
+</html>

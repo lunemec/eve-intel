@@ -41,7 +41,8 @@
     "desktop:dist:mac:arm64": "npm run build && electron-builder --mac dmg zip --arm64",
     "release:github": "node scripts/publish-github-release.mjs",
     "release:github:full": "node scripts/publish-github-release.mjs --full",
-    "release:github:win": "npm run desktop:dist:win && npm run release:github"
+    "release:github:win": "npm run desktop:dist:win && npm run release:github",
+    "preview:fleet-grouping": "vite --open /previews/fleet-grouping.html"
   },
   "dependencies": {
     "electron-updater": "^6.6.2",
