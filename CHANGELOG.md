@@ -5,6 +5,8 @@ All notable changes to this project are documented in this file.
 ## Unreleased
 - Fixed Windows prebuild npm invocation in `scripts/prebuild-sde.mjs` by resolving npm run calls through `process.execPath + npm_execpath` when available, preventing `spawnSync npm.cmd EINVAL` failures during desktop build/run and release flows.
 - Added regression coverage in `scripts/tests/prebuild-sde.npm-invocation.test.mjs` for Windows npm invocation resolution and default fallback behavior.
+- Added the first `fleet-summary-killmail-groups` foundation module at `src/lib/fleetGrouping.ts` with typed domain contracts (`CoFlyEvidence`, `SuggestedPilot`, `FleetGroup`, `FleetGroupingState`), deterministic source-signature/group-id helpers, and a pure `computeFleetGrouping` skeleton that currently returns a stable empty state.
+- Added focused red/green coverage in `src/lib/fleetGrouping.test.ts` for empty-state shape, signature normalization, deterministic group-id hashing, and stable skeleton output.
 
 ## v0.3.5 - 2026-03-03
 - Hardened changelog workflow governance to require `## Unreleased` as the first changelog section, preventing in-flight release notes from being added directly under released version snapshots.
