@@ -13,10 +13,6 @@ const DUPLICATE_IMPORT_TARGETS = Object.freeze([
   {
     filePath: "src/lib/pipeline/derivedInference.ts",
     modulePath: "../cache"
-  },
-  {
-    filePath: "src/lib/pipeline/inferenceWindow.ts",
-    modulePath: "../api/esi"
   }
 ]);
 
@@ -45,3 +41,4 @@ describe("pipeline duplicate-import hygiene", () => {
     expect(duplicateImportViolations).toEqual([]);
   });
 });
+

@@ -1,11 +1,12 @@
 import { getCachedStateAsync, setCachedAsync } from "./cache";
 import type { GroupPresentation } from "./appViewModel";
 import type { ZkillKillmail } from "./api/zkill";
+import { CO_FLY_RECENT_KILL_WINDOW_MAX } from "./fleetGrouping";
 import type { PilotCard } from "./pilotDomain";
 
 const FLEET_GROUPING_ARTIFACT_VERSION = 1;
 const FLEET_GROUPING_CACHE_KEY_NAMESPACE = "v1";
-const FLEET_GROUPING_ARTIFACT_SOURCE_NAMESPACE = "fleet-grouping-artifact-src-v1";
+const FLEET_GROUPING_ARTIFACT_SOURCE_NAMESPACE = "fleet-grouping-artifact-src-v2";
 const FLEET_GROUPING_ARTIFACT_TTL_MS = 15 * 60 * 1000;
 const FLEET_GROUPING_ARTIFACT_STALE_MS = 5 * 60 * 1000;
 
@@ -39,9 +40,8 @@ export function buildFleetGroupingArtifactSourceSignature(pilotCards: PilotCard[
   const byPilotId = collectPilotCardsById(pilotCards);
   const cardFragments = selectedPilotIds.map((pilotId) => {
     const pilot = byPilotId.get(pilotId);
-    const killIds = normalizeKillmailIds(pilot?.inferenceKills ?? []);
-    const lossIds = normalizeKillmailIds(pilot?.inferenceLosses ?? []);
-    return `${pilotId}:k${killIds.join(",")}:l${lossIds.join(",")}`;
+    const killIds = collectRecentKillmailIds(pilot?.inferenceKills ?? [], CO_FLY_RECENT_KILL_WINDOW_MAX);
+    return `${pilotId}:k${killIds.join(",")}`;
   });
 
   return [
@@ -132,15 +132,20 @@ function collectPilotCardsById(pilotCards: PilotCard[]): Map<number, PilotCard> 
   return byPilotId;
 }
 
-function normalizeKillmailIds(rows: ZkillKillmail[]): number[] {
-  const ids = new Set<number>();
+function collectRecentKillmailIds(rows: ZkillKillmail[], limit: number): number[] {
+  const normalizedLimit = Number.isInteger(limit) && limit > 0 ? limit : 0;
+  const ids: number[] = [];
   for (const row of rows) {
     const killmailId = row.killmail_id;
-    if (Number.isInteger(killmailId) && killmailId > 0) {
-      ids.add(killmailId);
+    if (!Number.isInteger(killmailId) || killmailId <= 0) {
+      continue;
+    }
+    ids.push(killmailId);
+    if (ids.length >= normalizedLimit) {
+      break;
     }
   }
-  return [...ids].sort((a, b) => a - b);
+  return ids;
 }
 
 function normalizePilotIds(pilotIds: number[]): number[] {

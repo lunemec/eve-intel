@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { ParsedPilotInput } from "../types";
 import type { DogmaIndex } from "./dogma/index";
 import type { PilotCard } from "./pilotDomain";
-import { runBreadthPilotPipeline, type ResolvedPilotTask } from "./pipeline/breadthPipeline";
+import type { ResolvedPilotTask } from "./pipeline/breadthPipeline";
+import { runResolvedPilotPipeline } from "./pipeline/runPipeline";
 import { DEEP_HISTORY_MAX_PAGES, TOP_SHIP_CANDIDATES } from "./pipeline/constants";
 import { patchPilotCardRows } from "./pipeline/cards";
 import { createLoadingCard } from "./pipeline/stateTransitions";
@@ -55,7 +56,7 @@ export function useSuggestedPilotCards(params: {
       setSuggestedPilotCards((current) => patchPilotCardRows(current, pilotName, patch));
     };
 
-    void runBreadthPilotPipeline({
+    void runResolvedPilotPipeline({
       tasks,
       lookbackDays: params.lookbackDays,
       topShips: TOP_SHIP_CANDIDATES,

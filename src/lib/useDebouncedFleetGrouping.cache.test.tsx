@@ -4,7 +4,11 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { GroupPresentation } from "./appViewModel";
-import type { FleetGroupingCacheArtifact } from "./fleetGroupingCache";
+import {
+  buildFleetGroupingArtifactSourceSignature,
+  isFleetGroupingArtifactUsable,
+  type FleetGroupingCacheArtifact
+} from "./fleetGroupingCache";
 import type { PilotCard } from "./pilotDomain";
 import { useDebouncedFleetGrouping, type DebouncedFleetGroupingDeps } from "./useDebouncedFleetGrouping";
 
@@ -32,11 +36,20 @@ function presentationMap(entries: Array<[number, GroupPresentation]>): Map<numbe
   return new Map(entries);
 }
 
+function killmailRows(anchorId: number, count: number): PilotCard["inferenceKills"] {
+  return Array.from({ length: count }, (_, index) => ({
+    killmail_id: anchorId * 10_000 + index + 1,
+    killmail_time: `2026-03-${String((index % 28) + 1).padStart(2, "0")}T00:00:00Z`,
+    victim: {},
+    attackers: [{ character_id: anchorId }]
+  }));
+}
+
 function artifact(overrides: Partial<FleetGroupingCacheArtifact> = {}): FleetGroupingCacheArtifact {
   return {
     version: 1,
     selectedPilotIds: [1001, 1002],
-    sourceSignature: "fleet-grouping-artifact-src-v1|selected:1001,1002",
+    sourceSignature: "fleet-grouping-artifact-src-v2|selected:1001,1002",
     orderedPilotIds: [1001, 1002],
     presentationEntries: [],
     savedAt: Date.now(),
@@ -51,7 +64,7 @@ describe("useDebouncedFleetGrouping cache artifact", () => {
     const pilotCards = [alpha, bravo];
     const sortPilotCardsForFleetView = vi.fn((cards: PilotCard[]) => cards.slice());
     const deriveGroupPresentationByPilotId = vi.fn(() => presentationMap([]));
-    const buildFleetGroupingArtifactSourceSignature = vi.fn(() => "fleet-grouping-artifact-src-v1|selected:1001,1002");
+    const buildFleetGroupingArtifactSourceSignature = vi.fn(() => "fleet-grouping-artifact-src-v2|selected:1001,1002");
     const loadFleetGroupingArtifact = vi.fn(async () => ({
       artifact: artifact({
         orderedPilotIds: [1002, 1001],
@@ -113,11 +126,11 @@ describe("useDebouncedFleetGrouping cache artifact", () => {
     const pilotCards = [alpha, bravo];
     const sortPilotCardsForFleetView = vi.fn((cards: PilotCard[]) => cards.slice().reverse());
     const deriveGroupPresentationByPilotId = vi.fn(() => presentationMap([]));
-    const buildFleetGroupingArtifactSourceSignature = vi.fn(() => "fleet-grouping-artifact-src-v1|selected:2001,2002");
+    const buildFleetGroupingArtifactSourceSignature = vi.fn(() => "fleet-grouping-artifact-src-v2|selected:2001,2002");
     const loadFleetGroupingArtifact = vi.fn(async () => ({
       artifact: artifact({
         selectedPilotIds: [2001, 2002],
-        sourceSignature: "fleet-grouping-artifact-src-v1|selected:2001,2002|old",
+        sourceSignature: "fleet-grouping-artifact-src-v2|selected:2001,2002|old",
         orderedPilotIds: [2001, 2002]
       }),
       stale: true
@@ -148,5 +161,65 @@ describe("useDebouncedFleetGrouping cache artifact", () => {
     expect(result.current.sortedPilotCards.map((row) => row.characterName)).toEqual(["Bravo", "Alpha"]);
     expect(isFleetGroupingArtifactUsableSpy).toHaveBeenCalled();
     expect(saveFleetGroupingArtifact).toHaveBeenCalled();
+  });
+
+  it("keeps cache artifact usable for deep-history-only updates outside the v2 kill window", async () => {
+    const alpha = pilot({ characterId: 3001, characterName: "Alpha", inferenceKills: killmailRows(3001, 130) });
+    const bravo = pilot({ characterId: 3002, characterName: "Bravo" });
+    const initialCards = [alpha, bravo];
+    const deepUpdatedKills = alpha.inferenceKills.slice();
+    deepUpdatedKills[120] = {
+      ...deepUpdatedKills[120],
+      killmail_id: 9_001_001
+    };
+    const updatedCards = [
+      pilot({
+        characterId: 3001,
+        characterName: "Alpha",
+        inferenceKills: deepUpdatedKills
+      }),
+      bravo
+    ];
+
+    const sortPilotCardsForFleetView = vi.fn((cards: PilotCard[]) => cards.slice());
+    const deriveGroupPresentationByPilotId = vi.fn(() => presentationMap([]));
+    const loadFleetGroupingArtifact = vi.fn(async () => ({
+      artifact: artifact({
+        selectedPilotIds: [3001, 3002],
+        sourceSignature: buildFleetGroupingArtifactSourceSignature(initialCards),
+        orderedPilotIds: [3002, 3001]
+      }),
+      stale: false
+    }));
+    const saveFleetGroupingArtifact = vi.fn(async () => undefined);
+    const deps: Partial<DebouncedFleetGroupingDeps> = {
+      sortPilotCardsForFleetView,
+      deriveGroupPresentationByPilotId,
+      buildFleetGroupingArtifactSourceSignature,
+      loadFleetGroupingArtifact,
+      isFleetGroupingArtifactUsable,
+      saveFleetGroupingArtifact
+    };
+
+    const { result, rerender } = renderHook(
+      ({ cards }) => useDebouncedFleetGrouping(cards, { deps, debounceMs: 0 }),
+      { initialProps: { cards: initialCards } }
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(result.current.sortedPilotCards.map((row) => row.characterName)).toEqual(["Bravo", "Alpha"]);
+    });
+
+    await act(async () => {
+      rerender({ cards: updatedCards });
+      await Promise.resolve();
+    });
+
+    expect(loadFleetGroupingArtifact).toHaveBeenCalledTimes(1);
+    expect(result.current.sortedPilotCards.map((row) => row.characterName)).toEqual(["Bravo", "Alpha"]);
   });
 });

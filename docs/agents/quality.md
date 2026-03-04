@@ -19,6 +19,15 @@ This document defines repository expectations for changelog maintenance, robustn
 - Preserve backward-compatible behavior unless a change is intentional and documented.
 - Add error handling that is actionable and easy to diagnose.
 
+## Fetch And Cache Guardrails
+- Keep one canonical orchestration path for pilot fetching. Wrappers may add pre-resolution or UX glue, but they must delegate to the same runtime pipeline entrypoint.
+- Preserve first paint semantics: complete base page-1 round, then recompute immediately. Do not delay first paint behind deep paging or weighting batches.
+- Allow deepening rounds to be danger-weighted, but keep weighting isolated to post-first-paint scheduling.
+- Cache and regroup signatures must track only material evidence actually used by grouping logic. Do not include non-material deep-history fields in signature keys.
+- Non-material pilot-card updates should not force regroup recomputation. Use explicit skip behavior and reasoned logs when signatures are unchanged.
+- Long-running active fetches may use periodic guard refreshes, but guard refresh must stop when selected pilots reach terminal fetch phases.
+- Keep debug logs sufficient to diagnose waiting points: scheduling reason, cache hit/miss reason, and per-page fetch timing should remain observable.
+
 ## Change Quality Checklist
 - Tests added or updated for behavior changes.
 - Edge cases covered for new logic.

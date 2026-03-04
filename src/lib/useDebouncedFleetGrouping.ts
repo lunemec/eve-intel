@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   deriveGroupPresentationByPilotId,
   sortPilotCardsByDanger,
@@ -24,6 +24,12 @@ import type { PilotCard } from "./pilotDomain";
 import { useLatestRef } from "./useLatestRef";
 
 export const FLEET_GROUPING_DEBOUNCE_MS = 1_000;
+const FLEET_GROUPING_GUARD_REFRESH_MS = 30_000;
+
+type FleetGroupingRecomputeScheduleReason =
+  | "selected-changed"
+  | "significant-signature-changed"
+  | "guard-refresh";
 
 export type DebouncedFleetGroupingDeps = {
   sortPilotCardsForFleetView: typeof sortPilotCardsForFleetView;
@@ -72,19 +78,134 @@ export function useDebouncedFleetGrouping(
     () => deps.buildFleetGroupingArtifactSourceSignature(pilotCards),
     [deps, pilotCards]
   );
+  const previousSelectedPilotIdsKeyRef = useRef<string | null>(null);
+  const previousSignificantSourceSignatureRef = useRef<string | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof globalThis.setTimeout> | null>(null);
+  const guardIntervalRef = useRef<ReturnType<typeof globalThis.setInterval> | null>(null);
+  const selectedFetchActive = useMemo(() => hasActiveSelectedPilotFetch(pilotCards), [pilotCards]);
+
+  const scheduleFleetGroupingRecompute = useCallback(
+    (reason: FleetGroupingRecomputeScheduleReason, options: { forceRefresh?: boolean } = {}) => {
+      const forceRefresh = options.forceRefresh === true;
+      const selectedPilots = selectedPilotIds.length;
+      if (selectedPilots === 0) {
+        return;
+      }
+
+      if (logDebug) {
+        logDebug("Fleet grouping recompute scheduled", {
+          reason,
+          selectedPilots,
+          debounceMs,
+          sourceSignature: summarizeSourceSignature(sourceSignature)
+        });
+      }
+
+      const applyUpdate = () => {
+        const nextCards = latestPilotCardsRef.current;
+        setDebouncedPilotCards(forceRefresh ? nextCards.slice() : nextCards);
+      };
+
+      if (debounceTimerRef.current !== null) {
+        globalThis.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+
+      if (debounceMs === 0) {
+        applyUpdate();
+        return;
+      }
+
+      debounceTimerRef.current = globalThis.setTimeout(() => {
+        debounceTimerRef.current = null;
+        applyUpdate();
+      }, debounceMs);
+    },
+    [debounceMs, latestPilotCardsRef, logDebug, selectedPilotIds.length, sourceSignature]
+  );
 
   useEffect(() => {
-    if (debounceMs === 0) {
+    const previousSelectedPilotIdsKey = previousSelectedPilotIdsKeyRef.current;
+    const previousSignificantSourceSignature = previousSignificantSourceSignatureRef.current;
+    const selectedChanged = previousSelectedPilotIdsKey !== selectedPilotIdsKey;
+    const significantSignatureChanged = previousSignificantSourceSignature !== sourceSignature;
+
+    previousSelectedPilotIdsKeyRef.current = selectedPilotIdsKey;
+    previousSignificantSourceSignatureRef.current = sourceSignature;
+
+    if (selectedPilotIds.length === 0) {
+      if (debounceTimerRef.current !== null) {
+        globalThis.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
       setDebouncedPilotCards(latestPilotCardsRef.current);
       return;
     }
-    const timer = globalThis.setTimeout(() => {
-      setDebouncedPilotCards(latestPilotCardsRef.current);
-    }, debounceMs);
+
+    if (selectedChanged) {
+      scheduleFleetGroupingRecompute("selected-changed");
+      return;
+    }
+
+    if (significantSignatureChanged) {
+      scheduleFleetGroupingRecompute("significant-signature-changed");
+      return;
+    }
+
+    if (logDebug) {
+      logDebug("Fleet grouping recompute skipped", {
+        reason: "signature-unchanged",
+        selectedPilots: selectedPilotIds.length,
+        sourceSignature: summarizeSourceSignature(sourceSignature)
+      });
+    }
+  }, [
+    latestPilotCardsRef,
+    logDebug,
+    scheduleFleetGroupingRecompute,
+    pilotCards,
+    selectedPilotIds.length,
+    selectedPilotIdsKey,
+    sourceSignature
+  ]);
+
+  useEffect(() => {
+    if (!selectedFetchActive) {
+      if (guardIntervalRef.current !== null) {
+        globalThis.clearInterval(guardIntervalRef.current);
+        guardIntervalRef.current = null;
+      }
+      return;
+    }
+
+    if (guardIntervalRef.current !== null) {
+      return;
+    }
+
+    guardIntervalRef.current = globalThis.setInterval(() => {
+      scheduleFleetGroupingRecompute("guard-refresh", { forceRefresh: true });
+    }, FLEET_GROUPING_GUARD_REFRESH_MS);
+
     return () => {
-      globalThis.clearTimeout(timer);
+      if (guardIntervalRef.current !== null) {
+        globalThis.clearInterval(guardIntervalRef.current);
+        guardIntervalRef.current = null;
+      }
     };
-  }, [debounceMs, latestPilotCardsRef, pilotCards]);
+  }, [scheduleFleetGroupingRecompute, selectedFetchActive]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current !== null) {
+        globalThis.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      if (guardIntervalRef.current !== null) {
+        globalThis.clearInterval(guardIntervalRef.current);
+        guardIntervalRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -354,6 +475,34 @@ function collectValidPilotIds(pilotCards: PilotCard[]): Set<number> {
 function collectSelectedPilotIds(pilotCards: PilotCard[]): number[] {
   const ids = collectValidPilotIds(pilotCards);
   return [...ids].sort((a, b) => a - b);
+}
+
+function hasActiveSelectedPilotFetch(pilotCards: PilotCard[]): boolean {
+  const selectedPilotIds = collectSelectedPilotIds(pilotCards);
+  if (selectedPilotIds.length === 0) {
+    return false;
+  }
+
+  const pilotCardsById = new Map<number, PilotCard>();
+  for (const pilot of pilotCards) {
+    const pilotId = toValidPilotId(pilot.characterId);
+    if (pilotId === null || pilotCardsById.has(pilotId)) {
+      continue;
+    }
+    pilotCardsById.set(pilotId, pilot);
+  }
+
+  for (const pilotId of selectedPilotIds) {
+    const fetchPhase = pilotCardsById.get(pilotId)?.fetchPhase;
+    if (!isTerminalFetchPhase(fetchPhase)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isTerminalFetchPhase(fetchPhase: PilotCard["fetchPhase"] | undefined): boolean {
+  return fetchPhase === "ready" || fetchPhase === "error";
 }
 
 function arrayEquals<T>(left: T[], right: T[]): boolean {
@@ -788,3 +937,4 @@ function toValidPilotId(value?: number): number | null {
   }
   return value;
 }
+

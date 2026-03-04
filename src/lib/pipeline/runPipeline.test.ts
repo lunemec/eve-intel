@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { runPilotPipeline } from "./runPipeline";
+import { runPilotPipeline, runResolvedPilotPipeline } from "./runPipeline";
 import type { ParsedPilotInput } from "../../types";
 import type { PilotCard } from "../pilotDomain";
 
@@ -32,6 +32,82 @@ function makeErrorCard(entry: ParsedPilotInput, error: string): PilotCard {
 }
 
 describe("pipeline/runPipeline", () => {
+  it("runs resolved tasks through runResolvedPilotPipeline", async () => {
+    const runResolvedPilotPipelineSpy = vi.fn(async () => undefined);
+    await runPilotPipeline(
+      {
+        entries: [ENTRY_A],
+        lookbackDays: 7,
+        topShips: 5,
+        signal: undefined,
+        isCancelled: () => false,
+        logDebug: vi.fn(),
+        setNetworkNotice: vi.fn(),
+        updatePilotCard: vi.fn(),
+        logError: vi.fn()
+      },
+      {
+        createRetryNoticeHandler: vi.fn(() => vi.fn(() => vi.fn())),
+        resolveCharacterIds: vi.fn(async () => new Map([["pilot a", 101]])),
+        collectUnresolvedEntries: vi.fn(() => []),
+        buildUnresolvedPilotError: vi.fn(() => "Character not found in ESI."),
+        buildResolvedPilotTasks: vi.fn(() => [{ entry: ENTRY_A, characterId: 101, priority: "selected" as const }]),
+        runResolvedPilotPipeline: runResolvedPilotPipelineSpy,
+        runBreadthPilotPipeline: vi.fn(async () => undefined),
+        createErrorCard: vi.fn((entry: ParsedPilotInput, error: string) => makeErrorCard(entry, error)),
+        isAbortError: vi.fn(() => false),
+        extractErrorMessage: vi.fn(() => "x")
+      } as any
+    );
+
+    expect(runResolvedPilotPipelineSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tasks: [{ entry: ENTRY_A, characterId: 101, priority: "selected" }],
+        lookbackDays: 7,
+        topShips: 5
+      }),
+      expect.objectContaining({ runBreadthPilotPipeline: expect.any(Function) })
+    );
+  });
+
+  it("runResolvedPilotPipeline forwards tasks to breadth pipeline", async () => {
+    const runBreadthPilotPipeline = vi.fn(async () => undefined);
+    const onRetry = vi.fn((_scope: string) => (_info: { status: number; attempt: number; delayMs: number }) => undefined);
+
+    await runResolvedPilotPipeline(
+      {
+        tasks: [{ entry: ENTRY_A, characterId: 101, priority: "selected" }],
+        lookbackDays: 7,
+        topShips: 5,
+        signal: undefined,
+        isCancelled: () => false,
+        onRetry,
+        logDebug: vi.fn(),
+        updatePilotCard: vi.fn(),
+        logError: vi.fn()
+      },
+      {
+        runBreadthPilotPipeline,
+        createErrorCard: vi.fn((entry: ParsedPilotInput, error: string) => makeErrorCard(entry, error)),
+        isAbortError: vi.fn(() => false),
+        extractErrorMessage: vi.fn(() => "x"),
+        createRetryNoticeHandler: vi.fn(() => vi.fn(() => vi.fn())),
+        resolveCharacterIds: vi.fn(async () => new Map()),
+        collectUnresolvedEntries: vi.fn(() => []),
+        buildUnresolvedPilotError: vi.fn(() => "Character not found in ESI."),
+        buildResolvedPilotTasks: vi.fn(() => [])
+      } as any
+    );
+
+    expect(runBreadthPilotPipeline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tasks: [{ entry: ENTRY_A, characterId: 101, priority: "selected" }],
+        lookbackDays: 7,
+        topShips: 5
+      })
+    );
+  });
+
   it("resolves ids, marks unresolved pilots, runs resolved tasks, and logs completion", async () => {
     const setNetworkNotice = vi.fn();
     const updatePilotCard = vi.fn();
@@ -150,3 +226,4 @@ describe("pipeline/runPipeline", () => {
     expect(updatePilotCard).not.toHaveBeenCalled();
   });
 });
+

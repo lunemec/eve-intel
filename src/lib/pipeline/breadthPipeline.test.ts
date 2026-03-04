@@ -171,6 +171,83 @@ describe("pipeline/breadthPipeline", () => {
     );
   });
 
+  it("logs base fetch timing and zKill stats availability during hydration", async () => {
+    const updatePilotCard = vi.fn();
+    const logDebug = vi.fn();
+    const tasks = [{ entry: ENTRY_A, characterId: 101 }];
+
+    await hydrateBaseCards(
+      {
+        tasks,
+        lookbackDays: 7,
+        topShips: 5,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard,
+        logDebug,
+        logError: vi.fn()
+      },
+      {
+        fetchCharacterPublic: vi.fn(async (id: number) => ({ character_id: id, name: "Pilot A", corporation_id: 1001 })),
+        fetchCharacterStats: vi.fn(async () => ({ kills: 10, losses: 2, danger: 80 })),
+        resolveUniverseNames: vi.fn(async () => new Map<number, string>()),
+        derivePilotStats: vi.fn(() => ({
+          kills: 0,
+          losses: 0,
+          kdRatio: 0,
+          solo: 0,
+          soloRatio: 0,
+          iskDestroyed: 0,
+          iskLost: 0,
+          iskRatio: 0,
+          danger: 0
+        })),
+        mergePilotStats: vi.fn(({ zkillStats }) => ({
+          kills: zkillStats?.kills ?? 0,
+          losses: zkillStats?.losses ?? 0,
+          kdRatio: 0,
+          solo: 0,
+          soloRatio: 0,
+          iskDestroyed: 0,
+          iskLost: 0,
+          iskRatio: 0,
+          danger: zkillStats?.danger ?? 0
+        })),
+        buildStageOneRow: vi.fn((params: { entry: ParsedPilotInput; characterId: number }) =>
+          makeStageOneRow(params.entry, params.characterId)
+        ),
+        createErrorCard: vi.fn(),
+        fetchLatestKillsPage: vi.fn(),
+        fetchLatestLossesPage: vi.fn(),
+        mergeKillmailLists: vi.fn((a: ZkillKillmail[], b: ZkillKillmail[]) => [...a, ...b]),
+        collectStageNameResolutionIds: vi.fn(),
+        resolveNamesSafely: vi.fn(),
+        buildStageTwoRow: vi.fn(),
+        recomputeDerivedInference: vi.fn(),
+        ensureExplicitShipTypeId: vi.fn(),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    expect(logDebug).toHaveBeenCalledWith(
+      "Pilot base fetch started",
+      expect.objectContaining({
+        pilot: "Pilot A",
+        characterId: 101,
+        priority: "selected"
+      })
+    );
+    expect(logDebug).toHaveBeenCalledWith(
+      "Pilot base fetch completed",
+      expect.objectContaining({
+        pilot: "Pilot A",
+        characterId: 101,
+        hasZkillStats: true,
+        durationMs: expect.any(Number)
+      })
+    );
+  });
   it("dispatches selected hydration tasks before suggested tasks when selected queue is full", async () => {
     const updatePilotCard = vi.fn();
     const selectedIds = [111, 112, 113, 114, 115];
@@ -891,6 +968,98 @@ describe("pipeline/breadthPipeline", () => {
     expect(fetchLatestLossesPage).toHaveBeenCalledTimes(1);
   });
 
+  it("logs page fetch timing and row outcomes per pilot", async () => {
+    const updatePilotCard = vi.fn();
+    const logDebug = vi.fn();
+    const pilotA = makePilotState(ENTRY_A, 301, 80);
+    const mk = (id: number): ZkillKillmail => ({
+      killmail_id: id,
+      killmail_time: "2026-02-17T00:00:00Z",
+      victim: {},
+      attackers: []
+    });
+
+    await runPagedHistoryRounds(
+      {
+        pilots: [pilotA],
+        lookbackDays: 7,
+        topShips: 5,
+        maxPages: 1,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard,
+        logDebug
+      },
+      {
+        fetchCharacterPublic: vi.fn(),
+        fetchCharacterStats: vi.fn(),
+        resolveUniverseNames: vi.fn(),
+        derivePilotStats: vi.fn(),
+        mergePilotStats: vi.fn(),
+        buildStageOneRow: vi.fn(),
+        createErrorCard: vi.fn(),
+        fetchLatestKillsPage: vi.fn(async () => [mk(3001)]),
+        fetchLatestLossesPage: vi.fn(async () => []),
+        mergeKillmailLists: vi.fn((a: ZkillKillmail[], b: ZkillKillmail[]) => [...a, ...b]),
+        collectStageNameResolutionIds: vi.fn(() => []),
+        resolveNamesSafely: vi.fn(async () => new Map<number, string>()),
+        buildStageTwoRow: vi.fn((params: { stageOne: PilotCard; inferenceKills: ZkillKillmail[]; inferenceLosses: ZkillKillmail[] }) => ({
+          ...params.stageOne,
+          inferenceKills: params.inferenceKills,
+          inferenceLosses: params.inferenceLosses
+        })),
+        recomputeDerivedInference: vi.fn(async () => ({
+          predictedShips: [],
+          fitCandidates: [],
+          cynoRisk: { potentialCyno: false, jumpAssociation: false, reasons: [] }
+        })),
+        ensureExplicitShipTypeId: vi.fn(async () => undefined),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    expect(logDebug).toHaveBeenCalledWith(
+      "Pilot page fetch started",
+      expect.objectContaining({
+        pilot: "Pilot A",
+        characterId: 301,
+        killPage: 1,
+        lossPage: 1,
+        fetchKills: true,
+        fetchLosses: true
+      })
+    );
+    expect(logDebug).toHaveBeenCalledWith(
+      "Pilot page fetch completed",
+      expect.objectContaining({
+        pilot: "Pilot A",
+        characterId: 301,
+        totalAdded: 1,
+        totalDurationMs: expect.any(Number),
+        historyKills: 1,
+        historyLosses: 0,
+        kills: expect.objectContaining({
+          requested: true,
+          page: 1,
+          rows: 1,
+          added: 1,
+          exhausted: false,
+          durationMs: expect.any(Number),
+          cacheEvent: null
+        }),
+        losses: expect.objectContaining({
+          requested: true,
+          page: 1,
+          rows: 0,
+          added: 0,
+          exhausted: true,
+          durationMs: expect.any(Number),
+          cacheEvent: null
+        })
+      })
+    );
+  });
   it("marks only the failed pilot as error when page fetch rejects", async () => {
     const updatePilotCard = vi.fn();
     const pilotA = makePilotState(ENTRY_A, 401, 80);
@@ -1094,6 +1263,231 @@ describe("pipeline/breadthPipeline", () => {
     expect(callOrder.some((value) => value.includes("-203-p2"))).toBe(false);
   });
 
+  it("recomputes first paint before any page-2 fetch starts", async () => {
+    const callOrder: string[] = [];
+    const pilotHigh = makePilotState(ENTRY_A, 901, 90);
+    const pilotNormal = makePilotState(ENTRY_B, 902, 20);
+    const mk = (id: number): ZkillKillmail => ({
+      killmail_id: id,
+      killmail_time: "2026-02-17T00:00:00Z",
+      victim: {},
+      attackers: []
+    });
+
+    await runPagedHistoryRounds(
+      {
+        pilots: [pilotHigh, pilotNormal],
+        lookbackDays: 7,
+        topShips: 5,
+        maxPages: 2,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard: vi.fn(),
+        logDebug: vi.fn()
+      },
+      {
+        fetchCharacterPublic: vi.fn(),
+        fetchCharacterStats: vi.fn(),
+        resolveUniverseNames: vi.fn(),
+        derivePilotStats: vi.fn(),
+        mergePilotStats: vi.fn(),
+        buildStageOneRow: vi.fn(),
+        createErrorCard: vi.fn(),
+        fetchLatestKillsPage: vi.fn(async (characterId: number, page: number) => {
+          callOrder.push(`k-${characterId}-p${page}`);
+          if (page === 1) {
+            return [mk(characterId * 100 + page)];
+          }
+          return [];
+        }),
+        fetchLatestLossesPage: vi.fn(async (characterId: number, page: number) => {
+          callOrder.push(`l-${characterId}-p${page}`);
+          return [];
+        }),
+        mergeKillmailLists: vi.fn((a: ZkillKillmail[], b: ZkillKillmail[]) => [...a, ...b]),
+        collectStageNameResolutionIds: vi.fn(() => []),
+        resolveNamesSafely: vi.fn(async () => new Map<number, string>()),
+        buildStageTwoRow: vi.fn((params: { stageOne: PilotCard; inferenceKills: ZkillKillmail[]; inferenceLosses: ZkillKillmail[] }) => ({
+          ...params.stageOne,
+          inferenceKills: params.inferenceKills,
+          inferenceLosses: params.inferenceLosses
+        })),
+        recomputeDerivedInference: vi.fn(async (params: { row: PilotCard }) => {
+          callOrder.push(`recompute-${params.row.parsedEntry.pilotName}`);
+          return {
+            predictedShips: [],
+            fitCandidates: [],
+            cynoRisk: { potentialCyno: false, jumpAssociation: false, reasons: [] }
+          };
+        }),
+        ensureExplicitShipTypeId: vi.fn(async () => undefined),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    const firstRecomputeIndex = callOrder.findIndex((value) => value.startsWith("recompute-"));
+    const firstPageTwoIndex = callOrder.findIndex((value) => value.includes("-p2"));
+    expect(firstRecomputeIndex).toBeGreaterThan(-1);
+    expect(firstPageTwoIndex).toBeGreaterThan(-1);
+    expect(firstRecomputeIndex).toBeLessThan(firstPageTwoIndex);
+  });
+
+  it("applies 4:1 high-danger deepening weight after first-paint recompute", async () => {
+    const callOrder: string[] = [];
+    const pilotHigh = makePilotState(ENTRY_A, 901, 90);
+    const pilotNormal = makePilotState(ENTRY_B, 902, 20);
+    const mk = (id: number): ZkillKillmail => ({
+      killmail_id: id,
+      killmail_time: "2026-02-17T00:00:00Z",
+      victim: {},
+      attackers: []
+    });
+
+    await runPagedHistoryRounds(
+      {
+        pilots: [pilotHigh, pilotNormal],
+        lookbackDays: 7,
+        topShips: 5,
+        maxPages: 4,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard: vi.fn(),
+        logDebug: vi.fn()
+      },
+      {
+        fetchCharacterPublic: vi.fn(),
+        fetchCharacterStats: vi.fn(),
+        resolveUniverseNames: vi.fn(),
+        derivePilotStats: vi.fn(),
+        mergePilotStats: vi.fn(),
+        buildStageOneRow: vi.fn(),
+        createErrorCard: vi.fn(),
+        fetchLatestKillsPage: vi.fn(async (characterId: number, page: number) => {
+          callOrder.push(`k-${characterId}-p${page}`);
+          if (characterId === 901) {
+            return page <= 4 ? [mk(characterId * 100 + page)] : [];
+          }
+          return page <= 3 ? [mk(characterId * 100 + page)] : [];
+        }),
+        fetchLatestLossesPage: vi.fn(async (characterId: number, page: number) => {
+          callOrder.push(`l-${characterId}-p${page}`);
+          return [];
+        }),
+        mergeKillmailLists: vi.fn((a: ZkillKillmail[], b: ZkillKillmail[]) => [...a, ...b]),
+        collectStageNameResolutionIds: vi.fn(() => []),
+        resolveNamesSafely: vi.fn(async () => new Map<number, string>()),
+        buildStageTwoRow: vi.fn((params: { stageOne: PilotCard; inferenceKills: ZkillKillmail[]; inferenceLosses: ZkillKillmail[] }) => ({
+          ...params.stageOne,
+          inferenceKills: params.inferenceKills,
+          inferenceLosses: params.inferenceLosses
+        })),
+        recomputeDerivedInference: vi.fn(async (params: { row: PilotCard }) => {
+          callOrder.push(`recompute-${params.row.parsedEntry.pilotName}`);
+          return {
+            predictedShips: [],
+            fitCandidates: [],
+            cynoRisk: { potentialCyno: false, jumpAssociation: false, reasons: [] }
+          };
+        }),
+        ensureExplicitShipTypeId: vi.fn(async () => undefined),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    const firstRecomputeIndex = callOrder.findIndex((value) => value.startsWith("recompute-"));
+    const normalPageThreeIndex = callOrder.findIndex((value) => value === "k-902-p3");
+    expect(firstRecomputeIndex).toBeGreaterThan(-1);
+    expect(normalPageThreeIndex).toBeGreaterThan(-1);
+
+    const highDeepeningFetchesBeforeNormalPageThree = callOrder
+      .slice(firstRecomputeIndex + 1, normalPageThreeIndex)
+      .filter((value) => value.startsWith("k-901-p"));
+    expect(highDeepeningFetchesBeforeNormalPageThree).toHaveLength(3);
+  });
+
+  it("emits first-paint/deepening scheduler diagnostics", async () => {
+    const logDebug = vi.fn();
+    const pilotHigh = makePilotState(ENTRY_A, 901, 90);
+    const pilotNormal = makePilotState(ENTRY_B, 902, 20);
+    const mk = (id: number): ZkillKillmail => ({
+      killmail_id: id,
+      killmail_time: "2026-02-17T00:00:00Z",
+      victim: {},
+      attackers: []
+    });
+
+    await runPagedHistoryRounds(
+      {
+        pilots: [pilotHigh, pilotNormal],
+        lookbackDays: 7,
+        topShips: 5,
+        maxPages: 2,
+        signal: undefined,
+        onRetry: () => () => undefined,
+        isCancelled: () => false,
+        updatePilotCard: vi.fn(),
+        logDebug
+      },
+      {
+        fetchCharacterPublic: vi.fn(),
+        fetchCharacterStats: vi.fn(),
+        resolveUniverseNames: vi.fn(),
+        derivePilotStats: vi.fn(),
+        mergePilotStats: vi.fn(),
+        buildStageOneRow: vi.fn(),
+        createErrorCard: vi.fn(),
+        fetchLatestKillsPage: vi.fn(async (_characterId: number, page: number) => {
+          return page === 1 ? [mk(page)] : [];
+        }),
+        fetchLatestLossesPage: vi.fn(async () => []),
+        mergeKillmailLists: vi.fn((a: ZkillKillmail[], b: ZkillKillmail[]) => [...a, ...b]),
+        collectStageNameResolutionIds: vi.fn(() => []),
+        resolveNamesSafely: vi.fn(async () => new Map<number, string>()),
+        buildStageTwoRow: vi.fn((params: { stageOne: PilotCard; inferenceKills: ZkillKillmail[]; inferenceLosses: ZkillKillmail[] }) => ({
+          ...params.stageOne,
+          inferenceKills: params.inferenceKills,
+          inferenceLosses: params.inferenceLosses
+        })),
+        recomputeDerivedInference: vi.fn(async () => ({
+          predictedShips: [],
+          fitCandidates: [],
+          cynoRisk: { potentialCyno: false, jumpAssociation: false, reasons: [] }
+        })),
+        ensureExplicitShipTypeId: vi.fn(async () => undefined),
+        isAbortError: vi.fn(() => false)
+      }
+    );
+
+    expect(logDebug).toHaveBeenCalledWith(
+      "Pilot page round scheduling",
+      expect.objectContaining({
+        round: 1,
+        phase: "first-paint",
+        activePilots: 2,
+        highThreatPilots: 1,
+        normalThreatPilots: 1,
+        plannedHighBonusBatches: 0
+      })
+    );
+    expect(logDebug).toHaveBeenCalledWith(
+      "Pilot first-paint recompute started",
+      expect.objectContaining({ round: 1, pilots: 2 })
+    );
+    expect(logDebug).toHaveBeenCalledWith(
+      "Pilot first-paint recompute completed",
+      expect.objectContaining({ round: 1, pilots: 2, durationMs: expect.any(Number) })
+    );
+    expect(logDebug).toHaveBeenCalledWith(
+      "Pilot page round scheduling",
+      expect.objectContaining({
+        round: 2,
+        phase: "deepening",
+        plannedHighBonusBatches: 3
+      })
+    );
+  });
   it("integrates base hydration and rounds end-to-end through runBreadthPilotPipeline", async () => {
     const updatePilotCard = vi.fn();
     const tasks = [{ entry: ENTRY_A, characterId: 101 }];
@@ -1161,3 +1555,4 @@ describe("pipeline/breadthPipeline", () => {
     expect(updatePilotCard).toHaveBeenLastCalledWith("Pilot A", expect.objectContaining({ fetchPhase: "ready" }));
   });
 });
+

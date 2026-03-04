@@ -5,6 +5,7 @@ import {
   fetchCharacterStats,
   fetchLatestKillsPage,
   fetchLatestLossesPage,
+  type ZkillCacheEvent,
   type ZkillKillmail
 } from "../api/zkill";
 import { derivePilotStats } from "../intel";
@@ -185,10 +186,24 @@ export async function hydrateBaseCards(
       return;
     }
     try {
+      const priority = normalizeTaskPriority(task.priority);
+      const baseFetchStartedAt = Date.now();
+      params.logDebug("Pilot base fetch started", {
+        pilot: task.entry.pilotName,
+        characterId: task.characterId,
+        priority
+      });
       const [character, zkillStats] = await Promise.all([
         deps.fetchCharacterPublic(task.characterId, params.signal, params.onRetry("ESI character")),
         deps.fetchCharacterStats(task.characterId, params.signal, params.onRetry("zKill stats"))
       ]);
+      params.logDebug("Pilot base fetch completed", {
+        pilot: task.entry.pilotName,
+        characterId: task.characterId,
+        priority,
+        durationMs: Date.now() - baseFetchStartedAt,
+        hasZkillStats: Boolean(zkillStats)
+      });
       if (params.isCancelled()) {
         return;
       }
@@ -272,7 +287,7 @@ export async function hydrateBaseCards(
       states.push({
         entry: task.entry,
         characterId: task.characterId,
-        priority: normalizeTaskPriority(task.priority),
+        priority,
         character,
         stageOneRow: stageOneForPipeline,
         danger: stats.danger,
@@ -340,26 +355,50 @@ export async function runPagedHistoryRounds(
       break;
     }
 
+    const round = roundsProcessed + 1;
+    const isFirstPaintRound = round === 1;
+    const highThreatPilots = active.filter((pilot) => (pilot.threatTier ?? classifyThreat(pilot.danger)) === "high").length;
+    const normalThreatPilots = active.length - highThreatPilots;
+    const plannedHighBonusBatches = isFirstPaintRound
+      ? 0
+      : Math.max(0, THREAT_PRIORITY_HIGH_PAGE_WEIGHT - THREAT_PRIORITY_NORMAL_PAGE_WEIGHT);
+    params.logDebug("Pilot page round scheduling", {
+      round,
+      phase: isFirstPaintRound ? "first-paint" : "deepening",
+      activePilots: active.length,
+      highThreatPilots,
+      normalThreatPilots,
+      plannedHighBonusBatches
+    });
+
     let roundNewRows = 0;
     const baseBatch = buildRoundBatch(active);
     roundNewRows += await runRoundBatch(baseBatch, params, deps);
 
-    const extraWeight = Math.max(0, THREAT_PRIORITY_HIGH_PAGE_WEIGHT - THREAT_PRIORITY_NORMAL_PAGE_WEIGHT);
-    for (let index = 0; index < extraWeight; index += 1) {
-      if (params.isCancelled()) {
-        return;
+    if (!isFirstPaintRound) {
+      for (let index = 0; index < plannedHighBonusBatches; index += 1) {
+        if (params.isCancelled()) {
+          return;
+        }
+        const highThreatBatch = buildRoundBatch(active, "high");
+        if (highThreatBatch.length === 0) {
+          break;
+        }
+        roundNewRows += await runRoundBatch(highThreatBatch, params, deps);
       }
-      const highThreatBatch = buildRoundBatch(active, "high");
-      if (highThreatBatch.length === 0) {
-        break;
-      }
-      roundNewRows += await runRoundBatch(highThreatBatch, params, deps);
     }
 
-    roundsProcessed += 1;
+    roundsProcessed = round;
     const validPilots = params.pilots.filter((pilot) => pilot.failed !== true);
-    if (roundsProcessed === 1) {
+    if (isFirstPaintRound) {
+      const firstPaintRecomputeStartedAt = Date.now();
+      params.logDebug("Pilot first-paint recompute started", { round, pilots: validPilots.length });
       await recomputeForPilots({ ...params, pilots: validPilots }, deps, false);
+      params.logDebug("Pilot first-paint recompute completed", {
+        round,
+        pilots: validPilots.length,
+        durationMs: Date.now() - firstPaintRecomputeStartedAt
+      });
     }
 
     if (roundNewRows === 0) {
@@ -380,7 +419,6 @@ export async function runPagedHistoryRounds(
     }
   }
 }
-
 async function recomputeForPilots(
   params: {
     pilots: PilotBreadthState[];
@@ -663,6 +701,7 @@ async function runPilotPageFetch(
     signal: PipelineSignal;
     onRetry: RetryBuilder;
     updatePilotCard: PilotCardUpdater;
+    logDebug: DebugLogger;
   },
   deps: Pick<BreadthDeps, "fetchLatestKillsPage" | "fetchLatestLossesPage" | "mergeKillmailLists">
 ): Promise<number> {
@@ -674,22 +713,54 @@ async function runPilotPageFetch(
     return 0;
   }
 
-  const killRows = shouldFetchKills
-    ? await deps.fetchLatestKillsPage(
-        pilot.characterId,
-        killPage,
-        params.signal,
-        params.onRetry(`zKill kills page ${killPage}`)
-      )
-    : [];
-  const lossRows = shouldFetchLosses
-    ? await deps.fetchLatestLossesPage(
-        pilot.characterId,
-        lossPage,
-        params.signal,
-        params.onRetry(`zKill losses page ${lossPage}`)
-      )
-    : [];
+  const pageFetchStartedAt = Date.now();
+  params.logDebug("Pilot page fetch started", {
+    pilot: pilot.entry.pilotName,
+    characterId: pilot.characterId,
+    killPage,
+    lossPage,
+    fetchKills: shouldFetchKills,
+    fetchLosses: shouldFetchLosses
+  });
+
+  let killRows: ZkillKillmail[] = [];
+  let lossRows: ZkillKillmail[] = [];
+  let killDurationMs = 0;
+  let lossDurationMs = 0;
+  let killCacheEvent: ZkillCacheEvent | null = null;
+  let lossCacheEvent: ZkillCacheEvent | null = null;
+
+  if (shouldFetchKills) {
+    const killFetchStartedAt = Date.now();
+    killRows = await deps.fetchLatestKillsPage(
+      pilot.characterId,
+      killPage,
+      params.signal,
+      params.onRetry(`zKill kills page ${killPage}`),
+      {
+        onCacheEvent: (event) => {
+          killCacheEvent = event;
+        }
+      }
+    );
+    killDurationMs = Date.now() - killFetchStartedAt;
+  }
+
+  if (shouldFetchLosses) {
+    const lossFetchStartedAt = Date.now();
+    lossRows = await deps.fetchLatestLossesPage(
+      pilot.characterId,
+      lossPage,
+      params.signal,
+      params.onRetry(`zKill losses page ${lossPage}`),
+      {
+        onCacheEvent: (event) => {
+          lossCacheEvent = event;
+        }
+      }
+    );
+    lossDurationMs = Date.now() - lossFetchStartedAt;
+  }
 
   if (shouldFetchKills) {
     pilot.nextKillsPage += 1;
@@ -724,6 +795,34 @@ async function runPilotPageFetch(
       inferenceLosses: toSortedRows(pilot.historyLosses, deps)
     });
   }
+
+  params.logDebug("Pilot page fetch completed", {
+    pilot: pilot.entry.pilotName,
+    characterId: pilot.characterId,
+    totalDurationMs: Date.now() - pageFetchStartedAt,
+    totalAdded,
+    historyKills: pilot.historyKills.size,
+    historyLosses: pilot.historyLosses.size,
+    kills: {
+      requested: shouldFetchKills,
+      page: killPage,
+      rows: killRows.length,
+      added: addedKills,
+      exhausted: pilot.exhaustedKills,
+      durationMs: killDurationMs,
+      cacheEvent: killCacheEvent
+    },
+    losses: {
+      requested: shouldFetchLosses,
+      page: lossPage,
+      rows: lossRows.length,
+      added: addedLosses,
+      exhausted: pilot.exhaustedLosses,
+      durationMs: lossDurationMs,
+      cacheEvent: lossCacheEvent
+    }
+  });
+
   return totalAdded;
 }
 

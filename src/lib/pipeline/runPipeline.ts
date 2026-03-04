@@ -7,15 +7,43 @@ import { collectUnresolvedEntries, buildUnresolvedPilotError } from "./unresolve
 import { buildResolvedPilotTasks } from "./tasking";
 import { createErrorCard } from "./stateTransitions";
 import { extractErrorMessage, isAbortError } from "./pure";
-import { runBreadthPilotPipeline } from "./breadthPipeline";
+import { runBreadthPilotPipeline, type ResolvedPilotTask } from "./breadthPipeline";
 import { ZKILL_PAGE_MAX_ROUNDS } from "./constants";
 import type {
   CancelCheck,
   DebugLogger,
   ErrorLogger,
   PipelineSignal,
-  PilotCardUpdater
+  PilotCardUpdater,
+  RetryBuilder
 } from "./types";
+
+export type RunResolvedPilotPipelineParams = {
+  tasks: ResolvedPilotTask[];
+  lookbackDays: number;
+  topShips: number;
+  dogmaIndex?: DogmaIndex | null;
+  signal: PipelineSignal;
+  onRetry: RetryBuilder;
+  isCancelled: CancelCheck;
+  updatePilotCard: PilotCardUpdater;
+  logDebug: DebugLogger;
+  logError: ErrorLogger;
+  maxPages?: number;
+};
+
+export type RunResolvedPipelineDeps = {
+  runBreadthPilotPipeline: typeof runBreadthPilotPipeline;
+};
+
+const DEFAULT_RESOLVED_DEPS: RunResolvedPipelineDeps = {
+  runBreadthPilotPipeline
+};
+
+type RunResolvedPilotPipelineFn = (
+  params: RunResolvedPilotPipelineParams,
+  deps?: RunResolvedPipelineDeps
+) => Promise<void>;
 
 type RunPipelineDeps = {
   createRetryNoticeHandler: typeof createRetryNoticeHandler;
@@ -23,6 +51,7 @@ type RunPipelineDeps = {
   collectUnresolvedEntries: typeof collectUnresolvedEntries;
   buildUnresolvedPilotError: typeof buildUnresolvedPilotError;
   buildResolvedPilotTasks: typeof buildResolvedPilotTasks;
+  runResolvedPilotPipeline?: RunResolvedPilotPipelineFn;
   runBreadthPilotPipeline: typeof runBreadthPilotPipeline;
   createErrorCard: typeof createErrorCard;
   extractErrorMessage: typeof extractErrorMessage;
@@ -35,11 +64,31 @@ const DEFAULT_DEPS: RunPipelineDeps = {
   collectUnresolvedEntries,
   buildUnresolvedPilotError,
   buildResolvedPilotTasks,
+  runResolvedPilotPipeline,
   runBreadthPilotPipeline,
   createErrorCard,
   extractErrorMessage,
   isAbortError
 };
+
+export async function runResolvedPilotPipeline(
+  params: RunResolvedPilotPipelineParams,
+  deps: RunResolvedPipelineDeps = DEFAULT_RESOLVED_DEPS
+): Promise<void> {
+  await deps.runBreadthPilotPipeline({
+    tasks: params.tasks,
+    lookbackDays: params.lookbackDays,
+    topShips: params.topShips,
+    dogmaIndex: params.dogmaIndex,
+    maxPages: params.maxPages ?? ZKILL_PAGE_MAX_ROUNDS,
+    signal: params.signal,
+    onRetry: params.onRetry,
+    isCancelled: params.isCancelled,
+    updatePilotCard: params.updatePilotCard,
+    logDebug: params.logDebug,
+    logError: params.logError
+  });
+}
 
 export async function runPilotPipeline(
   params: {
@@ -91,19 +140,23 @@ export async function runPilotPipeline(
   }
 
   const tasks = deps.buildResolvedPilotTasks(params.entries, idMap);
-  await deps.runBreadthPilotPipeline({
-    tasks,
-    lookbackDays: params.lookbackDays,
-    topShips: params.topShips,
-    dogmaIndex: params.dogmaIndex,
-    maxPages: params.maxPages ?? ZKILL_PAGE_MAX_ROUNDS,
-    signal: params.signal,
-    onRetry,
-    isCancelled: params.isCancelled,
-    updatePilotCard: params.updatePilotCard,
-    logDebug: params.logDebug,
-    logError: params.logError
-  });
+  const runResolved = deps.runResolvedPilotPipeline ?? runResolvedPilotPipeline;
+  await runResolved(
+    {
+      tasks,
+      lookbackDays: params.lookbackDays,
+      topShips: params.topShips,
+      dogmaIndex: params.dogmaIndex,
+      maxPages: params.maxPages ?? ZKILL_PAGE_MAX_ROUNDS,
+      signal: params.signal,
+      onRetry,
+      isCancelled: params.isCancelled,
+      updatePilotCard: params.updatePilotCard,
+      logDebug: params.logDebug,
+      logError: params.logError
+    },
+    { runBreadthPilotPipeline: deps.runBreadthPilotPipeline }
+  );
   if (!params.isCancelled()) {
     params.logDebug("Pipeline complete", {
       pilots: params.entries.length,

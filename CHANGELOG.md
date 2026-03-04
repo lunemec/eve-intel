@@ -3,6 +3,11 @@
 All notable changes to this project are documented in this file.
 
 ## Unreleased
+- Added breadth-pipeline fetch diagnostics in `src/lib/pipeline/breadthPipeline.ts` (base fetch start/complete timing, per-page kills/losses fetch timing, row/added counts, and zKill cache-event payloads) plus regression coverage in `src/lib/pipeline/breadthPipeline.test.ts` to investigate slow initial likely-ship display.
+- Unified resolved pilot fetching through new `runResolvedPilotPipeline` in `src/lib/pipeline/runPipeline.ts`, updated `runPilotPipeline` to delegate through that canonical path, and switched suggested-pilot hydration in `src/lib/useSuggestedPilotCards.ts` to use the same entrypoint.
+- Reworked breadth paging in `src/lib/pipeline/breadthPipeline.ts` for first-paint prioritization: round 1 now recomputes immediately after base page-1 fetches (still danger-sorted), later rounds apply stronger danger weighting (`THREAT_PRIORITY_HIGH_PAGE_WEIGHT = 4`), and new round-level/first-paint scheduler diagnostics were added.
+- Removed unused legacy pipeline paths and tests (`inferenceWindow`, `stageOneFetch`, `stageTwo`, `pilotProcessor`, `processPilotFactory`, `stageOneEnrichment`, `stageTwoEnrichment`) and updated duplicate-import hygiene coverage to track only live pipeline modules.
+- Reduced fleet-grouping deep-fetch churn by changing `src/lib/fleetGroupingCache.ts` source signatures to `fleet-grouping-artifact-src-v2` (selected pilots + first 100 `inferenceKills` IDs only), gating regroup scheduling in `src/lib/useDebouncedFleetGrouping.ts` to significant signature/selection changes, and adding a 30s fetch-active guard refresh with regression coverage in `src/lib/fleetGroupingCache.test.ts`, `src/lib/useDebouncedFleetGrouping.test.tsx`, and `src/lib/useDebouncedFleetGrouping.cache.test.tsx`.
 
 ## v0.3.6 - 2026-03-03
 - Updated fleet-group color assignment in `src/lib/fleetGrouping.ts` to use a high-contrast display-order sequence (`0,3,1,4,2,5`) so adjacent groups are visually separated instead of landing on similar neighboring tones.
@@ -296,3 +301,4 @@ Boundary source:
 
 Boundary source:
 - Tagged commit `b216dbf` (`v0.2.2`).
+
