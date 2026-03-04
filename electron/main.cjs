@@ -31,7 +31,7 @@ let parityFitDumpLoaded = false;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1080,
+    width: 1140,
     height: 920,
     minWidth: 500,
     minHeight: 680,

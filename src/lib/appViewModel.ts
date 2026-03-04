@@ -41,25 +41,37 @@ export function sortPilotCardsForFleetView(pilotCards: PilotCard[]): PilotCard[]
   if (groupingSeed.pilotCardsById.size === 0) {
     return groupingSeed.fallbackOrder;
   }
+
   const grouping = computeFleetGrouping({
     selectedPilotIds: groupingSeed.selectedPilotIds,
     pilotCardsById: groupingSeed.pilotCardsById,
     allKnownPilotNamesById: groupingSeed.allKnownPilotNamesById,
     nowMs: 0
   });
-  if (grouping.orderedPilotIds.length === 0) {
+  if (grouping.groups.length === 0) {
     return groupingSeed.fallbackOrder;
   }
 
-  const orderedPilotCards: PilotCard[] = [];
+  const groupedSelectedOrder: PilotCard[] = [];
   const includedPilotIds = new Set<number>();
-  for (const pilotId of grouping.orderedPilotIds) {
-    const pilot = groupingSeed.pilotCardsById.get(pilotId);
-    if (!pilot || includedPilotIds.has(pilotId)) {
-      continue;
+  for (const group of grouping.groups) {
+    const selectedGroupPilots = group.selectedPilotIds
+      .map((pilotId) => groupingSeed.pilotCardsById.get(pilotId))
+      .filter((pilot): pilot is PilotCard => Boolean(pilot))
+      .sort(comparePilotCardsByDanger);
+
+    for (const selectedGroupPilot of selectedGroupPilots) {
+      const pilotId = toValidPilotId(selectedGroupPilot.characterId);
+      if (pilotId === null || includedPilotIds.has(pilotId)) {
+        continue;
+      }
+      groupedSelectedOrder.push(selectedGroupPilot);
+      includedPilotIds.add(pilotId);
     }
-    orderedPilotCards.push(pilot);
-    includedPilotIds.add(pilotId);
+  }
+
+  if (groupedSelectedOrder.length === 0) {
+    return groupingSeed.fallbackOrder;
   }
 
   for (const pilot of groupingSeed.fallbackOrder) {
@@ -67,10 +79,10 @@ export function sortPilotCardsForFleetView(pilotCards: PilotCard[]): PilotCard[]
     if (pilotId !== null && includedPilotIds.has(pilotId)) {
       continue;
     }
-    orderedPilotCards.push(pilot);
+    groupedSelectedOrder.push(pilot);
   }
 
-  return orderedPilotCards;
+  return groupedSelectedOrder;
 }
 
 export function deriveGroupPresentationByPilotId(pilotCards: PilotCard[]): Map<number, GroupPresentation> {

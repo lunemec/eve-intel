@@ -1,0 +1,90 @@
+.readme-media-root {
+  min-height: 100vh;
+  background: linear-gradient(150deg, #09131d 0%, #0f1a28 45%, #111b2b 100%);
+  color: #e5eefb;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+.readme-media-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px;
+  display: grid;
+  gap: 16px;
+}
+
+.readme-media-card {
+  border: 1px solid #2d4057;
+  border-radius: 12px;
+  background: rgba(10, 19, 31, 0.88);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+.readme-media-hero {
+  padding: 20px;
+  display: grid;
+  gap: 10px;
+}
+
+.readme-media-hero h1 {
+  margin: 0;
+  font-size: 1.72rem;
+}
+
+.readme-media-hero p {
+  margin: 0;
+  color: #b8cadf;
+}
+
+.readme-media-hero ul {
+  margin: 4px 0 0 0;
+  padding-left: 18px;
+  color: #d8e4f5;
+}
+
+.readme-media-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.readme-media-clip {
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.readme-media-clip h2 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.readme-media-caption {
+  margin: 0;
+  color: #9fb5ce;
+  font-size: 0.87rem;
+}
+
+.readme-media-frame {
+  border: 1px solid #35506e;
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(22, 35, 51, 0.72);
+}
+
+.readme-media-frame h3 {
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
+}
+
+.readme-media-frame p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #c5d5e8;
+}
+
+@media (max-width: 980px) {
+  .readme-media-grid {
+    grid-template-columns: 1fr;
+  }
+}

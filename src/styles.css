@@ -35,13 +35,20 @@ body {
 .app {
   position: relative;
   z-index: 1;
-  max-width: 1060px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 20px;
 }
 
 .app.desktop-shell {
   padding-top: 42px;
+}
+
+.app[data-readme-media-scene] *,
+.app[data-readme-media-scene] *::before,
+.app[data-readme-media-scene] *::after {
+  animation: none !important;
+  transition: none !important;
 }
 
 .constellation-canvas {

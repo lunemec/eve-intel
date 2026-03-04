@@ -26,6 +26,9 @@ jobs:
       - name: Run docs governance checks
         run: npm run check:docs-governance
 
+      - name: Run README media freshness check
+        run: npm run docs:media:check
+
       - name: Run unit/integration tests
         run: npm test
 

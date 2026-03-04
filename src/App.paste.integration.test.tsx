@@ -397,6 +397,127 @@ describe("App paste flow", () => {
     expect(ungroupedRow?.getAttribute("data-group-id")).not.toBe(groupedId);
   });
 
+
+  it("keeps suggested pilot ordering stable by character id after async name hydration", async () => {
+    const suggestedLowerId = 999101;
+    const suggestedHigherId = 999102;
+    const suggestedLowerName = "Zulu Wing";
+    const suggestedHigherName = "Alpha Wing";
+
+    const { resolveCharacterIds } = await import("./lib/api/esi");
+    vi.mocked(resolveCharacterIds).mockImplementation(async (names: string[]) => {
+      const map = new Map<string, number>();
+      for (const name of names) {
+        const normalized = name.trim().toLowerCase();
+        if (normalized === "a9tan") {
+          map.set(normalized, 12345);
+        }
+        if (normalized === "b9tan") {
+          map.set(normalized, 67890);
+        }
+      }
+      return map;
+    });
+
+    vi.mocked(fetchCharacterPublic).mockImplementation(async (characterId: number) => {
+      if (characterId === 67890) {
+        return {
+          character_id: 67890,
+          corporation_id: 98765,
+          alliance_id: 0,
+          name: "B9tan",
+          security_status: 2.1
+        };
+      }
+      if (characterId === suggestedLowerId || characterId === suggestedHigherId) {
+        return {
+          character_id: characterId,
+          corporation_id: 9990011,
+          alliance_id: 0,
+          name: `Character ${characterId}`,
+          security_status: 3.2
+        };
+      }
+      return {
+        character_id: 12345,
+        corporation_id: 54321,
+        alliance_id: 0,
+        name: "A9tan",
+        security_status: 2.3
+      };
+    });
+
+    vi.mocked(resolveUniverseNames).mockImplementation(async (ids) => {
+      const names = new Map<number, string>();
+      for (const id of ids) {
+        if (id === 54321) names.set(id, "Test Corp");
+        if (id === 98765) names.set(id, "Bravo Corp");
+        if (id === 9990011) names.set(id, "Suggested Corp");
+        if (id === 12731) names.set(id, "Onyx");
+        if (id === 22436) names.set(id, "Widow");
+        if (id === 22456) names.set(id, "Sabre");
+        if (id === suggestedLowerId) names.set(id, suggestedLowerName);
+        if (id === suggestedHigherId) names.set(id, suggestedHigherName);
+      }
+      return names;
+    });
+
+    const groupedKills = Array.from({ length: 10 }, (_, index) => ({
+      killmail_id: 50_000 + index,
+      killmail_time: `2026-02-${String((index % 28) + 1).padStart(2, "0")}T00:00:00Z`,
+      victim: {},
+      attackers: [
+        { character_id: 12345, ship_type_id: 12731 },
+        { character_id: 67890, ship_type_id: 22456 },
+        { character_id: suggestedLowerId, ship_type_id: 22436 },
+        { character_id: suggestedHigherId, ship_type_id: 22436 }
+      ],
+      zkb: { totalValue: 2_100_000_000 }
+    }));
+
+    vi.mocked(fetchLatestKillsPage).mockImplementation(async (characterId: number, page: number) => {
+      if (page !== 1) {
+        return [];
+      }
+      if (
+        characterId === 12345 ||
+        characterId === 67890 ||
+        characterId === suggestedLowerId ||
+        characterId === suggestedHigherId
+      ) {
+        return groupedKills;
+      }
+      return [];
+    });
+    vi.mocked(fetchLatestLossesPage).mockImplementation(async () => []);
+
+    const { container } = render(<App />);
+
+    const event = new Event("paste") as ClipboardEvent;
+    Object.defineProperty(event, "clipboardData", {
+      value: {
+        getData: () => "A9tan\nB9tan"
+      }
+    });
+    window.dispatchEvent(event);
+
+    await waitFor(() => {
+      expect(screen.getByText("Fleet Summary")).toBeTruthy();
+      expect(screen.getAllByText(suggestedLowerName).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(suggestedHigherName).length).toBeGreaterThan(0);
+      expect(container.querySelectorAll("article.pilot-card").length).toBeGreaterThanOrEqual(4);
+    }, { timeout: 3000 });
+
+    const summaryNames = [...container.querySelectorAll(".fleet-summary-line .fleet-summary-name")]
+      .map((node) => node.textContent?.trim() ?? "")
+      .filter((name) => name.length > 0);
+    expect(summaryNames.slice(0, 4)).toEqual(["A9tan", "B9tan", suggestedLowerName, suggestedHigherName]);
+
+    const detailNames = [...container.querySelectorAll("article.pilot-card .player-name")]
+      .map((node) => node.textContent?.trim() ?? "")
+      .filter((name) => name.length > 0);
+    expect(detailNames.slice(0, 4)).toEqual(["A9tan", "B9tan", suggestedLowerName, suggestedHigherName]);
+  });
   it("uses zKill dangerous metric for player threat and danger row", async () => {
     vi.mocked(fetchCharacterStats).mockResolvedValueOnce({
       kills: 1,

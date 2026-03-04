@@ -58,7 +58,7 @@ function artifact(overrides: Partial<FleetGroupingCacheArtifact> = {}): FleetGro
 }
 
 describe("useDebouncedFleetGrouping cache artifact", () => {
-  it("restores grouped ordering from cache artifact after simulated reload", async () => {
+  it("keeps selected ordering sourced from live sort even when cache artifact stores grouped order", async () => {
     const alpha = pilot({ characterId: 1001, characterName: "Alpha" });
     const bravo = pilot({ characterId: 1002, characterName: "Bravo" });
     const pilotCards = [alpha, bravo];
@@ -116,7 +116,7 @@ describe("useDebouncedFleetGrouping cache artifact", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.sortedPilotCards.map((row) => row.characterName)).toEqual(["Bravo", "Alpha"]);
+      expect(result.current.sortedPilotCards.map((row) => row.characterName)).toEqual(["Alpha", "Bravo"]);
     });
   });
 
@@ -163,7 +163,7 @@ describe("useDebouncedFleetGrouping cache artifact", () => {
     expect(saveFleetGroupingArtifact).toHaveBeenCalled();
   });
 
-  it("keeps cache artifact usable for deep-history-only updates outside the v2 kill window", async () => {
+  it("keeps cache artifact usable for deep-history-only updates outside the v2 kill window without overriding live selected order", async () => {
     const alpha = pilot({ characterId: 3001, characterName: "Alpha", inferenceKills: killmailRows(3001, 130) });
     const bravo = pilot({ characterId: 3002, characterName: "Bravo" });
     const initialCards = [alpha, bravo];
@@ -211,7 +211,7 @@ describe("useDebouncedFleetGrouping cache artifact", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.sortedPilotCards.map((row) => row.characterName)).toEqual(["Bravo", "Alpha"]);
+      expect(result.current.sortedPilotCards.map((row) => row.characterName)).toEqual(["Alpha", "Bravo"]);
     });
 
     await act(async () => {
@@ -220,6 +220,6 @@ describe("useDebouncedFleetGrouping cache artifact", () => {
     });
 
     expect(loadFleetGroupingArtifact).toHaveBeenCalledTimes(1);
-    expect(result.current.sortedPilotCards.map((row) => row.characterName)).toEqual(["Bravo", "Alpha"]);
+    expect(result.current.sortedPilotCards.map((row) => row.characterName)).toEqual(["Alpha", "Bravo"]);
   });
 });

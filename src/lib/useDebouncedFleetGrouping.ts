@@ -69,7 +69,6 @@ export function useDebouncedFleetGrouping(
   );
   const latestPilotCardsRef = useLatestRef(pilotCards);
   const [debouncedPilotCards, setDebouncedPilotCards] = useState<PilotCard[]>(pilotCards);
-  const [cachedOrderedPilotIds, setCachedOrderedPilotIds] = useState<number[]>([]);
   const [cachedPresentationByPilotId, setCachedPresentationByPilotId] = useState<ReadonlyMap<number, GroupPresentation>>(new Map());
   const previousGroupingDiagnosticRef = useRef<FleetGroupingDiagnosticSnapshot | null>(null);
   const selectedPilotIds = useMemo(() => collectSelectedPilotIds(pilotCards), [pilotCards]);
@@ -214,7 +213,6 @@ export function useDebouncedFleetGrouping(
       : [];
 
     if (selectedPilotIdsForCache.length === 0) {
-      setCachedOrderedPilotIds((previous) => (previous.length === 0 ? previous : []));
       setCachedPresentationByPilotId((previous) => (previous.size === 0 ? previous : new Map()));
       return () => {
         cancelled = true;
@@ -251,15 +249,10 @@ export function useDebouncedFleetGrouping(
             sourceSignature
           })
         ) {
-          setCachedOrderedPilotIds((previous) => (previous.length === 0 ? previous : []));
           setCachedPresentationByPilotId((previous) => (previous.size === 0 ? previous : new Map()));
           return;
         }
-        const nextOrderedPilotIds = cached.artifact.orderedPilotIds;
         const nextPresentationByPilotId = materializeGroupPresentationByPilotId(cached.artifact.presentationEntries);
-        setCachedOrderedPilotIds((previous) =>
-          arrayEquals(previous, nextOrderedPilotIds) ? previous : nextOrderedPilotIds
-        );
         setCachedPresentationByPilotId((previous) =>
           presentationMapEquals(previous, nextPresentationByPilotId)
             ? previous
@@ -277,7 +270,6 @@ export function useDebouncedFleetGrouping(
             error: error instanceof Error ? error.message : String(error)
           });
         }
-        setCachedOrderedPilotIds((previous) => (previous.length === 0 ? previous : []));
         setCachedPresentationByPilotId((previous) => (previous.size === 0 ? previous : new Map()));
       });
 
@@ -298,10 +290,6 @@ export function useDebouncedFleetGrouping(
   const debouncedOrderedPilotIds = useMemo(
     () => collectOrderedPilotIds(debouncedSortedPilotCards),
     [debouncedSortedPilotCards]
-  );
-  const effectiveOrderedPilotIds = useMemo(
-    () => (cachedOrderedPilotIds.length > 0 ? cachedOrderedPilotIds : debouncedOrderedPilotIds),
-    [cachedOrderedPilotIds, debouncedOrderedPilotIds]
   );
   const effectivePresentationByPilotId = useMemo(
     () =>
@@ -328,9 +316,9 @@ export function useDebouncedFleetGrouping(
       applyDebouncedOrdering({
         fallbackOrder,
         currentPilotCards: pilotCards,
-        orderedPilotIds: effectiveOrderedPilotIds
+        orderedPilotIds: debouncedOrderedPilotIds
       }),
-    [effectiveOrderedPilotIds, fallbackOrder, pilotCards]
+    [debouncedOrderedPilotIds, fallbackOrder, pilotCards]
   );
   const currentPilotIdSet = useMemo(() => collectValidPilotIds(pilotCards), [pilotCards]);
   const groupPresentationByPilotId = useMemo(

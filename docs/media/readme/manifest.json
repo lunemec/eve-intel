@@ -1,0 +1,45 @@
+{
+  "generatedAt": "2026-03-04T15:27:18.583Z",
+  "sourceHash": "d625b188248275a7acc37afe3ab5f52f6a01a93a8809cf05f5a33458c79f737d",
+  "sourceFiles": [
+    "src/App.tsx",
+    "src/lib/readmeMediaScenario.ts",
+    "vite.readme-media-preview.config.ts",
+    "scripts/lib/readme-media/config.mjs",
+    "scripts/lib/readme-media/generate.mjs"
+  ],
+  "outputs": [
+    {
+      "id": "overview-full-app",
+      "file": "overview-full-app.png",
+      "width": 1440,
+      "height": 900,
+      "frameDurationsMs": [
+        1200
+      ]
+    },
+    {
+      "id": "detail-pilot-ships",
+      "file": "detail-pilot-ships.png",
+      "width": 1280,
+      "height": 720,
+      "frameDurationsMs": [
+        1200
+      ]
+    },
+    {
+      "id": "detail-fleet-summary-groups",
+      "file": "detail-fleet-summary-groups.png",
+      "width": 1200,
+      "height": 300,
+      "frameDurationsMs": [
+        1200
+      ]
+    }
+  ],
+  "generationMode": "playwright+ffmpeg",
+  "host": {
+    "platform": "linux",
+    "release": "5.15.146.1-microsoft-standard-WSL2"
+  }
+}

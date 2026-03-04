@@ -6,12 +6,23 @@
 > Artificial Intelligence model. While efforts have been made to ensure functionality and
 > safety, it should be reviewed before use in production environments. Use at your own risk.
 
-[![EVE Intel screenshot](./screen.png)](./screen.png)
+[![EVE Intel full app showcase](./docs/media/readme/overview-full-app.png)](./docs/media/readme/overview-full-app.png)
 
 Browser-first EVE Online intel app inspired by EVE Squadron / EVEOS workflows, with an optional Electron desktop wrapper for better clipboard automation.
 
 **Like the app?** Donate ISK to [Lukas Nemec](https://zkillboard.com/character/93227004/).
 
+Full-app overview (above): Fleet Summary with grouped pilots, one hard-cyno highlight, and evidence-backed alert pills alongside detailed pilot cards.
+
+
+## Feature Tour
+
+![Pilot ship detail](./docs/media/readme/detail-pilot-ships.png)
+Single-pilot detail with likely ships, fitted EFT snippets, evidence-backed role/cyno/bait pills, and combat capability panel (DPS, alpha, range, speed, EHP, resist profile).
+
+![Fleet summary grouped detail](./docs/media/readme/detail-fleet-summary-groups.png)
+Detailed Fleet Summary with grouped and suggested pilots.
+Rows sharing the same group tint are detected co-fly groups; greyed rows are suggested pilots inferred from shared killmail participation that were not pasted directly.
 ## Overview
 
 This project provides:
@@ -488,3 +499,5 @@ zKill `pastSeconds` is capped; this app clamps windowed lookback to supported ma
 - Data is fetched from public ESI/zKill endpoints
 - Cached data is stored locally in browser storage
 - Do not paste sensitive non-game data into the intel field
+
+

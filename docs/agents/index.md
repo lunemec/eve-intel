@@ -12,6 +12,8 @@ Canonical navigation for repository policy documents.
 - Keep behavior stable during refactors unless the behavior change is explicitly documented.
 - For combat bugfixes, add fit corpus coverage and pyfa reference data before Dogma fixes.
 
+Fleet ordering contract: grouped selected pilots render first (groups by weighted confidence, members by danger), then ungrouped selected pilots by danger; suggested pilots keep deterministic ID order (see `quality.md`).
+
 ## Documentation Format
 - `AGENTS.md` is the compact entrypoint: it states mandatory rules and links here first.
 - `docs/agents/index.md` is the navigation hub: it defines read order and points to domain-specific policies.

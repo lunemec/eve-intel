@@ -17,6 +17,8 @@ This document defines repository expectations for changelog maintenance, robustn
 - Handle edge cases explicitly (empty values, missing data, unexpected types, out-of-range numbers).
 - Avoid hidden side effects; keep functions deterministic where possible.
 - Preserve backward-compatible behavior unless a change is intentional and documented.
+- Keep Fleet Summary and detail-card ordering in one canonical sequence: grouped selected pilots render first (groups by weighted confidence, members by danger), then ungrouped selected pilots by danger; suggested pilots use deterministic ID order that remains stable across async name hydration.
+- Keep README media pilot-detail ship suggestions aligned with the runtime inference cap: `fit-metrics/roles` fixture data in `src/lib/readmeMediaScenario.ts` should include `TOP_SHIP_CANDIDATES` entries so screenshots match live app card expectations.
 - Add error handling that is actionable and easy to diagnose.
 
 ## Fetch And Cache Guardrails

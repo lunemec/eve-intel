@@ -91,34 +91,69 @@ describe("sortPilotCardsByDanger", () => {
 });
 
 describe("sortPilotCardsForFleetView", () => {
-  it("prefers grouped ordering when grouping produces ordered pilot ids", () => {
-    const alphaId = 2001;
-    const zuluId = 2002;
+  it("prioritizes grouped pilots first, orders groups by weighted confidence, and keeps in-group danger sorting", () => {
+    const highConfidenceLowDangerA = 2001;
+    const highConfidenceLowDangerB = 2002;
+    const lowConfidenceHighDangerA = 2003;
+    const lowConfidenceHighDangerB = 2004;
+    const ungroupedHighestDanger = 2005;
     const rows = [
       pilot({
-        characterId: zuluId,
-        characterName: "Zulu Pilot",
-        parsedEntry: { ...pilot().parsedEntry, pilotName: "Zulu Pilot" },
-        stats: { danger: 95 } as PilotCard["stats"],
+        characterId: highConfidenceLowDangerA,
+        characterName: "High Group Anchor",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "High Group Anchor" },
+        stats: { danger: 20 } as PilotCard["stats"],
+        inferenceKills: killmailSeries(9_100, 20, (index) =>
+          index < 19
+            ? [highConfidenceLowDangerA, highConfidenceLowDangerB]
+            : [highConfidenceLowDangerA]
+        )
+      }),
+      pilot({
+        characterId: highConfidenceLowDangerB,
+        characterName: "High Group Wing",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "High Group Wing" },
+        stats: { danger: 60 } as PilotCard["stats"],
         inferenceKills: []
       }),
       pilot({
-        characterId: alphaId,
-        characterName: "Alpha Pilot",
-        parsedEntry: { ...pilot().parsedEntry, pilotName: "Alpha Pilot" },
-        stats: { danger: 5 } as PilotCard["stats"],
-        inferenceKills: killmailSeries(9000, 12, () => [alphaId, zuluId])
+        characterId: lowConfidenceHighDangerA,
+        characterName: "Low Group Anchor",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "Low Group Anchor" },
+        stats: { danger: 90 } as PilotCard["stats"],
+        inferenceKills: killmailSeries(9_200, 20, (index) =>
+          index < 17
+            ? [lowConfidenceHighDangerA, lowConfidenceHighDangerB]
+            : [lowConfidenceHighDangerA]
+        )
+      }),
+      pilot({
+        characterId: lowConfidenceHighDangerB,
+        characterName: "Low Group Wing",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "Low Group Wing" },
+        stats: { danger: 80 } as PilotCard["stats"],
+        inferenceKills: []
+      }),
+      pilot({
+        characterId: ungroupedHighestDanger,
+        characterName: "Ungrouped Apex",
+        parsedEntry: { ...pilot().parsedEntry, pilotName: "Ungrouped Apex" },
+        stats: { danger: 99 } as PilotCard["stats"],
+        inferenceKills: []
       })
     ];
 
     const ordered = sortPilotCardsForFleetView(rows);
     expect(ordered.map((row) => row.characterName ?? row.parsedEntry.pilotName)).toEqual([
-      "Alpha Pilot",
-      "Zulu Pilot"
+      "High Group Wing",
+      "High Group Anchor",
+      "Low Group Anchor",
+      "Low Group Wing",
+      "Ungrouped Apex"
     ]);
   });
 
-  it("falls back to danger ordering when grouping has no ordered ids", () => {
+  it("uses danger ordering when pilots have no grouping evidence", () => {
     const rows = [
       pilot({
         characterId: 3001,

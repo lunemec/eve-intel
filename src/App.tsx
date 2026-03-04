@@ -13,6 +13,7 @@ import { usePilotIntelPipeline } from "./lib/usePilotIntelPipeline";
 import { useDogmaIndex } from "./lib/useDogmaIndex";
 import { useDebugLog } from "./lib/useDebugLog";
 import { useFitMetricsResolver } from "./lib/useFitMetricsResolver";
+import type { FitMetricResult } from "./lib/useFitMetrics";
 import { useParsedPaste } from "./lib/useParsedPaste";
 import { useDebugSectionAutoScroll } from "./lib/useDebugSectionAutoScroll";
 import { useCacheWipeAction } from "./lib/useCacheWipeAction";
@@ -30,10 +31,13 @@ import { useSuggestedPilotCards } from "./lib/useSuggestedPilotCards";
 import { extractErrorMessage } from "./lib/appUtils";
 import { deriveGroupRunPositionsByIndex } from "./lib/groupRuns";
 import type { PilotCard } from "./lib/pilotDomain";
+import { getReadmeMediaSnapshot } from "./lib/readmeMediaScenario";
 
 const APP_VERSION = import.meta.env.PACKAGE_VERSION;
 
 export default function App() {
+  const readmeMediaSnapshot = useMemo(() => getReadmeMediaSnapshot(), []);
+  const isReadmeMediaMode = readmeMediaSnapshot !== null;
   const { settings, debugEnabled, onDebugToggle } = useAppPreferences({
     maxLookbackDays: ZKILL_MAX_LOOKBACK_DAYS
   });
@@ -48,9 +52,24 @@ export default function App() {
   const { dogmaIndex } = useDogmaIndex({ logDebug });
   const { pasteTrapRef, onPaste } = usePasteInputIntegration({ applyPaste });
   const getFitMetrics = useFitMetricsResolver({ dogmaIndex, logDebug });
+  const resolveFitMetrics = useMemo(() => {
+    if (!readmeMediaSnapshot) {
+      return getFitMetrics;
+    }
+    return (pilot: PilotCard, fit: PilotCard["fitCandidates"][number] | undefined): FitMetricResult => {
+      if (!fit?.fitLabel) {
+        return { status: "unavailable", key: "none", reason: "No resolved fit modules available." };
+      }
+      const value = readmeMediaSnapshot.fitMetricsByFitLabel.get(fit.fitLabel);
+      if (!value) {
+        return { status: "unavailable", key: fit.fitLabel, reason: "README media fixture has no combat metrics for fit." };
+      }
+      return { status: "ready", key: fit.fitLabel, value };
+    };
+  }, [getFitMetrics, readmeMediaSnapshot]);
 
   const { pilotCards, setPilotCards, networkNotice, setNetworkNotice } = usePilotIntelPipeline({
-    entries: parseResult.entries,
+    entries: isReadmeMediaMode ? [] : parseResult.entries,
     settings,
     dogmaIndex,
     logDebug
@@ -58,13 +77,17 @@ export default function App() {
   useDebugSectionAutoScroll({ debugEnabled, debugSectionRef });
 
   const {
-    sortedPilotCards,
-    fleetSummaryGroupPresentationByPilotId
-  } = useDebouncedFleetGrouping(pilotCards, { logDebug });
-  const suggestedPilotIds = useMemo(
+    sortedPilotCards: sortedPilotCardsFromGrouping,
+    fleetSummaryGroupPresentationByPilotId: fleetSummaryGroupPresentationByPilotIdFromGrouping
+  } = useDebouncedFleetGrouping(isReadmeMediaMode ? [] : pilotCards, { logDebug });
+  const sortedPilotCards = readmeMediaSnapshot?.selectedPilotCards ?? sortedPilotCardsFromGrouping;
+  const fleetSummaryGroupPresentationByPilotId = readmeMediaSnapshot?.groupPresentationByPilotId
+    ?? fleetSummaryGroupPresentationByPilotIdFromGrouping;
+  const suggestedPilotIdsForRuntime = useMemo(
     () => collectSuggestedPilotIdsForSummary(sortedPilotCards, fleetSummaryGroupPresentationByPilotId),
     [fleetSummaryGroupPresentationByPilotId, sortedPilotCards]
   );
+  const suggestedPilotIds = isReadmeMediaMode ? [] : suggestedPilotIdsForRuntime;
   const suggestedPilotCards = useSuggestedPilotCards({
     suggestedPilotIds,
     lookbackDays: settings.lookbackDays,
@@ -121,23 +144,25 @@ export default function App() {
       abortController.abort();
     };
   }, [logDebug, unresolvedFleetSummarySuggestedPilotIds]);
-  const displayPilotCards = useMemo(
-    () =>
-      buildDisplayPilotCards(
-        sortedPilotCards,
-        suggestedPilotIds,
-        suggestedPilotCards,
-        fleetSummarySuggestedNamesById,
-        fleetSummaryGroupPresentationByPilotId
-      ),
-    [
-      fleetSummaryGroupPresentationByPilotId,
-      fleetSummarySuggestedNamesById,
+  const displayPilotCards = useMemo(() => {
+    if (readmeMediaSnapshot) {
+      return readmeMediaSnapshot.displayPilotCards;
+    }
+    return buildDisplayPilotCards(
       sortedPilotCards,
+      suggestedPilotIds,
       suggestedPilotCards,
-      suggestedPilotIds
-    ]
-  );
+      fleetSummarySuggestedNamesById,
+      fleetSummaryGroupPresentationByPilotId
+    );
+  }, [
+    fleetSummaryGroupPresentationByPilotId,
+    fleetSummarySuggestedNamesById,
+    readmeMediaSnapshot,
+    sortedPilotCards,
+    suggestedPilotCards,
+    suggestedPilotIds
+  ]);
   const displayCopyableFleetCount = useMemo(
     () => displayPilotCards.filter((pilot) => Number.isFinite(pilot.characterId)).length,
     [displayPilotCards]
@@ -174,8 +199,12 @@ export default function App() {
   };
 
   return (
-    <main className={`app${isDesktopApp ? " desktop-shell" : ""}`}>
-      <ConstellationBackground />
+    <main
+      className={`app${isDesktopApp ? " desktop-shell" : ""}`}
+      data-readme-media-scene={readmeMediaSnapshot?.sceneId}
+      data-readme-media-frame={readmeMediaSnapshot?.frameId}
+    >
+      {isReadmeMediaMode ? null : <ConstellationBackground />}
       <TopBar
         isDesktopApp={isDesktopApp}
         isWindowMaximized={isWindowMaximized}
@@ -197,7 +226,7 @@ export default function App() {
 
       {networkNotice ? <p className="notice notice-inline">{networkNotice}</p> : null}
 
-      {sortedPilotCards.length === 0 ? (
+      {displayPilotCards.length === 0 ? (
         <section className="empty">
           <p>
             Try pasting one pilot per line, for example{" "}
@@ -221,7 +250,7 @@ export default function App() {
               <PilotCardView
                 key={pilot.parsedEntry.pilotName.toLowerCase()}
                 pilot={pilot}
-                getFitMetrics={getFitMetrics}
+                getFitMetrics={resolveFitMetrics}
                 groupPresentation={resolveGroupPresentation(fleetSummaryGroupPresentationByPilotId, pilot.characterId)}
                 groupRunPosition={displayGroupRunPositionsByIndex[index]}
               />
@@ -310,11 +339,7 @@ function buildDisplayPilotCards(
     }
   }
 
-  const orderedSuggestedPilotIds = orderSuggestedPilotIdsForDisplay({
-    suggestedPilotIds,
-    suggestedPilotCardsById,
-    suggestedPilotNamesById
-  });
+  const orderedSuggestedPilotIds = orderSuggestedPilotIdsForDisplay(suggestedPilotIds);
   const remainingSuggestedByGroupId = new Map<string, number[]>();
   const remainingUngroupedSuggestedPilotIds: number[] = [];
   for (const suggestedPilotId of orderedSuggestedPilotIds) {
@@ -456,63 +481,14 @@ function withResolvedSuggestedPilotName(
   };
 }
 
-function orderSuggestedPilotIdsForDisplay(params: {
-  suggestedPilotIds: number[];
-  suggestedPilotCardsById: ReadonlyMap<number, PilotCard>;
-  suggestedPilotNamesById: ReadonlyMap<number, string>;
-}): number[] {
+function orderSuggestedPilotIdsForDisplay(suggestedPilotIds: number[]): number[] {
   const uniqueSuggestedIds = new Set<number>();
-  for (const pilotId of params.suggestedPilotIds) {
+  for (const pilotId of suggestedPilotIds) {
     if (Number.isInteger(pilotId) && pilotId > 0) {
       uniqueSuggestedIds.add(pilotId);
     }
   }
-  return [...uniqueSuggestedIds].sort((leftPilotId, rightPilotId) =>
-    compareSuggestedPilotIdsForDisplay({
-      leftPilotId,
-      rightPilotId,
-      suggestedPilotCardsById: params.suggestedPilotCardsById,
-      suggestedPilotNamesById: params.suggestedPilotNamesById
-    })
-  );
-}
-
-function compareSuggestedPilotIdsForDisplay(params: {
-  leftPilotId: number;
-  rightPilotId: number;
-  suggestedPilotCardsById: ReadonlyMap<number, PilotCard>;
-  suggestedPilotNamesById: ReadonlyMap<number, string>;
-}): number {
-  const leftName = resolveSuggestedPilotNameForSort({
-    pilotId: params.leftPilotId,
-    suggestedPilotCardsById: params.suggestedPilotCardsById,
-    suggestedPilotNamesById: params.suggestedPilotNamesById
-  });
-  const rightName = resolveSuggestedPilotNameForSort({
-    pilotId: params.rightPilotId,
-    suggestedPilotCardsById: params.suggestedPilotCardsById,
-    suggestedPilotNamesById: params.suggestedPilotNamesById
-  });
-  return (
-    leftName.localeCompare(rightName, "en", { sensitivity: "base" }) ||
-    params.leftPilotId - params.rightPilotId
-  );
-}
-
-function resolveSuggestedPilotNameForSort(params: {
-  pilotId: number;
-  suggestedPilotCardsById: ReadonlyMap<number, PilotCard>;
-  suggestedPilotNamesById: ReadonlyMap<number, string>;
-}): string {
-  const resolvedName = params.suggestedPilotNamesById.get(params.pilotId);
-  if (resolvedName && resolvedName.trim().length > 0) {
-    return resolvedName.trim();
-  }
-  const cardName = params.suggestedPilotCardsById.get(params.pilotId)?.characterName;
-  if (cardName && cardName.trim().length > 0) {
-    return cardName.trim();
-  }
-  return `Character ${params.pilotId}`;
+  return [...uniqueSuggestedIds].sort((leftPilotId, rightPilotId) => leftPilotId - rightPilotId);
 }
 
 function findNextSelectedGroupId(params: {
