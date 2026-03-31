@@ -36,10 +36,33 @@ vi.mock("./api/esi", () => ({
 vi.mock("./api/zkill", () => ({
   fetchCharacterStats: vi.fn(),
   fetchLatestKills: vi.fn(),
-  fetchLatestKillsPage: vi.fn(),
+  fetchLatestKillsPage: vi.fn(async (_characterId: number, page: number) =>
+    page === 1
+      ? [
+          {
+            killmail_id: 1001,
+            killmail_time: new Date().toISOString(),
+            victim: { character_id: 999 },
+            attackers: []
+          }
+        ]
+      : []
+  ),
   fetchLatestKillsPaged: vi.fn(),
+  getZkillRateLimit: vi.fn(() => ({ remaining: 100, resetAfterSeconds: 0, updatedAt: Date.now() })),
   fetchLatestLosses: vi.fn(),
-  fetchLatestLossesPage: vi.fn(),
+  fetchLatestLossesPage: vi.fn(async (_characterId: number, page: number) =>
+    page === 1
+      ? [
+          {
+            killmail_id: 2001,
+            killmail_time: new Date().toISOString(),
+            victim: { character_id: 101 },
+            attackers: []
+          }
+        ]
+      : []
+  ),
   fetchLatestLossesPaged: vi.fn(),
   fetchRecentKills: vi.fn(),
   fetchRecentLosses: vi.fn()
@@ -139,12 +162,32 @@ describe("usePilotIntelPipeline", () => {
       alliance_id: 456,
       security_status: 2.1
     });
-    vi.mocked(fetchRecentKills).mockResolvedValue([]);
-    vi.mocked(fetchRecentLosses).mockResolvedValue([]);
     vi.mocked(fetchLatestKills).mockResolvedValue([]);
     vi.mocked(fetchLatestLosses).mockResolvedValue([]);
-    vi.mocked(fetchLatestKillsPage).mockResolvedValue([]);
-    vi.mocked(fetchLatestLossesPage).mockResolvedValue([]);
+    vi.mocked(fetchLatestKillsPage).mockImplementation(async (_characterId: number, page: number) =>
+      page === 1
+        ? [
+            {
+              killmail_id: 1001,
+              killmail_time: new Date().toISOString(),
+              victim: { character_id: 999 },
+              attackers: []
+            }
+          ]
+        : []
+    );
+    vi.mocked(fetchLatestLossesPage).mockImplementation(async (_characterId: number, page: number) =>
+      page === 1
+        ? [
+            {
+              killmail_id: 2001,
+              killmail_time: new Date().toISOString(),
+              victim: { character_id: 101 },
+              attackers: []
+            }
+          ]
+        : []
+    );
     vi.mocked(fetchLatestKillsPaged).mockResolvedValue([]);
     vi.mocked(fetchLatestLossesPaged).mockResolvedValue([]);
     vi.mocked(fetchCharacterStats).mockResolvedValue(null);

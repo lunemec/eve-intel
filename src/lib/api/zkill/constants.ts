@@ -5,5 +5,5 @@ export const ZKILL_MAX_LOOKBACK_DAYS = 7;
 export const ESI_BASE = "https://esi.evetech.net/latest";
 export const ESI_DATASOURCE = "tranquility";
 export const KILLMAIL_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
-export const MAX_HYDRATE = 50;
-export const HYDRATE_CONCURRENCY = 5;
+export const MAX_HYDRATE = 15;
+export const HYDRATE_CONCURRENCY = 15;

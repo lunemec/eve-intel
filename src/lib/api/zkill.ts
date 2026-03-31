@@ -11,6 +11,7 @@ import {
 } from "./zkill/constants";
 import { findHydrationCandidates, hydrateKillmailSummaries } from "./zkill/hydration";
 import { normalizeZkillArray, parseCharacterStats, parseZkillResponse } from "./zkill/parsing";
+import { throttleZkill } from "./zkill/throttle";
 import {
   fetchCharacterStatsTransport,
   fetchKillmailDetailsTransport,
@@ -35,6 +36,48 @@ export type {
   ZkillKillmail,
   ZkillVictim
 };
+
+export type ZkillRateLimit = {
+  remaining: number;
+  resetAfterSeconds: number;
+  updatedAt: number;
+};
+
+let zkillRateLimit: ZkillRateLimit = {
+  remaining: 100,
+  resetAfterSeconds: 0,
+  updatedAt: 0
+};
+
+export function getZkillRateLimit(): ZkillRateLimit {
+  return zkillRateLimit;
+}
+
+function trackZkillRateLimit(headers: Headers): void {
+  const rateLimitHeader = headers.get("ratelimit");
+  if (!rateLimitHeader) {
+    return;
+  }
+
+  // Example: default;r=50;t=30
+  const parts = rateLimitHeader.split(";");
+  let remaining = zkillRateLimit.remaining;
+  let resetAfterSeconds = zkillRateLimit.resetAfterSeconds;
+
+  for (const part of parts) {
+    if (part.startsWith("r=")) {
+      remaining = Number(part.slice(2));
+    } else if (part.startsWith("t=")) {
+      resetAfterSeconds = Number(part.slice(2));
+    }
+  }
+
+  zkillRateLimit = {
+    remaining,
+    resetAfterSeconds,
+    updatedAt: Date.now()
+  };
+}
 
 const zkillRefreshInFlight = new Map<string, Promise<ZkillKillmail[]>>();
 const signalIdByAbortSignal = new WeakMap<AbortSignal, number>();
@@ -95,7 +138,11 @@ export async function fetchLatestKillsPage(
   page: number,
   signal?: AbortSignal,
   onRetry?: (info: RetryInfo) => void,
-  options?: { forceNetwork?: boolean; onCacheEvent?: (event: ZkillCacheEvent) => void }
+  options?: {
+    forceNetwork?: boolean;
+    onCacheEvent?: (event: ZkillCacheEvent) => void;
+    maxHydrate?: number;
+  }
 ): Promise<ZkillKillmail[]> {
   const normalizedPage = Math.max(1, Math.floor(page));
   const cacheKey = `eve-intel.cache.zkill.kills.latest.${characterId}.page.${normalizedPage}`;
@@ -107,7 +154,8 @@ export async function fetchLatestKillsPage(
     {
       aggressiveRevalidate: normalizedPage === 1,
       forceNetwork: options?.forceNetwork,
-      onCacheEvent: options?.onCacheEvent
+      onCacheEvent: options?.onCacheEvent,
+      maxHydrate: options?.maxHydrate
     }
   );
 }
@@ -117,7 +165,11 @@ export async function fetchLatestLossesPage(
   page: number,
   signal?: AbortSignal,
   onRetry?: (info: RetryInfo) => void,
-  options?: { forceNetwork?: boolean; onCacheEvent?: (event: ZkillCacheEvent) => void }
+  options?: {
+    forceNetwork?: boolean;
+    onCacheEvent?: (event: ZkillCacheEvent) => void;
+    maxHydrate?: number;
+  }
 ): Promise<ZkillKillmail[]> {
   const normalizedPage = Math.max(1, Math.floor(page));
   const cacheKey = `eve-intel.cache.zkill.losses.latest.${characterId}.page.${normalizedPage}`;
@@ -129,7 +181,8 @@ export async function fetchLatestLossesPage(
     {
       aggressiveRevalidate: normalizedPage === 1,
       forceNetwork: options?.forceNetwork,
-      onCacheEvent: options?.onCacheEvent
+      onCacheEvent: options?.onCacheEvent,
+      maxHydrate: options?.maxHydrate
     }
   );
 }
@@ -177,6 +230,7 @@ async function fetchZkillList(
     aggressiveRevalidate?: boolean;
     forceNetwork?: boolean;
     onCacheEvent?: (event: ZkillCacheEvent) => void;
+    maxHydrate?: number;
   }
 ): Promise<ZkillKillmail[]> {
   const cached = await getCachedStateAsync<ZkillKillmail[] | ZkillListCacheEnvelope>(cacheKey);
@@ -184,7 +238,8 @@ async function fetchZkillList(
   if (options?.forceNetwork) {
     return refreshZkillListDeduped(url, cacheKey, onRetry, signal, normalizedEnvelope ?? undefined, {
       forceNetwork: true,
-      onCacheEvent: options.onCacheEvent
+      onCacheEvent: options.onCacheEvent,
+      maxHydrate: options.maxHydrate
     });
   }
 
@@ -203,12 +258,16 @@ async function fetchZkillList(
       await setCachedAsync(cacheKey, envelopeForRefresh, ZKILL_CACHE_TTL_MS);
     }
     if (normalizedCached.length === 0 && cachedRows.length > 0) {
-      return refreshZkillListDeduped(url, cacheKey, onRetry, signal, envelopeForRefresh);
+      return refreshZkillListDeduped(url, cacheKey, onRetry, signal, envelopeForRefresh, {
+        maxHydrate: options?.maxHydrate
+      });
     }
     if (normalizedCached.length === 0) {
       // Empty cache entries can be stale/poisoned from transient upstream responses.
       try {
-        return await refreshZkillListDeduped(url, cacheKey, onRetry, signal, envelopeForRefresh);
+        return await refreshZkillListDeduped(url, cacheKey, onRetry, signal, envelopeForRefresh, {
+          maxHydrate: options?.maxHydrate
+        });
       } catch {
         return [];
       }
@@ -219,14 +278,20 @@ async function fetchZkillList(
       Date.now() - envelopeForRefresh.validatedAt >= ZKILL_PAGE_ONE_REVALIDATE_MS;
 
     if (cached.stale) {
-      void refreshZkillListDeduped(url, cacheKey, onRetry, undefined, envelopeForRefresh);
+      void refreshZkillListDeduped(url, cacheKey, onRetry, undefined, envelopeForRefresh, {
+        maxHydrate: options?.maxHydrate
+      });
     } else if (needsAggressiveRevalidate) {
-      void refreshZkillListDeduped(url, cacheKey, onRetry, undefined, envelopeForRefresh);
+      void refreshZkillListDeduped(url, cacheKey, onRetry, undefined, envelopeForRefresh, {
+        maxHydrate: options?.maxHydrate
+      });
     }
     return normalizedCached;
   }
 
-  return refreshZkillListDeduped(url, cacheKey, onRetry, signal);
+  return refreshZkillListDeduped(url, cacheKey, onRetry, signal, undefined, {
+    maxHydrate: options?.maxHydrate
+  });
 }
 
 async function fetchLatestPaged(
@@ -240,19 +305,23 @@ async function fetchLatestPaged(
   const totalPages = Math.max(1, Math.floor(maxPages));
 
   for (let page = 1; page <= totalPages; page += 1) {
-    const rows =
-      side === "kills"
-        ? await fetchLatestKillsPage(characterId, page, signal, onRetry)
-        : await fetchLatestLossesPage(characterId, page, signal, onRetry);
-    const beforeCount = unique.size;
+    try {
+      const rows =
+        side === "kills"
+          ? await fetchLatestKillsPage(characterId, page, signal, onRetry)
+          : await fetchLatestLossesPage(characterId, page, signal, onRetry);
+      const beforeCount = unique.size;
 
-    for (const row of rows) {
-      unique.set(row.killmail_id, row);
-    }
+      for (const row of rows) {
+        unique.set(row.killmail_id, row);
+      }
 
-    // Stop only when endpoint is exhausted (no rows), or when paging no longer yields new killmails.
-    // Some zKill list endpoints are effectively capped per page well below 200.
-    if (rows.length === 0 || unique.size === beforeCount) {
+      // Stop only when endpoint is exhausted (no rows), or when paging no longer yields new killmails.
+      if (rows.length === 0 || unique.size === beforeCount) {
+        break;
+      }
+    } catch {
+      // Return whatever we have if a page fails
       break;
     }
   }
@@ -274,6 +343,7 @@ function refreshZkillListDeduped(
   options?: {
     forceNetwork?: boolean;
     onCacheEvent?: (event: ZkillCacheEvent) => void;
+    maxHydrate?: number;
   }
 ): Promise<ZkillKillmail[]> {
   // Dedupe boundary: foreground refreshes only share work when they reuse the same AbortSignal.
@@ -313,10 +383,16 @@ async function refreshZkillList(
   options?: {
     forceNetwork?: boolean;
     onCacheEvent?: (event: ZkillCacheEvent) => void;
+    maxHydrate?: number;
   }
 ): Promise<ZkillKillmail[]> {
   const conditionalHeaders = toConditionalHeaders(cachedEnvelope);
-  const response = await fetchZkillListTransport(url, signal, onRetry, conditionalHeaders);
+  const shortUrl = url.replace(ZKILL_BASE, "zkill:");
+  const response = await throttleZkill(
+    () => fetchZkillListTransport(url, signal, onRetry, conditionalHeaders),
+    shortUrl
+  );
+  trackZkillRateLimit(response.headers);
 
   options?.onCacheEvent?.({
     forceNetwork: Boolean(options?.forceNetwork),
@@ -357,7 +433,7 @@ async function refreshZkillList(
   }
 
   const data = await parseZkillResponse(response.data, {
-    maxHydrate: MAX_HYDRATE,
+    maxHydrate: options?.maxHydrate ?? MAX_HYDRATE,
     signal,
     onRetry,
     findHydrationCandidates,
@@ -392,7 +468,11 @@ async function refreshCharacterStats(
   onRetry?: (info: RetryInfo) => void
 ): Promise<ZkillCharacterStats | null> {
   try {
-    const response = await fetchCharacterStatsTransport(characterId, signal, onRetry);
+    const response = await throttleZkill(
+      () => fetchCharacterStatsTransport(characterId, signal, onRetry),
+      `zkill:stats/${characterId}`
+    );
+    trackZkillRateLimit(response.headers);
     const stats = parseCharacterStats(response.data);
     const cachePolicy = resolveHttpCachePolicy(response.headers, {
       fallbackTtlMs: ZKILL_CACHE_TTL_MS,
@@ -407,7 +487,6 @@ async function refreshCharacterStats(
     if (isAbortError(error)) {
       throw error;
     }
-    await setCachedAsync(cacheKey, null, 1000 * 60 * 5);
     return null;
   }
 }

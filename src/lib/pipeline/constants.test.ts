@@ -14,7 +14,7 @@ import {
 describe("pipeline/constants", () => {
   it("keeps stable default limits for pipeline stages", () => {
     expect(TOP_SHIP_CANDIDATES).toBe(5);
-    expect(DEEP_HISTORY_MAX_PAGES).toBe(20);
+    expect(DEEP_HISTORY_MAX_PAGES).toBe(10);
     expect(PILOT_PROCESS_CONCURRENCY).toBe(4);
     expect(ZKILL_PAGE_ROUND_CONCURRENCY).toBe(PILOT_PROCESS_CONCURRENCY);
     expect(ZKILL_PAGE_MAX_ROUNDS).toBe(DEEP_HISTORY_MAX_PAGES);

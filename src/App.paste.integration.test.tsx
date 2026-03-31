@@ -75,10 +75,33 @@ vi.mock("./lib/api/zkill", () => ({
   ZKILL_MAX_LOOKBACK_DAYS: 7,
   fetchCharacterStats: vi.fn(async () => null),
   fetchLatestKills: vi.fn(async () => []),
-  fetchLatestKillsPage: vi.fn(async (_characterId: number, page: number) => (page === 1 ? [] : [])),
+  fetchLatestKillsPage: vi.fn(async (_characterId: number, page: number) =>
+    page === 1
+      ? [
+          {
+            killmail_id: 1001,
+            killmail_time: new Date().toISOString(),
+            victim: { character_id: 999 },
+            attackers: []
+          }
+        ]
+      : []
+  ),
   fetchLatestKillsPaged: vi.fn(async () => []),
+  getZkillRateLimit: vi.fn(() => ({ remaining: 100, resetAfterSeconds: 0, updatedAt: Date.now() })),
   fetchLatestLosses: vi.fn(async () => []),
-  fetchLatestLossesPage: vi.fn(async (_characterId: number, page: number) => (page === 1 ? [] : [])),
+  fetchLatestLossesPage: vi.fn(async (_characterId: number, page: number) =>
+    page === 1
+      ? [
+          {
+            killmail_id: 2001,
+            killmail_time: new Date().toISOString(),
+            victim: { character_id: 12345 },
+            attackers: []
+          }
+        ]
+      : []
+  ),
   fetchLatestLossesPaged: vi.fn(async () => []),
   fetchRecentKills: vi.fn(async () => []),
   fetchRecentLosses: vi.fn(async () => [])

@@ -15,17 +15,12 @@ export function createLoadingCard(entry: ParsedPilotInput): PilotCard {
   };
 }
 
-export function createErrorCard(entry: ParsedPilotInput, error: string): PilotCard {
+export function createErrorCard(entry: ParsedPilotInput, error: string, existing?: PilotCard): PilotCard {
   return {
-    parsedEntry: entry,
+    ...createLoadingCard(entry),
+    ...(existing ?? {}),
     status: "error",
     fetchPhase: "error",
-    error,
-    predictedShips: [],
-    fitCandidates: [],
-    kills: [],
-    losses: [],
-    inferenceKills: [],
-    inferenceLosses: []
+    error
   };
 }

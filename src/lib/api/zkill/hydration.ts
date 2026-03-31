@@ -41,9 +41,20 @@ export async function hydrateKillmailSummaries(
   onRetry?: (info: RetryInfo) => void
 ): Promise<ZkillKillmail[]> {
   const output: ZkillKillmail[] = [];
+  // Prioritize losses (victim ship type usually higher signal for character activity)
+  const prioritized = [...rows].sort((a, b) => {
+    const aRow = a as Partial<ZkillKillmail>;
+    const bRow = b as Partial<ZkillKillmail>;
+    const aIsLoss = typeof aRow.victim?.ship_type_id !== "number" ? 1 : 0;
+    const bIsLoss = typeof bRow.victim?.ship_type_id !== "number" ? 1 : 0;
+    return bIsLoss - aIsLoss;
+  });
 
-  for (let index = 0; index < rows.length; index += HYDRATE_CONCURRENCY) {
-    const batch = rows.slice(index, index + HYDRATE_CONCURRENCY);
+  for (let index = 0; index < prioritized.length; index += HYDRATE_CONCURRENCY) {
+    if (signal?.aborted) {
+      break;
+    }
+    const batch = prioritized.slice(index, index + HYDRATE_CONCURRENCY);
     const hydrated = await Promise.all(
       batch.map(async (row) => {
         const hash = row.zkb?.hash;
@@ -71,6 +82,11 @@ export async function hydrateKillmailSummaries(
       if (entry) {
         output.push(entry);
       }
+    }
+
+    if (index + HYDRATE_CONCURRENCY < prioritized.length) {
+      // Small mandatory delay between hydration batches to avoid hitting ESI burst limits.
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
   }
 

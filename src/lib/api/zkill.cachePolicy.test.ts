@@ -7,10 +7,12 @@ vi.mock("../cache", () => ({
 
 import { getCachedStateAsync, setCachedAsync } from "../cache";
 import { fetchLatestKillsPage } from "./zkill";
+import { _resetThrottleForTesting } from "./zkill/throttle";
 
 describe("zkill cache policy", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    _resetThrottleForTesting();
   });
 
   it("uses HTTP max-age for zKill list cache TTL", async () => {

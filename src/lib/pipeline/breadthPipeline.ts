@@ -5,11 +5,14 @@ import {
   fetchCharacterStats,
   fetchLatestKillsPage,
   fetchLatestLossesPage,
+  getZkillRateLimit,
   type ZkillCacheEvent,
   type ZkillKillmail
 } from "../api/zkill";
+import { setThrottleDebugListener, getThrottleStats } from "../api/zkill/throttle";
 import { derivePilotStats } from "../intel";
 import type { PilotCard } from "../pilotDomain";
+import { HttpError } from "../api/http";
 import { buildDerivedInferenceKey, isAbortError, mergeKillmailLists, mergePilotStats } from "./pure";
 import { buildStageOneRow, buildStageTwoRow } from "./rows";
 import { createErrorCard } from "./stateTransitions";
@@ -36,6 +39,8 @@ import {
   THREAT_PRIORITY_DANGER_THRESHOLD,
   THREAT_PRIORITY_HIGH_PAGE_WEIGHT,
   THREAT_PRIORITY_NORMAL_PAGE_WEIGHT,
+  ZKILL_ADAPTIVE_MIN_REMAINING,
+  ZKILL_MAX_HISTORY_AGE_DAYS,
   ZKILL_PAGE_MAX_ROUNDS,
   ZKILL_PAGE_ROUND_CONCURRENCY
 } from "./constants";
@@ -62,6 +67,9 @@ type PilotBreadthState = {
   exhaustedLosses: boolean;
   lastMaterialSignature: string;
   failed?: boolean;
+  lastTopShipsSignature?: string;
+  stableRounds: number;
+  converged: boolean;
 };
 
 type BreadthDeps = {
@@ -74,6 +82,7 @@ type BreadthDeps = {
   createErrorCard: typeof createErrorCard;
   fetchLatestKillsPage: typeof fetchLatestKillsPage;
   fetchLatestLossesPage: typeof fetchLatestLossesPage;
+  getZkillRateLimit: typeof getZkillRateLimit;
   mergeKillmailLists: typeof mergeKillmailLists;
   collectStageNameResolutionIds: typeof collectStageNameResolutionIds;
   resolveNamesSafely: typeof resolveNamesSafely;
@@ -97,6 +106,7 @@ const DEFAULT_DEPS: BreadthDeps = {
   createErrorCard,
   fetchLatestKillsPage,
   fetchLatestLossesPage,
+  getZkillRateLimit,
   mergeKillmailLists,
   collectStageNameResolutionIds,
   resolveNamesSafely,
@@ -126,6 +136,22 @@ export async function runBreadthPilotPipeline(
   },
   deps: BreadthDeps = DEFAULT_DEPS
 ): Promise<void> {
+  // Wire throttle debug events to the pipeline's debug logger.
+  // Note: fleet size is set by the caller (usePilotIntelPipelineEffect)
+  // since each pilot runs as a separate pipeline with tasks.length=1.
+  setThrottleDebugListener((evt) => {
+    if (evt.event === "dispatch" || evt.event === "complete" || evt.event === "error") {
+      params.logDebug(`Throttle ${evt.event}`, {
+        label: evt.label,
+        queueDepth: evt.queueDepth,
+        running: evt.running,
+        ...(evt.waitMs !== undefined ? { waitMs: evt.waitMs } : {}),
+        ...(evt.durationMs !== undefined ? { durationMs: evt.durationMs } : {}),
+        ...(evt.error ? { error: evt.error } : {})
+      });
+    }
+  });
+
   const maxPages = Math.max(1, Math.floor(params.maxPages ?? ZKILL_PAGE_MAX_ROUNDS));
   const pilots = await hydrateBaseCards(
     {
@@ -160,6 +186,10 @@ export async function runBreadthPilotPipeline(
     },
     deps
   );
+
+  const throttleStats = getThrottleStats();
+  params.logDebug("Pipeline throttle stats", throttleStats);
+  setThrottleDebugListener(null);
 }
 
 export async function hydrateBaseCards(
@@ -299,6 +329,8 @@ export async function hydrateBaseCards(
         exhaustedKills: false,
         exhaustedLosses: false,
         failed: false,
+        stableRounds: 0,
+        converged: false,
         lastMaterialSignature: buildPilotMaterialSignature({
           fetchPhase: stageOneForPipeline.fetchPhase ?? "base",
           statsDanger: stageOneForPipeline.stats?.danger,
@@ -315,10 +347,11 @@ export async function hydrateBaseCards(
       const message = error instanceof Error ? error.message : String(error);
       params.logError(`Pilot base hydration failed for ${task.entry.pilotName}`, error);
       params.logDebug("Pilot base hydration failed", { pilot: task.entry.pilotName, error: message });
-      params.updatePilotCard(
-        task.entry.pilotName,
-        deps.createErrorCard(task.entry, `Failed to fetch pilot intel: ${message}`)
-      );
+      params.updatePilotCard(task.entry.pilotName, {
+        status: "error",
+        fetchPhase: "error",
+        error: `Failed to fetch base pilot intel: ${message}`
+      });
     }
     }
   );
@@ -346,65 +379,51 @@ export async function runPagedHistoryRounds(
   }
   let roundsProcessed = 0;
 
-  while (true) {
+  // Phase 1: first-paint for ALL pilots (round 1)
+  {
     if (params.isCancelled()) {
       return;
     }
-    const active = params.pilots.filter((pilot) => pilot.failed !== true && hasRemainingPages(pilot, params.maxPages));
-    if (active.length === 0) {
-      break;
-    }
+    const active = params.pilots.filter((pilot) => pilot.failed !== true && hasRemainingPages(pilot, params.maxPages, deps));
+    if (active.length > 0) {
+      const highThreatPilots = active.filter((pilot) => (pilot.threatTier ?? classifyThreat(pilot.danger)) === "high").length;
+      params.logDebug("Pilot page round scheduling", {
+        round: 1,
+        phase: "first-paint",
+        activePilots: active.length,
+        highThreatPilots,
+        normalThreatPilots: active.length - highThreatPilots,
+        plannedHighBonusBatches: 0
+      });
 
-    const round = roundsProcessed + 1;
-    const isFirstPaintRound = round === 1;
-    const highThreatPilots = active.filter((pilot) => (pilot.threatTier ?? classifyThreat(pilot.danger)) === "high").length;
-    const normalThreatPilots = active.length - highThreatPilots;
-    const plannedHighBonusBatches = isFirstPaintRound
-      ? 0
-      : Math.max(0, THREAT_PRIORITY_HIGH_PAGE_WEIGHT - THREAT_PRIORITY_NORMAL_PAGE_WEIGHT);
-    params.logDebug("Pilot page round scheduling", {
-      round,
-      phase: isFirstPaintRound ? "first-paint" : "deepening",
-      activePilots: active.length,
-      highThreatPilots,
-      normalThreatPilots,
-      plannedHighBonusBatches
-    });
+      const baseBatch = buildRoundBatch(active);
+      await runRoundBatch(baseBatch, params, deps, true);
+      roundsProcessed = 1;
 
-    let roundNewRows = 0;
-    const baseBatch = buildRoundBatch(active);
-    roundNewRows += await runRoundBatch(baseBatch, params, deps);
-
-    if (!isFirstPaintRound) {
-      for (let index = 0; index < plannedHighBonusBatches; index += 1) {
-        if (params.isCancelled()) {
-          return;
-        }
-        const highThreatBatch = buildRoundBatch(active, "high");
-        if (highThreatBatch.length === 0) {
-          break;
-        }
-        roundNewRows += await runRoundBatch(highThreatBatch, params, deps);
+      // Update convergence signatures after first data
+      for (const pilot of active) {
+        updateConvergence(pilot);
       }
-    }
 
-    roundsProcessed = round;
-    const validPilots = params.pilots.filter((pilot) => pilot.failed !== true);
-    if (isFirstPaintRound) {
+      const validPilots = params.pilots.filter((pilot) => pilot.failed !== true);
       const firstPaintRecomputeStartedAt = Date.now();
-      params.logDebug("Pilot first-paint recompute started", { round, pilots: validPilots.length });
+      params.logDebug("Pilot first-paint recompute started", { round: 1, pilots: validPilots.length });
       await recomputeForPilots({ ...params, pilots: validPilots }, deps, false);
       params.logDebug("Pilot first-paint recompute completed", {
-        round,
+        round: 1,
         pilots: validPilots.length,
         durationMs: Date.now() - firstPaintRecomputeStartedAt
       });
     }
-
-    if (roundNewRows === 0) {
-      break;
-    }
   }
+
+  // Phase 2: deepen SELECTED pilots first (rounds 2+)
+  const selectedPilots = params.pilots.filter((p) => p.priority === "selected");
+  const suggestedPilots = params.pilots.filter((p) => p.priority === "suggested");
+
+  roundsProcessed = await runDeepeningRounds(selectedPilots, params, deps, roundsProcessed, "selected");
+  // Phase 3: deepen SUGGESTED pilots (remaining budget)
+  roundsProcessed = await runDeepeningRounds(suggestedPilots, params, deps, roundsProcessed, "suggested");
 
   if (roundsProcessed === 0 || params.isCancelled()) {
     return;
@@ -418,6 +437,92 @@ export async function runPagedHistoryRounds(
       params.updatePilotCard(pilot.entry.pilotName, { fetchPhase: "ready" });
     }
   }
+}
+
+async function runDeepeningRounds(
+  pilots: PilotBreadthState[],
+  params: {
+    maxPages: number;
+    signal: PipelineSignal;
+    onRetry: RetryBuilder;
+    isCancelled: CancelCheck;
+    updatePilotCard: PilotCardUpdater;
+    logDebug: DebugLogger;
+  },
+  deps: Pick<
+    BreadthDeps,
+    "fetchLatestKillsPage" |
+    "fetchLatestLossesPage" |
+    "mergeKillmailLists" |
+    "createErrorCard" |
+    "isAbortError" |
+    "getZkillRateLimit"
+  >,
+  startRound: number,
+  phase: "selected" | "suggested"
+): Promise<number> {
+  let roundsProcessed = startRound;
+
+  while (true) {
+    if (params.isCancelled()) {
+      return roundsProcessed;
+    }
+    const active = pilots.filter((pilot) => pilot.failed !== true && hasRemainingPages(pilot, params.maxPages, deps));
+    if (active.length === 0) {
+      break;
+    }
+
+    const round = roundsProcessed + 1;
+    const highThreatPilots = active.filter((pilot) => (pilot.threatTier ?? classifyThreat(pilot.danger)) === "high").length;
+    const normalThreatPilots = active.length - highThreatPilots;
+    const plannedHighBonusBatches = Math.max(0, THREAT_PRIORITY_HIGH_PAGE_WEIGHT - THREAT_PRIORITY_NORMAL_PAGE_WEIGHT);
+    params.logDebug("Pilot page round scheduling", {
+      round,
+      phase: `deepening-${phase}`,
+      activePilots: active.length,
+      highThreatPilots,
+      normalThreatPilots,
+      plannedHighBonusBatches
+    });
+
+    let roundNewRows = 0;
+    const baseBatch = buildRoundBatch(active);
+    roundNewRows += await runRoundBatch(baseBatch, params, deps);
+
+    for (let index = 0; index < plannedHighBonusBatches; index += 1) {
+      if (params.isCancelled()) {
+        return roundsProcessed;
+      }
+      const highThreatBatch = buildRoundBatch(active, "high");
+      if (highThreatBatch.length === 0) {
+        break;
+      }
+      roundNewRows += await runRoundBatch(highThreatBatch, params, deps);
+    }
+
+    roundsProcessed = round;
+
+    // Check convergence after each deepening round
+    for (const pilot of active) {
+      const wasBefore = pilot.converged;
+      updateConvergence(pilot);
+      if (pilot.converged && !wasBefore) {
+        params.logDebug("Pilot converged", {
+          pilot: pilot.entry.pilotName,
+          stableRounds: pilot.stableRounds,
+          historyKills: pilot.historyKills.size,
+          historyLosses: pilot.historyLosses.size,
+          topShips: pilot.lastTopShipsSignature
+        });
+      }
+    }
+
+    if (roundNewRows === 0) {
+      break;
+    }
+  }
+
+  return roundsProcessed;
 }
 async function recomputeForPilots(
   params: {
@@ -548,10 +653,11 @@ async function recomputeForPilots(
       pilot.exhaustedKills = true;
       pilot.exhaustedLosses = true;
       params.logDebug("Pilot recompute failed", { pilot: pilot.entry.pilotName, error: message });
-      params.updatePilotCard(
-        pilot.entry.pilotName,
-        deps.createErrorCard(pilot.entry, `Failed to fetch pilot intel: ${message}`)
-      );
+      params.updatePilotCard(pilot.entry.pilotName, {
+        status: "error",
+        fetchPhase: "error",
+        error: `Failed to recompute pilot intel: ${message}`
+      });
     }
   });
 }
@@ -584,8 +690,66 @@ function initializePilotSchedulerState(pilot: PilotBreadthState): void {
   }
 }
 
-function hasRemainingPages(pilot: PilotBreadthState, maxPages: number): boolean {
+function computeTopShipsSignature(pilot: PilotBreadthState): string {
+  const freq = new Map<number, number>();
+  for (const km of pilot.historyKills.values()) {
+    for (const atk of km.attackers ?? []) {
+      if (atk.ship_type_id && atk.character_id === pilot.characterId) {
+        freq.set(atk.ship_type_id, (freq.get(atk.ship_type_id) ?? 0) + 1);
+      }
+    }
+  }
+  for (const km of pilot.historyLosses.values()) {
+    const shipId = km.victim?.ship_type_id;
+    if (shipId) {
+      freq.set(shipId, (freq.get(shipId) ?? 0) + 1);
+    }
+  }
+  return [...freq.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([id, count]) => `${id}:${count}`)
+    .join(",");
+}
+
+const CONVERGENCE_STABLE_ROUNDS = 2;
+
+function updateConvergence(pilot: PilotBreadthState): void {
+  const sig = computeTopShipsSignature(pilot);
+  if (sig === pilot.lastTopShipsSignature) {
+    pilot.stableRounds += 1;
+    if (pilot.stableRounds >= CONVERGENCE_STABLE_ROUNDS) {
+      pilot.converged = true;
+    }
+  } else {
+    pilot.stableRounds = 0;
+    pilot.lastTopShipsSignature = sig;
+  }
+}
+
+function hasRemainingPages(
+  pilot: PilotBreadthState,
+  maxPages: number,
+  deps: Pick<BreadthDeps, "getZkillRateLimit">
+): boolean {
   initializePilotSchedulerState(pilot);
+
+  if (pilot.converged) {
+    return false;
+  }
+
+  // Adaptive: if we are low on rate limit, stop deep history fetching for more pilots.
+  const rateLimit = deps.getZkillRateLimit();
+  if (rateLimit.remaining < ZKILL_ADAPTIVE_MIN_REMAINING) {
+    return false;
+  }
+
+  // Adaptive: if we already have a lot of data, we don't need to go deeper.
+  // 100 kills and 100 losses is usually more than enough for a very confident prediction.
+  if (pilot.historyKills.size >= 100 && pilot.historyLosses.size >= 100) {
+    return false;
+  }
+
   const hasKills = !pilot.exhaustedKills && pilot.nextKillsPage <= maxPages;
   const hasLosses = !pilot.exhaustedLosses && pilot.nextLossesPage <= maxPages;
   return hasKills || hasLosses;
@@ -644,6 +808,19 @@ function resolvePilotDangerForScheduling(pilot: PilotBreadthState): number {
   return Number.NEGATIVE_INFINITY;
 }
 
+function isLikelyRateLimit(error: unknown): boolean {
+  // Electron: HTTP 420 or 429
+  if (error instanceof HttpError && (error.status === 420 || error.status === 429)) {
+    return true;
+  }
+  // Browser: zkill strips CORS headers on rate limit → TypeError (network error)
+  if (error instanceof TypeError && error.message.includes("fetch")) {
+    return true;
+  }
+  const msg = error instanceof Error ? error.message : String(error);
+  return msg.includes("rate") || msg.includes("429") || msg.includes("420") || msg.includes("CORS") || msg.includes("ERR_FAILED");
+}
+
 async function runRoundBatch(
   pilots: PilotBreadthState[],
   params: {
@@ -660,8 +837,10 @@ async function runRoundBatch(
     "fetchLatestLossesPage" |
     "mergeKillmailLists" |
     "createErrorCard" |
-    "isAbortError"
-  >
+    "isAbortError" |
+    "getZkillRateLimit"
+  >,
+  isFirstPaint = false
 ): Promise<number> {
   let roundNewRows = 0;
   await runWithPriorityConcurrency(
@@ -669,25 +848,38 @@ async function runRoundBatch(
     Math.max(1, ZKILL_PAGE_ROUND_CONCURRENCY),
     (pilot) => pilot.priority,
     async (pilot) => {
-    if (params.isCancelled() || !hasRemainingPages(pilot, params.maxPages)) {
+    if (params.isCancelled() || !hasRemainingPages(pilot, params.maxPages, deps)) {
       return;
     }
     try {
-      const added = await runPilotPageFetch(pilot, params, deps);
+      const added = await runPilotPageFetch(pilot, params, deps, isFirstPaint);
       roundNewRows += added;
     } catch (error) {
       if (deps.isAbortError(error)) {
         return;
       }
       const message = error instanceof Error ? error.message : String(error);
+      const isRateLimit = isLikelyRateLimit(error);
       pilot.failed = true;
       pilot.exhaustedKills = true;
       pilot.exhaustedLosses = true;
-      params.logDebug("Pilot page fetch failed", { pilot: pilot.entry.pilotName, error: message });
-      params.updatePilotCard(
-        pilot.entry.pilotName,
-        deps.createErrorCard(pilot.entry, `Failed to fetch pilot intel: ${message}`)
-      );
+      params.logDebug(isRateLimit ? "Pilot page fetch rate-limited" : "Pilot page fetch failed", {
+        pilot: pilot.entry.pilotName,
+        characterId: pilot.characterId,
+        killPage: pilot.nextKillsPage,
+        lossPage: pilot.nextLossesPage,
+        historyKills: pilot.historyKills.size,
+        historyLosses: pilot.historyLosses.size,
+        error: message,
+        isRateLimit
+      });
+      params.updatePilotCard(pilot.entry.pilotName, {
+        status: "error",
+        fetchPhase: "error",
+        error: isRateLimit
+          ? `zkill rate limit reached (had ${pilot.historyKills.size} kills, ${pilot.historyLosses.size} losses)`
+          : `Failed to fetch pilot history: ${message}`
+      });
     }
     }
   );
@@ -703,7 +895,8 @@ async function runPilotPageFetch(
     updatePilotCard: PilotCardUpdater;
     logDebug: DebugLogger;
   },
-  deps: Pick<BreadthDeps, "fetchLatestKillsPage" | "fetchLatestLossesPage" | "mergeKillmailLists">
+  deps: Pick<BreadthDeps, "fetchLatestKillsPage" | "fetchLatestLossesPage" | "mergeKillmailLists">,
+  isFirstPaint = false
 ): Promise<number> {
   const killPage = pilot.nextKillsPage;
   const lossPage = pilot.nextLossesPage;
@@ -730,36 +923,82 @@ async function runPilotPageFetch(
   let killCacheEvent: ZkillCacheEvent | null = null;
   let lossCacheEvent: ZkillCacheEvent | null = null;
 
-  if (shouldFetchKills) {
-    const killFetchStartedAt = Date.now();
-    killRows = await deps.fetchLatestKillsPage(
-      pilot.characterId,
-      killPage,
-      params.signal,
-      params.onRetry(`zKill kills page ${killPage}`),
-      {
-        onCacheEvent: (event) => {
-          killCacheEvent = event;
-        }
-      }
-    );
-    killDurationMs = Date.now() - killFetchStartedAt;
-  }
+  // First-paint: reduced hydration for fast initial ship prediction.
+  // Deepening: full hydration for fit details on early pages, light on later pages.
+  // Suggested pilots get half the hydration budget — they need less precision.
+  const isSuggested = pilot.priority === "suggested";
+  const getTieredMaxHydrate = (page: number) =>
+    isFirstPaint
+      ? isSuggested ? 8 : 15
+      : page <= 2
+        ? isSuggested ? 20 : 40
+        : 5;
 
-  if (shouldFetchLosses) {
-    const lossFetchStartedAt = Date.now();
-    lossRows = await deps.fetchLatestLossesPage(
-      pilot.characterId,
-      lossPage,
-      params.signal,
-      params.onRetry(`zKill losses page ${lossPage}`),
-      {
-        onCacheEvent: (event) => {
-          lossCacheEvent = event;
+  if (isFirstPaint && shouldFetchKills && shouldFetchLosses) {
+    // Parallel fetch on first-paint to halve wall-clock time.
+    const killFetchStartedAt = Date.now();
+    const lossFetchStartedAt = killFetchStartedAt;
+    const [fetchedKills, fetchedLosses] = await Promise.all([
+      deps.fetchLatestKillsPage(
+        pilot.characterId,
+        killPage,
+        params.signal,
+        params.onRetry(`zKill kills page ${killPage}`),
+        {
+          onCacheEvent: (event) => { killCacheEvent = event; },
+          maxHydrate: getTieredMaxHydrate(killPage)
         }
-      }
-    );
+      ),
+      deps.fetchLatestLossesPage(
+        pilot.characterId,
+        lossPage,
+        params.signal,
+        params.onRetry(`zKill losses page ${lossPage}`),
+        {
+          onCacheEvent: (event) => { lossCacheEvent = event; },
+          maxHydrate: getTieredMaxHydrate(lossPage)
+        }
+      )
+    ]);
+    killRows = fetchedKills;
+    lossRows = fetchedLosses;
+    killDurationMs = Date.now() - killFetchStartedAt;
     lossDurationMs = Date.now() - lossFetchStartedAt;
+  } else {
+    // Sequential fetch during deepening to respect rate-limit backpressure.
+    if (shouldFetchKills) {
+      const killFetchStartedAt = Date.now();
+      killRows = await deps.fetchLatestKillsPage(
+        pilot.characterId,
+        killPage,
+        params.signal,
+        params.onRetry(`zKill kills page ${killPage}`),
+        {
+          onCacheEvent: (event) => {
+            killCacheEvent = event;
+          },
+          maxHydrate: getTieredMaxHydrate(killPage)
+        }
+      );
+      killDurationMs = Date.now() - killFetchStartedAt;
+    }
+
+    if (shouldFetchLosses) {
+      const lossFetchStartedAt = Date.now();
+      lossRows = await deps.fetchLatestLossesPage(
+        pilot.characterId,
+        lossPage,
+        params.signal,
+        params.onRetry(`zKill losses page ${lossPage}`),
+        {
+          onCacheEvent: (event) => {
+            lossCacheEvent = event;
+          },
+          maxHydrate: getTieredMaxHydrate(lossPage)
+        }
+      );
+      lossDurationMs = Date.now() - lossFetchStartedAt;
+    }
   }
 
   if (shouldFetchKills) {
@@ -780,11 +1019,18 @@ async function runPilotPageFetch(
   const addedKills = pilot.historyKills.size - beforeKills;
   const addedLosses = pilot.historyLosses.size - beforeLosses;
 
+  const maxAgeMs = ZKILL_MAX_HISTORY_AGE_DAYS * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
   if (shouldFetchKills) {
-    pilot.exhaustedKills = killRows.length === 0 || addedKills === 0;
+    const oldestKill = killRows[killRows.length - 1];
+    const oldestKillAgeMs = oldestKill ? now - Date.parse(oldestKill.killmail_time) : 0;
+    pilot.exhaustedKills = killRows.length === 0 || addedKills === 0 || oldestKillAgeMs > maxAgeMs;
   }
   if (shouldFetchLosses) {
-    pilot.exhaustedLosses = lossRows.length === 0 || addedLosses === 0;
+    const oldestLoss = lossRows[lossRows.length - 1];
+    const oldestLossAgeMs = oldestLoss ? now - Date.parse(oldestLoss.killmail_time) : 0;
+    pilot.exhaustedLosses = lossRows.length === 0 || addedLosses === 0 || oldestLossAgeMs > maxAgeMs;
   }
 
   const totalAdded = addedKills + addedLosses;

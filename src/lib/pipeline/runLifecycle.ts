@@ -1,4 +1,5 @@
 import type { ParsedPilotInput } from "../../types";
+import { clearThrottleQueue } from "../api/zkill/throttle";
 import { toPilotKey } from "./pilotIdentity";
 
 export type PilotRunMode = "interactive" | "background";
@@ -76,6 +77,9 @@ export function cancelAllPilotRuns(params: {
   }
   params.activeByPilotKey.clear();
   params.pendingByPilotKey.clear();
+  // Clear stale requests from the global zkill throttle so they don't
+  // waste budget after a new paste replaces the fleet.
+  clearThrottleQueue();
 }
 
 function launchPilotRun(params: {

@@ -1,5 +1,6 @@
 const DEFAULT_TIMEOUT_MS = 9000;
 const DEFAULT_RETRIES = 2;
+const USER_AGENT = "EVE-Intel (github.com/lunemec/eve-intel)";
 
 export type RetryInfo = {
   status: number;
@@ -64,6 +65,8 @@ export async function fetchJsonWithMeta<T>(
     throw new DOMException("Aborted", "AbortError");
   }
 
+  const requestInit = withDefaultHeaders(init);
+
   for (let attempt = 0; attempt <= DEFAULT_RETRIES; attempt += 1) {
     const controller = new AbortController();
     const abortExternal = () => controller.abort();
@@ -72,7 +75,7 @@ export async function fetchJsonWithMeta<T>(
 
     try {
       const response = await fetch(url, {
-        ...init,
+        ...requestInit,
         signal: controller.signal
       });
 
@@ -136,7 +139,7 @@ export async function fetchJsonWithMetaConditional<T>(
     throw new DOMException("Aborted", "AbortError");
   }
 
-  const requestInit = withConditionalHeaders(init, conditional);
+  const requestInit = withDefaultHeaders(withConditionalHeaders(init, conditional));
 
   for (let attempt = 0; attempt <= DEFAULT_RETRIES; attempt += 1) {
     const controller = new AbortController();
@@ -285,6 +288,20 @@ function parseCacheControl(value: string): Map<string, string | undefined> {
   return directives;
 }
 
+function withDefaultHeaders(init?: RequestInit): RequestInit {
+  const headers = new Headers(init?.headers);
+  // User-Agent is a forbidden header in browsers — setting it triggers a CORS
+  // preflight that third-party APIs (e.g. zkill) reject with 405.
+  // Only set it in Electron where CORS isn't enforced.
+  if (!headers.has("User-Agent") && typeof window !== "undefined" && window.eveIntelDesktop) {
+    headers.set("User-Agent", USER_AGENT);
+  }
+  return {
+    ...(init ?? {}),
+    headers
+  };
+}
+
 function withConditionalHeaders(init: RequestInit | undefined, conditional?: ConditionalHeaders): RequestInit | undefined {
   if (!conditional?.etag && !conditional?.lastModified) {
     return init;
@@ -319,13 +336,15 @@ function backoffDelay(attempt: number): number {
   return 400 * Math.pow(2, attempt);
 }
 
+const MAX_RETRY_DELAY_MS = 10_000;
+
 function retryDelayMs(response: Response, attempt: number): number {
   const retryAfterHeader = response.headers.get("retry-after");
   const retryAfterMs = parseRetryAfterMs(retryAfterHeader);
   if (retryAfterMs !== undefined) {
-    return retryAfterMs;
+    return Math.min(retryAfterMs, MAX_RETRY_DELAY_MS);
   }
-  return backoffDelay(attempt);
+  return Math.min(backoffDelay(attempt), MAX_RETRY_DELAY_MS);
 }
 
 function parseRetryAfterMs(value: string | null): number | undefined {

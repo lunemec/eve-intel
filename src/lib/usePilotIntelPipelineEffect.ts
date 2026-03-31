@@ -9,6 +9,7 @@ import { DEEP_HISTORY_MAX_PAGES, TOP_SHIP_CANDIDATES } from "./pipeline/constant
 import type { DebugLoggerRef } from "./pipeline/types";
 import { patchPilotCardRows } from "./pipeline/cards";
 import { fetchLatestKillsPage, fetchLatestLossesPage } from "./api/zkill";
+import { setThrottleFleetSize } from "./api/zkill/throttle";
 import {
   killmailHeadSignature,
   normalizeShipName,
@@ -27,7 +28,7 @@ import {
   updatePilotRefreshHead
 } from "./pipeline/backgroundRefresh";
 
-const BACKGROUND_REVALIDATE_INTERVAL_MS = 30_000;
+const BACKGROUND_REVALIDATE_INTERVAL_MS = 150_000;
 
 type EffectDeps = {
   createLoadingCard: typeof createLoadingCard;
@@ -136,6 +137,9 @@ export function usePilotIntelPipelineEffect(
     }
 
     params.setNetworkNotice("");
+
+    // Set throttle fleet size so spacing adapts to total pilot count.
+    setThrottleFleetSize(params.entries.length);
 
     const paramsChanged =
       !lastParamsRef.current ||

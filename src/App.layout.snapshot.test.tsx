@@ -40,6 +40,7 @@ vi.mock("./lib/api/zkill", () => ({
     }
   ] : [])),
   fetchLatestKillsPaged: vi.fn(async () => []),
+  getZkillRateLimit: vi.fn(() => ({ remaining: 100, resetAfterSeconds: 0, updatedAt: Date.now() })),
   fetchLatestLosses: vi.fn(async () => []),
   fetchLatestLossesPage: vi.fn(async (_characterId: number, page: number) => (page === 1 ? [
     {
