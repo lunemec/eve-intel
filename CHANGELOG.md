@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 ## Unreleased
 - _No changes yet._
 
+## v0.3.8 - 2026-04-01
+- Added global zkill request throttle (`src/lib/api/zkill/throttle.ts`) with adaptive spacing that scales with fleet size (80ms base + 5ms per pilot, capped at 250ms, max 2 concurrent) to prevent zkill rate limiting which strips CORS headers in browsers.
+- Added parallel kills+losses fetching on first-paint round using `Promise.all` in `src/lib/pipeline/breadthPipeline.ts`, reducing first visible ship prediction from ~6s to ~300ms for single pilots.
+- Restructured `runPagedHistoryRounds` in `src/lib/pipeline/breadthPipeline.ts` into three phases: first-paint (all pilots), deepening-selected (selected pilots only), deepening-suggested (suggested pilots last), ensuring selected pilots get deeper data before suggested pilots consume rate-limit budget.
+- Added ship prediction convergence detection in `src/lib/pipeline/breadthPipeline.ts`: tracks top-5 ship frequency stability across deepening rounds and stops fetching when predictions stabilize for 2 consecutive rounds.
+- Reduced hydration budget for suggested pilots (8 vs 15 first-paint, 20 vs 40 deepening) in `src/lib/pipeline/breadthPipeline.ts` to reduce API pressure while preserving prediction quality for selected pilots.
+- Bumped ESI hydration concurrency from 5 to 15 in `src/lib/api/zkill/constants.ts` (ESI allows 3600 req/15min).
+- Capped HTTP retry delay at 10s in `src/lib/api/http.ts` to prevent 5-minute waits when zkill sends `Retry-After: 300` on 429 responses.
+- Added throttle queue clearing on fleet cancellation in `src/lib/pipeline/runLifecycle.ts` to prevent stale requests from consuming throttle budget after a new paste.
+- Set throttle fleet size at effect level in `src/lib/usePilotIntelPipelineEffect.ts` (not per-pilot pipeline) so adaptive spacing correctly reflects total fleet size.
+- Increased background revalidation interval from 30s to 150s in `src/lib/usePilotIntelPipelineEffect.ts` to avoid rate-limit hits after initial pipeline completes.
+- Added rate-limit detection in error logging (`src/lib/pipeline/breadthPipeline.ts`): distinguishes HTTP 420/429 from network/CORS errors and shows accumulated data counts in error cards.
+- Added throttle debug logging: dispatch/complete/error events with labels, queue depth, wait time, duration, and per-pipeline throttle stats summary.
+- Fixed CORS error in browsers by gating User-Agent header behind Electron-only check in `src/lib/api/http.ts`.
+- Fixed 3 TypeScript compilation errors from prior incomplete rate-limit wiring: missing `deps` argument in `hasRemainingPages`, missing `ZKILL_MAX_HISTORY_AGE_DAYS` import, and `.victim` type error in hydration sort.
+
 ## v0.3.7 - 2026-03-04
 - Fixed README media pilot-detail ship-count drift by aligning `fit-metrics/roles` fixture suggestions in `src/lib/readmeMediaScenario.ts` to the runtime `TOP_SHIP_CANDIDATES` cap (5), added regression coverage in `src/lib/readmeMediaScenario.test.ts`, and documented the parity rule in `docs/agents/quality.md`.
 - Expanded README `fit-metrics/roles` media fixture in `src/lib/readmeMediaScenario.ts` to fill the detailed `Likely Ships` list to the UI cap (3 ships) with matching fit evidence, and added regression coverage in `src/lib/readmeMediaScenario.test.ts`.
