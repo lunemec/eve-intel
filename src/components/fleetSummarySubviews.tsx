@@ -21,6 +21,10 @@ import {
 } from "../lib/links";
 import { buildSuggestionHoverTitle } from "./suggestionHoverTitle";
 
+export type FleetSortColumn = "corporation" | "alliance";
+export type FleetSortDirection = "asc" | "desc" | null;
+export type FleetSortState = { column: FleetSortColumn | null; direction: FleetSortDirection };
+
 const DEFAULT_SCROLL_DURATION_MS = 120;
 const FLEET_SUMMARY_ALLOWED_ROLE_PILLS = new Set(["HIC", "Bubble", "Dictor"]);
 const BOTH_SHIPS_PILL_PROBABILITY_MIN = 45;
@@ -31,6 +35,41 @@ function isBothShipPillProbabilityRange(probability: number): boolean {
     Number.isFinite(probability) &&
     probability >= BOTH_SHIPS_PILL_PROBABILITY_MIN &&
     probability <= BOTH_SHIPS_PILL_PROBABILITY_MAX
+  );
+}
+
+function sortIndicator(direction: FleetSortDirection): string {
+  if (direction === "asc") return " ▲";
+  if (direction === "desc") return " ▼";
+  return "";
+}
+
+export function FleetSummaryColumnHeaderSubview(props: {
+  sortState: FleetSortState;
+  onSort: (column: FleetSortColumn) => void;
+}): JSX.Element {
+  const { sortState, onSort } = props;
+  const corpDirection = sortState.column === "corporation" ? sortState.direction : null;
+  const allianceDirection = sortState.column === "alliance" ? sortState.direction : null;
+  return (
+    <div className="fleet-summary-grid fleet-summary-column-headers">
+      <span className="fleet-col fleet-col-pilot fleet-col-label">Pilot</span>
+      <span
+        className="fleet-col fleet-col-corporation fleet-col-sortable"
+        onClick={() => onSort("corporation")}
+      >
+        Corporation{sortIndicator(corpDirection)}
+      </span>
+      <span
+        className="fleet-col fleet-col-alliance fleet-col-sortable"
+        onClick={() => onSort("alliance")}
+      >
+        Alliance{sortIndicator(allianceDirection)}
+      </span>
+      <span className="fleet-col fleet-col-ship fleet-col-label">Ship</span>
+      <span className="fleet-col fleet-col-ship fleet-col-label" />
+      <span className="fleet-col fleet-col-alerts fleet-col-label" />
+    </div>
   );
 }
 

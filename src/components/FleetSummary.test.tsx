@@ -105,7 +105,7 @@ describe("FleetSummary", () => {
       />
     );
 
-    const shipColumn = document.querySelector(".fleet-col-ship");
+    const shipColumn = document.querySelector(".fleet-summary-line .fleet-col-ship");
     expect(shipColumn?.textContent).toContain("82%");
     expect(shipColumn?.textContent).not.toContain("81.6%");
     expect(shipColumn?.textContent).toContain(longShipName);
@@ -186,8 +186,9 @@ describe("FleetSummary", () => {
       />
     );
 
-    const corporationColumn = container.querySelector(".fleet-col-corporation");
-    const allianceColumn = container.querySelector(".fleet-col-alliance");
+    const row = container.querySelector(".fleet-summary-line");
+    const corporationColumn = row?.querySelector(".fleet-col-corporation");
+    const allianceColumn = row?.querySelector(".fleet-col-alliance");
     expect(corporationColumn?.textContent).toContain("Corp Prime");
     expect(allianceColumn?.textContent).toContain("Alliance Prime");
   });
@@ -636,9 +637,11 @@ describe("FleetSummary", () => {
       <li data-testid="fleet-summary-row-subview">{props.pilot.parsedEntry.pilotName}</li>
     ));
 
+    const columnHeaderSpy = vi.fn(() => <div data-testid="fleet-summary-column-headers" />);
     vi.doMock("./fleetSummarySubviews", () => ({
       FleetSummaryHeaderSubview: headerSpy,
-      FleetSummaryRowSubview: rowSpy
+      FleetSummaryRowSubview: rowSpy,
+      FleetSummaryColumnHeaderSubview: columnHeaderSpy
     }));
 
     try {

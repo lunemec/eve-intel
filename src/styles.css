@@ -461,6 +461,25 @@ body {
   column-gap: 12px;
 }
 
+.fleet-summary-column-headers {
+  font-size: 0.75rem;
+  color: #8899aa;
+  padding: 2px 6px;
+  user-select: none;
+}
+
+.fleet-col-sortable {
+  cursor: pointer;
+}
+
+.fleet-col-sortable:hover {
+  color: #d3dbe6;
+}
+
+.fleet-col-label {
+  pointer-events: none;
+}
+
 .fleet-summary-list {
   margin: 0;
   padding: 0;
