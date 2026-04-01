@@ -228,8 +228,12 @@ export function resolveHttpCachePolicy(
   if (cacheControl) {
     const directives = parseCacheControl(cacheControl);
     if (directives.has("no-store") || directives.has("no-cache")) {
+      // HTTP no-store/no-cache are directives for HTTP intermediaries (proxies, CDNs),
+      // not for application-level caches. ESI POST endpoints always send no-store,
+      // which would prevent character name and universe name lookups from ever being
+      // cached at the app level. Use the fallback TTL instead.
       return {
-        cacheable: false,
+        cacheable: true,
         ttlMs: fallbackTtlMs,
         staleMs: fallbackStaleMs
       };

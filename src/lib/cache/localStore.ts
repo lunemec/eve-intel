@@ -1,7 +1,11 @@
-import { CACHE_PREFIX, type CacheEnvelope, type CacheLookup } from "./types";
+import { CACHE_PREFIX, STABLE_PREFIX, type CacheEnvelope, type CacheLookup } from "./types";
 
 export function versionedKey(key: string): string {
   return `${CACHE_PREFIX}${key}`;
+}
+
+export function stableKey(key: string): string {
+  return `${STABLE_PREFIX}${key}`;
 }
 
 export function buildEnvelope<T>(value: T, ttlMs: number, staleMs = Math.floor(ttlMs / 2)): CacheEnvelope<T> {
@@ -34,6 +38,56 @@ export function getLocalCachedState<T>(key: string): CacheLookup<T> {
     };
   } catch {
     return { value: null, stale: false };
+  }
+}
+
+export function getLocalCachedStateStable<T>(key: string): CacheLookup<T> {
+  try {
+    const raw = localStorage.getItem(stableKey(key));
+    if (!raw) {
+      return { value: null, stale: false };
+    }
+
+    const parsed = JSON.parse(raw) as CacheEnvelope<T>;
+    const now = Date.now();
+    if (now > parsed.expiresAt) {
+      localStorage.removeItem(stableKey(key));
+      return { value: null, stale: false };
+    }
+
+    return {
+      value: parsed.value,
+      stale: now > parsed.staleAt
+    };
+  } catch {
+    return { value: null, stale: false };
+  }
+}
+
+export function setLocalCachedEnvelopeStable<T>(
+  key: string,
+  envelope: CacheEnvelope<T>,
+  maxItemBytes: number,
+  maxTotalBytes: number
+): boolean {
+  const k = stableKey(key);
+  const serialized = JSON.stringify(envelope);
+  if (serialized.length > maxItemBytes) {
+    return false;
+  }
+
+  try {
+    guardLocalStorageBudget(serialized.length, k, maxTotalBytes);
+    localStorage.setItem(k, serialized);
+    return true;
+  } catch {
+    try {
+      evictOldest(15);
+      localStorage.setItem(k, serialized);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 
@@ -75,6 +129,30 @@ export function clearLocalCache(): void {
   }
   for (const key of keysToRemove) {
     localStorage.removeItem(key);
+  }
+}
+
+// Removes versioned cache entries from old app versions that accumulate across updates
+// and eventually consume the localStorage quota without counting toward the budget.
+// Safe to call on startup: only removes `eve-intel.app-*` keys that don't match the
+// current version; stable keys (`eve-intel.stable.*`) are intentionally preserved.
+export function cleanupStaleVersionCache(): void {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (!key) {
+        continue;
+      }
+      if (key.startsWith("eve-intel.app-") && !key.startsWith(CACHE_PREFIX)) {
+        keysToRemove.push(key);
+      }
+    }
+    for (const key of keysToRemove) {
+      localStorage.removeItem(key);
+    }
+  } catch {
+    // Ignore failures — cleanup is best-effort.
   }
 }
 

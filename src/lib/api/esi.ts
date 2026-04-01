@@ -1,4 +1,4 @@
-import { getCachedState, getCachedStateAsync, setCachedAsync } from "../cache";
+import { getCachedStateStable, getCachedState, getCachedStateAsync, getCachedStableAsync, setCachedAsync, setCachedStable } from "../cache";
 import { fetchJsonWithMeta, resolveHttpCachePolicy, type RetryInfo } from "./http";
 
 const ESI_BASE = "https://esi.evetech.net/latest";
@@ -52,7 +52,11 @@ export async function resolveCharacterIds(
 
   for (const normalized of unique) {
     const cacheKey = characterNameCacheKey(normalized);
-    const cached = getCachedState<number>(cacheKey);
+    // Character name→ID is permanently stable: ESI IDs never change for a given name.
+    // Prefer the stable (version-independent) store; fall back to the versioned store
+    // for entries written before this change.
+    const stableLookup = getCachedStateStable<number>(cacheKey);
+    const cached = stableLookup.value !== null ? stableLookup : getCachedState<number>(cacheKey);
     if (cached.value) {
       map.set(normalized, cached.value);
       if (cached.stale) {
@@ -224,7 +228,8 @@ async function refreshCharacterIds(
     }
     normalizedResolved.add(normalized);
     if (hitPolicy.cacheable) {
-      writes.push(setCachedAsync(characterNameCacheKey(normalized), character.id, hitPolicy.ttlMs, hitPolicy.staleMs));
+      // Use stable (version-independent) cache: character IDs never change.
+      writes.push(setCachedStable(characterNameCacheKey(normalized), character.id, hitPolicy.ttlMs, hitPolicy.staleMs));
     }
   }
 

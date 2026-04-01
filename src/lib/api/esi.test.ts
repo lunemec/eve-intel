@@ -198,7 +198,7 @@ describe("ESI universe names", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("does not persist character id cache when response is no-store", async () => {
+  it("caches character ids using fallback TTL even when response is no-store", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response(JSON.stringify({ characters: [{ id: 123, name: "Pilot A" }] }), {
         status: 200,
@@ -215,6 +215,7 @@ describe("ESI universe names", () => {
 
     expect(first.get("pilot a")).toBe(123);
     expect(second.get("pilot a")).toBe(123);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // no-store is an HTTP intermediary directive; the app-level cache should still persist.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

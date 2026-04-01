@@ -5,6 +5,11 @@ All notable changes to this project are documented in this file.
 ## Unreleased
 - _No changes yet._
 
+## v0.3.9 - 2026-04-01
+- Added stable (version-independent) cache tier (`eve-intel.stable.v1.*`) for truly immutable data: character name→ID mappings and killmail details (content-addressed by killmail ID + hash) now survive app updates without re-fetching.
+- Fixed ESI POST endpoints (character name lookups, universe names) being uncacheable because `resolveHttpCachePolicy` treated HTTP `no-store`/`no-cache` as application-level directives; these are now correctly interpreted as intermediary-only directives, falling back to the configured TTL.
+- Added startup cleanup of stale versioned cache entries from previous app versions in `src/main.tsx`, preventing old `eve-intel.app-*` keys from silently consuming the localStorage quota and eventually causing `QuotaExceededError` on new writes.
+
 ## v0.3.8 - 2026-04-01
 - Added sortable Corporation and Alliance column headers to Fleet Summary: click to sort A-Z, click again for Z-A, click again to restore original danger-based order. Sort resets automatically on new paste. Stable sub-ordering preserves danger ranking within same corp/alliance.
 - Added global zkill request throttle (`src/lib/api/zkill/throttle.ts`) with adaptive spacing that scales with fleet size (80ms base + 5ms per pilot, capped at 250ms, max 2 concurrent) to prevent zkill rate limiting which strips CORS headers in browsers.

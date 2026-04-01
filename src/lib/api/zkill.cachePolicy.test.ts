@@ -168,7 +168,7 @@ describe("zkill cache policy", () => {
     }
   });
 
-  it("does not cache zKill list responses marked no-store", async () => {
+  it("caches zKill list responses with fallback TTL even when marked no-store", async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn(async () =>
       new Response(
@@ -189,7 +189,8 @@ describe("zkill cache policy", () => {
 
     try {
       await fetchLatestKillsPage(12345, 1);
-      expect(vi.mocked(setCachedAsync)).not.toHaveBeenCalled();
+      // no-store is an HTTP intermediary directive; app-level cache uses the fallback TTL.
+      expect(vi.mocked(setCachedAsync)).toHaveBeenCalledTimes(1);
     } finally {
       globalThis.fetch = originalFetch;
     }

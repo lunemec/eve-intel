@@ -1,4 +1,4 @@
-import { getCachedStateAsync, setCachedAsync } from "../cache";
+import { getCachedStateAsync, getCachedStableAsync, setCachedAsync, setCachedStable } from "../cache";
 import { resolveHttpCachePolicy, type RetryInfo } from "./http";
 import { buildListCacheEnvelope, normalizeListCacheEnvelope, toConditionalHeaders } from "./zkill/cachePolicy";
 import {
@@ -497,8 +497,10 @@ async function fetchKillmailDetails(
   signal?: AbortSignal,
   onRetry?: (info: RetryInfo) => void
 ): Promise<ZkillKillmail | null> {
+  // Killmail details are content-addressed by {killmailId}.{hash} and truly immutable.
+  // Use stable (version-independent) cache so entries survive app updates.
   const cacheKey = `eve-intel.cache.killmail.${killmailId}.${hash}`;
-  const cached = await getCachedStateAsync<ZkillKillmail>(cacheKey);
+  const cached = await getCachedStableAsync<ZkillKillmail>(cacheKey);
   if (cached.value) {
     return cached.value;
   }
@@ -519,7 +521,7 @@ async function fetchKillmailDetails(
       fetchedAt: response.fetchedAt
     });
     if (cachePolicy.cacheable) {
-      await setCachedAsync(cacheKey, normalized, cachePolicy.ttlMs, cachePolicy.staleMs);
+      await setCachedStable(cacheKey, normalized, cachePolicy.ttlMs, cachePolicy.staleMs);
     }
     return normalized;
   } catch {

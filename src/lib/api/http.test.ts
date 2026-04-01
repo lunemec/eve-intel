@@ -265,11 +265,13 @@ describe("resolveHttpCachePolicy", () => {
     expect(policy.staleMs).toBe(300000);
   });
 
-  it("treats no-store and no-cache conservatively", () => {
+  it("uses fallback TTL for no-store and no-cache (HTTP directives apply to intermediaries, not app cache)", () => {
     const noStore = resolveHttpCachePolicy(new Headers({ "cache-control": "public, no-store" }), { fallbackTtlMs: 1234 });
     const noCache = resolveHttpCachePolicy(new Headers({ "cache-control": "max-age=60, no-cache" }), { fallbackTtlMs: 5678 });
-    expect(noStore.cacheable).toBe(false);
-    expect(noCache.cacheable).toBe(false);
+    expect(noStore.cacheable).toBe(true);
+    expect(noStore.ttlMs).toBe(1234);
+    expect(noCache.cacheable).toBe(true);
+    expect(noCache.ttlMs).toBe(5678);
   });
 
   it("falls back when headers are malformed", () => {
