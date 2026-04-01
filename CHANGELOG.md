@@ -3,9 +3,10 @@
 All notable changes to this project are documented in this file.
 
 ## Unreleased
-- Added sortable Corporation and Alliance column headers to Fleet Summary: click to sort A-Z, click again for Z-A, click again to restore original danger-based order. Sort resets automatically on new paste. Stable sub-ordering preserves danger ranking within same corp/alliance.
+- _No changes yet._
 
 ## v0.3.8 - 2026-04-01
+- Added sortable Corporation and Alliance column headers to Fleet Summary: click to sort A-Z, click again for Z-A, click again to restore original danger-based order. Sort resets automatically on new paste. Stable sub-ordering preserves danger ranking within same corp/alliance.
 - Added global zkill request throttle (`src/lib/api/zkill/throttle.ts`) with adaptive spacing that scales with fleet size (80ms base + 5ms per pilot, capped at 250ms, max 2 concurrent) to prevent zkill rate limiting which strips CORS headers in browsers.
 - Added parallel kills+losses fetching on first-paint round using `Promise.all` in `src/lib/pipeline/breadthPipeline.ts`, reducing first visible ship prediction from ~6s to ~300ms for single pilots.
 - Restructured `runPagedHistoryRounds` in `src/lib/pipeline/breadthPipeline.ts` into three phases: first-paint (all pilots), deepening-selected (selected pilots only), deepening-suggested (suggested pilots last), ensuring selected pilots get deeper data before suggested pilots consume rate-limit budget.
