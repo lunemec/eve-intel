@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 ## Unreleased
 - _No changes yet._
 
+## v0.4.0 - 2026-04-01
+- Fixed rate-limit handling to preserve partial kill/loss data instead of showing ERROR when zkill rate-limits mid-fetch: pilots with accumulated history from earlier rounds now render real threat scores from partial data.
+- Added automatic 10s retry (up to 3 attempts with jitter) for pilots that hit zkill rate limits, recovering without manual re-paste.
+- Added background sweep safety net that retries any pilots stuck in error state on the 150s revalidation interval.
+- Fixed network retry notice (yellow status text) persisting indefinitely by auto-clearing it after 5 seconds.
+
 ## v0.3.9 - 2026-04-01
 - Added stable (version-independent) cache tier (`eve-intel.stable.v1.*`) for truly immutable data: character name→ID mappings and killmail details (content-addressed by killmail ID + hash) now survive app updates without re-fetching.
 - Fixed ESI POST endpoints (character name lookups, universe names) being uncacheable because `resolveHttpCachePolicy` treated HTTP `no-store`/`no-cache` as application-level directives; these are now correctly interpreted as intermediary-only directives, falling back to the configured TTL.
