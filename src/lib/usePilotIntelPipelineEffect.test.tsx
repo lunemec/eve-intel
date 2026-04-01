@@ -259,7 +259,7 @@ describe("usePilotIntelPipelineEffect", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(runPilotPipeline).toHaveBeenCalledTimes(1);
 
-    await vi.advanceTimersByTimeAsync(31_000);
+    await vi.advanceTimersByTimeAsync(151_000);
     await Promise.resolve();
     expect(logDebug).toHaveBeenCalledWith("zKill page-1 refresh check", expect.objectContaining({
       pilot: "Pilot A",
@@ -271,7 +271,7 @@ describe("usePilotIntelPipelineEffect", () => {
     }));
     expect(runPilotPipeline).toHaveBeenCalledTimes(1);
 
-    await vi.advanceTimersByTimeAsync(31_000);
+    await vi.advanceTimersByTimeAsync(151_000);
     await Promise.resolve();
     await Promise.resolve();
     expect(runPilotPipeline).toHaveBeenCalledTimes(2);
@@ -334,7 +334,7 @@ describe("usePilotIntelPipelineEffect", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(runPilotPipeline).toHaveBeenCalledTimes(1);
 
-    await vi.advanceTimersByTimeAsync(31_000);
+    await vi.advanceTimersByTimeAsync(151_000);
     await Promise.resolve();
     await Promise.resolve();
 
@@ -437,7 +437,7 @@ describe("usePilotIntelPipelineEffect", () => {
     await Promise.resolve();
     expect(result.current.pilotCards[0]?.predictedShips[0]?.shipName).toBe("Falcon");
 
-    await vi.advanceTimersByTimeAsync(31_000);
+    await vi.advanceTimersByTimeAsync(151_000);
     await Promise.resolve();
     await Promise.resolve();
     expect(fetchLatestKillsPage).toHaveBeenCalled();
@@ -448,7 +448,7 @@ describe("usePilotIntelPipelineEffect", () => {
     expect(result.current.pilotCards[0]?.fetchPhase).toBe("ready");
     expect(result.current.pilotCards[0]?.predictedShips[0]?.shipName).toBe("Falcon");
 
-    await vi.advanceTimersByTimeAsync(60_000);
+    await vi.advanceTimersByTimeAsync(151_000);
     await vi.advanceTimersByTimeAsync(0);
     await Promise.resolve();
     await Promise.resolve();
@@ -553,7 +553,7 @@ describe("usePilotIntelPipelineEffect", () => {
 
     expect(runPilotPipeline).toHaveBeenCalledTimes(2);
 
-    await vi.advanceTimersByTimeAsync(31_000);
+    await vi.advanceTimersByTimeAsync(151_000);
     await Promise.resolve();
     await Promise.resolve();
     expect(fetchLatestKillsPage).toHaveBeenCalledWith(9001, 1, undefined, undefined, expect.objectContaining({ forceNetwork: true }));
@@ -806,7 +806,7 @@ describe("usePilotIntelPipelineEffect", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    await vi.advanceTimersByTimeAsync(31_000);
+    await vi.advanceTimersByTimeAsync(151_000);
     await Promise.resolve();
     await Promise.resolve();
 

@@ -86,8 +86,7 @@ describe("fetchJson", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(onRetry).toHaveBeenCalledTimes(1);
     expect(onRetry.mock.calls[0][0]).toMatchObject({ status: 429, attempt: 1 });
-    expect(onRetry.mock.calls[0][0].delayMs).toBeGreaterThanOrEqual(59000);
-    expect(onRetry.mock.calls[0][0].delayMs).toBeLessThanOrEqual(60000);
+    expect(onRetry.mock.calls[0][0].delayMs).toBe(10000);
   });
 
   it("prefers Retry-After HTTP-date over static backoff", async () => {
@@ -117,8 +116,7 @@ describe("fetchJson", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(onRetry).toHaveBeenCalledTimes(1);
     expect(onRetry.mock.calls[0][0]).toMatchObject({ status: 429, attempt: 1 });
-    expect(onRetry.mock.calls[0][0].delayMs).toBeGreaterThanOrEqual(59000);
-    expect(onRetry.mock.calls[0][0].delayMs).toBeLessThanOrEqual(60000);
+    expect(onRetry.mock.calls[0][0].delayMs).toBe(10000);
   });
 
   it("falls back to static backoff when Retry-After is invalid", async () => {
