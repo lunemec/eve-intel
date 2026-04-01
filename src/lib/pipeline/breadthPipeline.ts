@@ -32,6 +32,7 @@ import type {
   ErrorLogger,
   PipelineSignal,
   PilotCardUpdater,
+  RateLimitRetryScheduler,
   RetryBuilder
 } from "./types";
 import {
@@ -133,6 +134,7 @@ export async function runBreadthPilotPipeline(
     updatePilotCard: PilotCardUpdater;
     logDebug: DebugLogger;
     logError: ErrorLogger;
+    scheduleRateLimitRetry?: RateLimitRetryScheduler;
   },
   deps: BreadthDeps = DEFAULT_DEPS
 ): Promise<void> {
@@ -182,7 +184,8 @@ export async function runBreadthPilotPipeline(
       onRetry: params.onRetry,
       isCancelled: params.isCancelled,
       updatePilotCard: params.updatePilotCard,
-      logDebug: params.logDebug
+      logDebug: params.logDebug,
+      scheduleRateLimitRetry: params.scheduleRateLimitRetry
     },
     deps
   );
@@ -371,6 +374,7 @@ export async function runPagedHistoryRounds(
     isCancelled: CancelCheck;
     updatePilotCard: PilotCardUpdater;
     logDebug: DebugLogger;
+    scheduleRateLimitRetry?: RateLimitRetryScheduler;
   },
   deps: BreadthDeps = DEFAULT_DEPS
 ): Promise<void> {
@@ -448,6 +452,7 @@ async function runDeepeningRounds(
     isCancelled: CancelCheck;
     updatePilotCard: PilotCardUpdater;
     logDebug: DebugLogger;
+    scheduleRateLimitRetry?: RateLimitRetryScheduler;
   },
   deps: Pick<
     BreadthDeps,
@@ -830,6 +835,7 @@ async function runRoundBatch(
     isCancelled: CancelCheck;
     updatePilotCard: PilotCardUpdater;
     logDebug: DebugLogger;
+    scheduleRateLimitRetry?: RateLimitRetryScheduler;
   },
   deps: Pick<
     BreadthDeps,
@@ -860,26 +866,45 @@ async function runRoundBatch(
       }
       const message = error instanceof Error ? error.message : String(error);
       const isRateLimit = isLikelyRateLimit(error);
-      pilot.failed = true;
+      const hasPartialData = pilot.historyKills.size > 0 || pilot.historyLosses.size > 0;
+
       pilot.exhaustedKills = true;
       pilot.exhaustedLosses = true;
-      params.logDebug(isRateLimit ? "Pilot page fetch rate-limited" : "Pilot page fetch failed", {
-        pilot: pilot.entry.pilotName,
-        characterId: pilot.characterId,
-        killPage: pilot.nextKillsPage,
-        lossPage: pilot.nextLossesPage,
-        historyKills: pilot.historyKills.size,
-        historyLosses: pilot.historyLosses.size,
-        error: message,
-        isRateLimit
-      });
-      params.updatePilotCard(pilot.entry.pilotName, {
-        status: "error",
-        fetchPhase: "error",
-        error: isRateLimit
-          ? `zkill rate limit reached (had ${pilot.historyKills.size} kills, ${pilot.historyLosses.size} losses)`
-          : `Failed to fetch pilot history: ${message}`
-      });
+
+      if (isRateLimit && hasPartialData) {
+        // Stop paging but keep accumulated data — recompute will render partial results.
+        params.logDebug("Pilot page fetch rate-limited with partial data", {
+          pilot: pilot.entry.pilotName,
+          characterId: pilot.characterId,
+          killPage: pilot.nextKillsPage,
+          lossPage: pilot.nextLossesPage,
+          historyKills: pilot.historyKills.size,
+          historyLosses: pilot.historyLosses.size
+        });
+        params.scheduleRateLimitRetry?.(pilot.entry.pilotName);
+      } else {
+        pilot.failed = true;
+        params.logDebug(isRateLimit ? "Pilot page fetch rate-limited" : "Pilot page fetch failed", {
+          pilot: pilot.entry.pilotName,
+          characterId: pilot.characterId,
+          killPage: pilot.nextKillsPage,
+          lossPage: pilot.nextLossesPage,
+          historyKills: pilot.historyKills.size,
+          historyLosses: pilot.historyLosses.size,
+          error: message,
+          isRateLimit
+        });
+        params.updatePilotCard(pilot.entry.pilotName, {
+          status: "error",
+          fetchPhase: "error",
+          error: isRateLimit
+            ? `zkill rate limited — will retry automatically`
+            : `Failed to fetch pilot history: ${message}`
+        });
+        if (isRateLimit) {
+          params.scheduleRateLimitRetry?.(pilot.entry.pilotName);
+        }
+      }
     }
     }
   );

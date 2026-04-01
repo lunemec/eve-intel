@@ -24,6 +24,8 @@ export type PilotCardUpdater = (pilotName: string, patch: Partial<PilotCard>) =>
 
 export type PipelineSignal = AbortSignal | undefined;
 
+export type RateLimitRetryScheduler = (pilotName: string) => void;
+
 export type ProcessPilotFn = (
   entry: ParsedPilotInput,
   characterId: number,

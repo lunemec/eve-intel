@@ -15,6 +15,7 @@ import type {
   ErrorLogger,
   PipelineSignal,
   PilotCardUpdater,
+  RateLimitRetryScheduler,
   RetryBuilder
 } from "./types";
 
@@ -30,6 +31,7 @@ export type RunResolvedPilotPipelineParams = {
   logDebug: DebugLogger;
   logError: ErrorLogger;
   maxPages?: number;
+  scheduleRateLimitRetry?: RateLimitRetryScheduler;
 };
 
 export type RunResolvedPipelineDeps = {
@@ -86,7 +88,8 @@ export async function runResolvedPilotPipeline(
     isCancelled: params.isCancelled,
     updatePilotCard: params.updatePilotCard,
     logDebug: params.logDebug,
-    logError: params.logError
+    logError: params.logError,
+    scheduleRateLimitRetry: params.scheduleRateLimitRetry
   });
 }
 
@@ -103,6 +106,7 @@ export async function runPilotPipeline(
     updatePilotCard: PilotCardUpdater;
     logError: ErrorLogger;
     maxPages?: number;
+    scheduleRateLimitRetry?: RateLimitRetryScheduler;
   },
   deps: RunPipelineDeps = DEFAULT_DEPS
 ): Promise<void> {
@@ -153,7 +157,8 @@ export async function runPilotPipeline(
       isCancelled: params.isCancelled,
       updatePilotCard: params.updatePilotCard,
       logDebug: params.logDebug,
-      logError: params.logError
+      logError: params.logError,
+      scheduleRateLimitRetry: params.scheduleRateLimitRetry
     },
     { runBreadthPilotPipeline: deps.runBreadthPilotPipeline }
   );

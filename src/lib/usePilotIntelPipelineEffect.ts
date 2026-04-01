@@ -70,6 +70,9 @@ export function usePilotIntelPipelineEffect(
   const predictedShipsByPilotKeyRef = useRef<Map<string, PilotCard["predictedShips"]>>(new Map());
   const forceRefreshByPilotKeyRef = useRef<Set<string>>(new Set());
   const refreshInFlightByPilotKeyRef = useRef<Set<string>>(new Set());
+  const rateLimitRetryCountRef = useRef<Map<string, number>>(new Map());
+  const rateLimitRetryTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const errorPilotKeysRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     return () => {
@@ -85,6 +88,12 @@ export function usePilotIntelPipelineEffect(
       predictedShipsByPilotKeyRef.current.clear();
       forceRefreshByPilotKeyRef.current.clear();
       refreshInFlightByPilotKeyRef.current.clear();
+      for (const handle of rateLimitRetryTimersRef.current.values()) {
+        clearTimeout(handle);
+      }
+      rateLimitRetryTimersRef.current.clear();
+      rateLimitRetryCountRef.current.clear();
+      errorPilotKeysRef.current.clear();
     };
   }, []);
 
@@ -112,6 +121,11 @@ export function usePilotIntelPipelineEffect(
       if (patch.predictedShips) {
         predictedShipsByPilotKeyRef.current.set(pilotKey, patch.predictedShips);
       }
+      if (patch.status === "error") {
+        errorPilotKeysRef.current.add(pilotKey);
+      } else if (patch.status === "ready") {
+        errorPilotKeysRef.current.delete(pilotKey);
+      }
       params.setPilotCards((current) => patchPilotCardRows(current, pilotName, patch));
     };
 
@@ -126,6 +140,12 @@ export function usePilotIntelPipelineEffect(
       predictedShipsByPilotKeyRef.current.clear();
       forceRefreshByPilotKeyRef.current.clear();
       refreshInFlightByPilotKeyRef.current.clear();
+      for (const handle of rateLimitRetryTimersRef.current.values()) {
+        clearTimeout(handle);
+      }
+      rateLimitRetryTimersRef.current.clear();
+      rateLimitRetryCountRef.current.clear();
+      errorPilotKeysRef.current.clear();
       lastParamsRef.current = {
         lookbackDays: params.settings.lookbackDays,
         dogmaIndex: params.dogmaIndex
@@ -212,6 +232,42 @@ export function usePilotIntelPipelineEffect(
     lastEntrySignatureByPilotKeyRef.current = entrySignatures;
 
     let disposed = false;
+
+    const RATE_LIMIT_RETRY_DELAY_MS = 10_000;
+    const RATE_LIMIT_RETRY_JITTER_MS = 2_000;
+    const MAX_RATE_LIMIT_RETRIES = 3;
+
+    function scheduleRateLimitRetry(pilotName: string): void {
+      const pilotKey = toPilotKey(pilotName);
+      const attempts = rateLimitRetryCountRef.current.get(pilotKey) ?? 0;
+      if (attempts >= MAX_RATE_LIMIT_RETRIES) {
+        logDebug("Rate limit retry cap reached", { pilot: pilotName, attempts });
+        return;
+      }
+      // Clear any existing timer for this pilot
+      const existing = rateLimitRetryTimersRef.current.get(pilotKey);
+      if (existing) {
+        clearTimeout(existing);
+      }
+      rateLimitRetryCountRef.current.set(pilotKey, attempts + 1);
+      const jitter = Math.random() * RATE_LIMIT_RETRY_JITTER_MS;
+      const delayMs = RATE_LIMIT_RETRY_DELAY_MS + jitter;
+      logDebug("Rate limit retry scheduled", { pilot: pilotName, attempt: attempts + 1, delayMs: Math.round(delayMs) });
+      const handle = setTimeout(() => {
+        rateLimitRetryTimersRef.current.delete(pilotKey);
+        if (disposed) {
+          return;
+        }
+        const entry = params.entries.find((e) => toPilotKey(e.pilotName) === pilotKey);
+        if (!entry) {
+          return;
+        }
+        logDebug("Rate limit retry firing", { pilot: pilotName, attempt: attempts + 1 });
+        requestRun(entry, "background", false);
+      }, delayMs);
+      rateLimitRetryTimersRef.current.set(pilotKey, handle);
+    }
+
     if (paramsChanged || changedKeys.size > 0) {
       void runBackgroundRefreshSweep();
     }
@@ -224,6 +280,16 @@ export function usePilotIntelPipelineEffect(
       mode: "interactive" | "background",
       queueIfActive: boolean
     ): void {
+      if (mode === "interactive") {
+        // Reset retry count on interactive runs (user re-paste)
+        const pilotKey = toPilotKey(entry.pilotName);
+        rateLimitRetryCountRef.current.delete(pilotKey);
+        const existingTimer = rateLimitRetryTimersRef.current.get(pilotKey);
+        if (existingTimer) {
+          clearTimeout(existingTimer);
+          rateLimitRetryTimersRef.current.delete(pilotKey);
+        }
+      }
       requestPilotRun({
         entry,
         mode,
@@ -242,7 +308,8 @@ export function usePilotIntelPipelineEffect(
             setNetworkNotice: params.setNetworkNotice,
             updatePilotCard,
             logError,
-            maxPages: DEEP_HISTORY_MAX_PAGES
+            maxPages: DEEP_HISTORY_MAX_PAGES,
+            scheduleRateLimitRetry
           });
         }
       });
@@ -332,11 +399,32 @@ export function usePilotIntelPipelineEffect(
           refreshInFlightByPilotKeyRef.current.delete(pilotKey);
         }
       }
+
+      // Safety net: also retry pilots stuck in error state
+      for (const pilotKey of errorPilotKeysRef.current) {
+        if (disposed) {
+          return;
+        }
+        if (activeByPilotKeyRef.current.has(pilotKey)) {
+          continue;
+        }
+        const entry = params.entries.find((e) => toPilotKey(e.pilotName) === pilotKey);
+        if (!entry) {
+          errorPilotKeysRef.current.delete(pilotKey);
+          continue;
+        }
+        logDebug("Background sweep retrying error pilot", { pilot: entry.pilotName });
+        requestRun(entry, "background", false);
+      }
     }
 
     return () => {
       disposed = true;
       clearInterval(timer);
+      for (const handle of rateLimitRetryTimersRef.current.values()) {
+        clearTimeout(handle);
+      }
+      rateLimitRetryTimersRef.current.clear();
     };
   }, [rosterSignature, params.settings.lookbackDays, params.dogmaIndex]);
 }
